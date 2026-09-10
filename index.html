@@ -86,7 +86,39 @@ body{background:#07111a;image-rendering:auto}
 @media(max-width:760px){.ability-box{grid-template-columns:1fr 1fr}.schedule-layout{grid-template-columns:1fr}.mini-grid.four{grid-template-columns:1fr 1fr}.game-card{grid-template-columns:80px 1fr 55px}}
 .header-tools{display:flex;gap:5px;margin-top:6px;justify-content:flex-end}.header-tools button{padding:4px 7px;font-size:10px;background:#142733;border-color:#4a6677;color:#e4edf2}.schedule-board{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:4px;background:#09131c;padding:4px;overflow:auto}.schedule-day{min-width:150px;background:#e9f0f5;border:1px solid #4c6270;color:#13212b}.schedule-day.today{box-shadow:inset 0 0 0 3px #f2c84b}.schedule-day-head{display:flex;justify-content:space-between;align-items:center;padding:7px 8px;background:linear-gradient(#2a6c92,#194663);color:#fff;font-size:12px}.schedule-day-head span{font-size:9px;color:#f6d55a}.schedule-match{display:grid;grid-template-columns:30px 1fr 48px;gap:5px;align-items:center;padding:7px 6px;background:#f7fbfd;border-top:1px solid #bdcbd4;font-size:10px}.schedule-match.own{background:#fff1c8}.schedule-match.played{opacity:.78}.sm-date{font-size:11px;color:#526879}.sm-teams{line-height:1.35;font-weight:700}.sm-score{text-align:right;font-weight:900;color:#1d4a63}.fast-btn{width:100%;border:0;border-top:1px solid #456676;border-radius:0;background:#d77c3c;color:#fff;padding:6px;font-size:10px;font-weight:800}.day-off{padding:18px 8px;text-align:center;color:#6e7d86;font-size:11px}.rank-mini{display:grid;grid-template-columns:28px 1fr auto;gap:6px;align-items:center;padding:7px 2px;border-bottom:1px solid #2f3f4b;font-size:11px}.rank-mini b{color:#c6d6df;text-align:center}.rank-mini strong{font-variant-numeric:tabular-nums}.status-danger{color:#ff8e81}.rank-s b{color:#ff6358!important}.rank-a b{color:#ffad42!important}.rank-b b{color:#6cd47a!important}.rank-c b{color:#58baff!important}.rank-d b{color:#d7c862!important}.rank-e b{color:#bca9d6!important}.rank-f b{color:#bb809c!important}.rank-g b{color:#e36b7d!important}
 @media(max-width:1050px){.schedule-board{grid-template-columns:repeat(4,minmax(150px,1fr))}}@media(max-width:760px){.schedule-board{grid-template-columns:repeat(2,minmax(150px,1fr))}.header-tools{justify-content:stretch}.header-tools button{flex:1}}
-</style>
+
+/* Phase 9 visual layer */
+:root{--pblue:#173b83;--pblue2:#2857a7;--pyellow:#f4c430;--panel:#f7f9fc;--line:#b6c2d2;--ink:#172033;}
+body{background:linear-gradient(#dfe6f1,#cbd6e6);color:var(--ink);font-family:"Yu Gothic",Meiryo,system-ui,sans-serif;}
+header.game-header{background:linear-gradient(180deg,#214b9a,#122f6a);border-bottom:4px solid var(--pyellow);box-shadow:0 3px 0 rgba(0,0,0,.18);}
+.game-header h1,.game-header small,.header-date small,.header-date b{color:#fff;}
+.brand-mark{background:var(--pyellow)!important;color:var(--pblue)!important;border:2px solid #fff;box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);}
+.season-ribbon{background:#fff;border:1px solid var(--line);border-top:4px solid var(--pblue);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.season-ribbon b{color:var(--pblue);}
+nav.game-nav{background:#122e63;border:0;border-radius:8px 8px 0 0;overflow:hidden;}
+nav.game-nav button{border-radius:0;border-right:1px solid rgba(255,255,255,.15);background:linear-gradient(#3566b6,#21488d);color:#fff;font-weight:700;}
+nav.game-nav button.active{background:linear-gradient(#ffd95a,#e7ad18);color:#122e63;box-shadow:inset 0 -3px 0 #fff;}
+.panel,.match,.team-card,.player-card{background:var(--panel);border:1px solid var(--line);box-shadow:0 2px 3px rgba(0,0,0,.08);}
+.panel h3{color:#fff;background:linear-gradient(90deg,#214b9a,#3d6fc0);border-left:7px solid var(--pyellow);padding:8px 10px;margin:-1px -1px 12px;}
+button{border:1px solid #8b98ac;border-radius:5px;background:linear-gradient(#fff,#e2e7ee);color:#18233a;font-weight:700;box-shadow:0 1px 1px rgba(0,0,0,.12);}
+button:hover{filter:brightness(1.04);transform:translateY(-1px);}
+button.primary{background:linear-gradient(#ffe16a,#e8b72a);border-color:#b88b00;color:#172b5d;}
+button.danger{background:linear-gradient(#ff9e9e,#dd5353);color:#fff;border-color:#a62f2f;}
+.schedule-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.day-card{background:#fff;border:1px solid #a9b7c9;border-radius:6px;overflow:hidden;}
+.day-card .day-head{background:linear-gradient(#eef3fb,#dbe5f3);border-bottom:1px solid #aebbd0;padding:7px;text-align:center;font-weight:800;color:#213d72;}
+.day-card.today{box-shadow:0 0 0 3px var(--pyellow);}
+.game-card{border:1px solid #c4cbd6;border-radius:5px;margin:7px;padding:7px;background:linear-gradient(180deg,#fff,#f1f4f8);}
+.game-card.user-game{border-left:5px solid var(--pyellow);}
+.game-card .score{font-size:18px;font-weight:900;color:#162b58;}
+.rank-S{color:#d21f1f!important}.rank-A{color:#f07819!important}.rank-B{color:#e2a900!important}.rank-C{color:#3b9c55!important}.rank-D{color:#2874be!important}.rank-E{color:#4b63a9!important}.rank-F{color:#6b7280!important}.rank-G{color:#8b8f98!important}
+.ability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.ability-cell{background:#fff;border:1px solid #bcc6d6;border-radius:4px;padding:7px;display:flex;justify-content:space-between;align-items:center;}
+.ability-cell .rank{font-size:24px;font-weight:900;min-width:28px;text-align:center;}
+.title-box{border-top:8px solid var(--pyellow)!important;background:linear-gradient(#173b83,#102a5f)!important;box-shadow:0 8px 0 rgba(0,0,0,.08);}
+.title-box h2{letter-spacing:2px;}
+footer{color:#3b4a65;}
+@media(max-width:900px){.schedule-board{grid-template-columns:repeat(2,minmax(0,1fr));}.ability-grid{grid-template-columns:repeat(2,1fr);}}\n</style>
 </head>
 <body>
 <div id="app"></div>
@@ -95,15 +127,14 @@ body{background:#07111a;image-rendering:auto}
 const TEAMS=[
 {id:"tigers",name:"阪神タイガース",league:"セ",city:"兵庫",power:84},{id:"carp",name:"広島東洋カープ",league:"セ",city:"広島",power:74},{id:"baystars",name:"横浜DeNAベイスターズ",league:"セ",city:"神奈川",power:80},{id:"giants",name:"読売ジャイアンツ",league:"セ",city:"東京",power:82},{id:"swallows",name:"東京ヤクルトスワローズ",league:"セ",city:"東京",power:72},{id:"dragons",name:"中日ドラゴンズ",league:"セ",city:"愛知",power:70},
 {id:"hawks",name:"福岡ソフトバンクホークス",league:"パ",city:"福岡",power:86},{id:"fighters",name:"北海道日本ハムファイターズ",league:"パ",city:"北海道",power:81},{id:"marines",name:"千葉ロッテマリーンズ",league:"パ",city:"千葉",power:76},{id:"eagles",name:"東北楽天ゴールデンイーグルス",league:"パ",city:"宮城",power:71},{id:"buffaloes",name:"オリックス・バファローズ",league:"パ",city:"大阪",power:79},{id:"lions",name:"埼玉西武ライオンズ",league:"パ",city:"埼玉",power:68}];
-const SAVE_KEY="pennant_manager_next_v7";
-const OLD_SAVE_KEY="pennant_manager_next_v6"; const OLD_SAVE_KEY2="pennant_manager_next_v5"; const OLD_SAVE_KEY3="pennant_manager_next_v4"; const OLD_SAVE_KEY4="pennant_manager_next_v3"; let state=null,selectedTeam=TEAMS[0].id;
+const SAVE_KEY="pennant_manager_next_v9"; const OLD_SAVE_KEY0="pennant_manager_next_v8"; const OLD_SAVE_KEY="pennant_manager_next_v7"; const OLD_SAVE_KEY2="pennant_manager_next_v6"; const OLD_SAVE_KEY3="pennant_manager_next_v5"; const OLD_SAVE_KEY4="pennant_manager_next_v4"; const OLD_SAVE_KEY5="pennant_manager_next_v3"; let state=null,selectedTeam=TEAMS[0].id;
 const $=id=>document.getElementById(id),team=id=>TEAMS.find(t=>t.id===id),clone=x=>JSON.parse(JSON.stringify(x));
 window.selectedPlayer=null;
 function dateStr(dt){const w=["日","月","火","水","木","金","土"];return `${dt.getUTCFullYear()}/${String(dt.getUTCMonth()+1).padStart(2,"0")}/${String(dt.getUTCDate()).padStart(2,"0")}（${w[dt.getUTCDay()]}）`}
 function ageAt(birth,year){return year-Number(birth.slice(0,4));}
 function clamp100(v){return Math.max(1,Math.min(100,Math.round(v)));}
 function rankOf(v){v=clamp100(v);if(v>=90)return "S";if(v>=80)return "A";if(v>=70)return "B";if(v>=60)return "C";if(v>=50)return "D";if(v>=40)return "E";if(v>=20)return "F";return "G";}
-function rankClass(v){return "rank-"+rankOf(v).toLowerCase();}
+function rankClass(v){return "rank-"+rankOf(v);}
 function ability(v){v=clamp100(v);return `<span class="ability ${rankClass(v)}"><b>${rankOf(v)}</b><small>${v}</small></span>`;}
 function overall(p){
   if(p.pos==="P") return clamp100((p.velocity-120)*0.9 + p.control*0.35 + p.stamina*0.3 + (p.velocity>=150?8:0));
@@ -132,30 +163,22 @@ function makePlayer(id,tm,i,pos){
   };
 }
 function makeRoster(tm){let ps=[];for(let i=0;i<30;i++){let pos=i<12?"P":i===12?"C":i<17?"IF":i<21?"OF":"IF";ps.push(makePlayer(tm.id,tm.id,i,pos));}return ps;}
-function freshState(control){let teams={};TEAMS.forEach(t=>teams[t.id]={id:t.id,wins:0,losses:0,ties:0,runsFor:0,runsAgainst:0,streak:"-",money:12000,payroll:0});let players=[];TEAMS.forEach(t=>players.push(...makeRoster(t)));players.forEach(p=>{p.salary=900+Math.max(0,overall(p)-55)*55+Math.floor(Math.random()*300);p.contractYears=1+Math.floor(Math.random()*3);p.freeAgent=false;p.career={years:0,awards:[]};});return {version:7,year:2026,currentDate:"2026-03-27T00:00:00Z",phase:"regular",controlTeam:control,teams,players,games:[],generated:false,lastMessage:"ゲームを開始しました。",lineups:{},rotation:{},seasonStats:{},postseason:null,offseasonStep:0,seasonHistory:[]};}
-function load(slot){let x=localStorage.getItem(SAVE_KEY+slot)||localStorage.getItem(OLD_SAVE_KEY+slot)||localStorage.getItem(OLD_SAVE_KEY2+slot)||localStorage.getItem(OLD_SAVE_KEY3+slot)||localStorage.getItem(OLD_SAVE_KEY4+slot);if(!x)return alert("データがありません。");try{state=migrateState(JSON.parse(x));}catch(e){alert("セーブデータを読み込めませんでした。");return}unlockBGM();renderGame("schedule")}
+function freshState(control){let teams={};TEAMS.forEach(t=>teams[t.id]={id:t.id,wins:0,losses:0,ties:0,runsFor:0,runsAgainst:0,streak:"-",money:12000,payroll:0});let players=[];TEAMS.forEach(t=>players.push(...makeRoster(t)));players.forEach(p=>{p.salary=900+Math.max(0,overall(p)-55)*55+Math.floor(Math.random()*300);p.contractYears=1+Math.floor(Math.random()*3);p.freeAgent=false;p.career={years:0,awards:[]};});return {version:9,year:2026,currentDate:"2026-03-27T00:00:00Z",phase:"regular",controlTeam:control,teams,players,games:[],generated:false,lastMessage:"ゲームを開始しました。",lineups:{},rotation:{},seasonStats:{},postseason:null,offseasonStep:0,seasonHistory:[]};}
+function load(slot){let x=localStorage.getItem(SAVE_KEY+slot)||localStorage.getItem(OLD_SAVE_KEY0+slot)||localStorage.getItem(OLD_SAVE_KEY+slot)||localStorage.getItem(OLD_SAVE_KEY2+slot)||localStorage.getItem(OLD_SAVE_KEY3+slot)||localStorage.getItem(OLD_SAVE_KEY4+slot)||localStorage.getItem(OLD_SAVE_KEY5+slot);if(!x)return alert("データがありません。");try{state=migrateState(JSON.parse(x));}catch(e){alert("セーブデータを読み込めませんでした。");return}unlockBGM();renderGame("schedule")}
 
-let bgmAudio=null,bgmTrack="",bgmEnabled=true,bgmUnlocked=false;
-try{bgmEnabled=localStorage.getItem("pennant_bgm_enabled")!=="0";}catch(e){}
-function bgmForDate(){if(!state)return null;let m=new Date(state.currentDate).getUTCMonth()+1;if(m>=3&&m<=5)return "COLOR.mp3";if(m>=6&&m<=8)return "Skyline.mp3";if(m>=9&&m<=11)return "Tears_in_the_Quiet_Rain.mp3";return "Sunlit_Path.mp3";}
-function ensureBGM(){
-  if(!bgmAudio){bgmAudio=new Audio();bgmAudio.preload="auto";bgmAudio.loop=true;bgmAudio.volume=.28;
-    bgmAudio.addEventListener("error",()=>{state&& (state.lastMessage="BGMファイルを読み込めませんでした。mp3 4ファイルが index.html と同じ場所にあるか確認してください。");});
-  }
-  return bgmAudio;
-}
-function playCurrentBGM(){
-  if(!state||!bgmEnabled)return;
-  const audio=ensureBGM(),track=bgmForDate();
-  if(!track)return;
-  if(bgmTrack!==track){audio.pause();audio.src="./"+encodeURI(track);audio.load();bgmTrack=track;}
-  const promise=audio.play();
-  if(promise&&promise.catch)promise.catch(()=>{bgmUnlocked=false;});
-}
-function unlockBGM(){bgmUnlocked=true;bgmEnabled=true;try{localStorage.setItem("pennant_bgm_enabled","1");}catch(e){};playCurrentBGM();}
-function updateBGM(){if(!state||!bgmUnlocked)return;playCurrentBGM();}
-function toggleBGM(){bgmEnabled=!bgmEnabled;try{localStorage.setItem("pennant_bgm_enabled",bgmEnabled?"1":"0");}catch(e){};if(bgmEnabled){bgmUnlocked=true;playCurrentBGM();}else if(bgmAudio){bgmAudio.pause();}renderGame("schedule");}
-function stopBGM(){if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}bgmTrack="";bgmUnlocked=false;}
+let bgmAudio=null,bgmTrack="",bgmEnabled=true,bgmUnlocked=false,bgmFail=false;
+
+bgmAudio=document.createElement("audio");
+bgmAudio.preload="auto"; bgmAudio.loop=true; bgmAudio.volume=0.5; bgmAudio.setAttribute("playsinline","");
+bgmAudio.addEventListener("error",()=>{bgmFail=true; if(state) state.lastMessage="BGMファイルを読み込めませんでした。MP3がindex.htmlと同じ階層にあるか確認してください。";});
+
+function seasonTrack(){if(!state)return "";const m=new Date(state.currentDate).getUTCMonth()+1;return m<=5?"COLOR.mp3":m<=8?"Skyline.mp3":m<=11?"Tears_in_the_Quiet_Rain.mp3":"Sunlit_Path.mp3"}
+function stopBGM(){if(!bgmAudio)return;bgmAudio.pause();bgmAudio.currentTime=0;}
+function unlockBGM(){bgmUnlocked=true; playCurrentBGM();}
+function playCurrentBGM(){if(!bgmAudio||!bgmEnabled||!state||!bgmUnlocked)return;const tr=seasonTrack();if(!tr)return;try{const url=new URL(tr,document.baseURI).href;if(bgmAudio.src!==url){bgmAudio.src=url;bgmAudio.load();}const p=bgmAudio.play();if(p&&p.catch)p.catch(()=>{bgmFail=true;});}catch(e){bgmFail=true;}}
+function updateBGM(){if(!state){stopBGM();return;}if(!bgmEnabled){stopBGM();return;}bgmTrack=seasonTrack();playCurrentBGM();}
+function toggleBGM(){bgmEnabled=!bgmEnabled;if(bgmEnabled){bgmUnlocked=true;playCurrentBGM();}else stopBGM();renderGame("schedule");}
+document.addEventListener("pointerdown",()=>{if(bgmEnabled){bgmUnlocked=true;playCurrentBGM();}},{passive:true});
 
 function playerById(id){return state?.players?.find(p=>p.id===id)||null;}
 function rating(p){return overall(p)+(p.form-50)*0.08-p.fatigue*0.12-(p.injury?20:0);}
@@ -180,12 +203,16 @@ function scheduleDates(){
   return out.slice(0,143);
 }
 function roundPairs(){
-  let ids=TEAMS.map(t=>t.id),a=ids.slice(),rounds=[];
+  const ids=TEAMS.map(t=>t.id);
+  const fixed=ids[0],rot=ids.slice(1);
+  const rounds=[];
   for(let r=0;r<11;r++){
-    let pairs=[];for(let i=0;i<6;i++){let x=a[i],y=a[11-i];pairs.push([x,y]);}
-    rounds.push(pairs);a=[a[0],a[11],...a.slice(1,11).slice(0,-1)];
+    const circle=[fixed,...rot.slice(r),...rot.slice(0,r)];
+    const pairs=[];
+    for(let i=0;i<6;i++)pairs.push([circle[i],circle[11-i]]);
+    rounds.push(...pairs);
   }
-  return rounds.flat();
+  return rounds;
 }
 function ensureSchedule(){
   if(state.generated && Array.isArray(state.games) && state.games.length)return;
@@ -199,7 +226,7 @@ function ensureSchedule(){
     games.push(...pairsThis);
   }
   state.games=games;state.generated=true;
-  autoLineup();autoRotation();
+  autoLineup(false);autoRotation(false);
 }
 function teamAttack(id){
   let ps=state.players.filter(p=>p.teamId===id&&!p.minor&&!p.retired&&!p.injury&&p.pos!=="P").sort((a,b)=>rating(b)-rating(a)).slice(0,9);
@@ -235,21 +262,37 @@ function recoverAndDevelop(){
     if(!p.injury&&!p.retired&&Math.random()<.0025){p.injury=Math.random()<.7?"軽傷":"負傷";p.injuryDays=p.injury==="軽傷"?3+Math.floor(Math.random()*5):10+Math.floor(Math.random()*16);}
   });
 }
-function advanceDay(){
-  if(!state)return renderTitle();
-  if(state.phase!=="regular"){
-    if(state.phase==="cs"){playCS();return;}
-    if(state.phase==="japan"){playJapan();return;}
-    return;
-  }
-  ensureSchedule();let d=state.currentDate.slice(0,10),today=gamesOn(d);today.filter(g=>!g.played).forEach(simulateGame);
+function processOneDay(render=false){
+  if(!state||state.phase!=="regular")return;
+  ensureSchedule();
+  const d=state.currentDate.slice(0,10);
+  const today=gamesOn(d).filter(g=>!g.played);
+  today.forEach(g=>simulateGame(g));
   recoverAndDevelop();
-  let nd=new Date(state.currentDate);nd.setUTCDate(nd.getUTCDate()+1);state.currentDate=nd.toISOString();
-  if(d>="2026-10-04"||state.games.every(g=>g.played)){completeRegularSeason();}
-  else state.lastMessage=today.length?`${today.length}試合を終了しました。`:`${dateStr(new Date(state.currentDate))}へ進みました。`;
-  renderGame("schedule");
+  const nd=new Date(state.currentDate); nd.setUTCDate(nd.getUTCDate()+1); state.currentDate=nd.toISOString();
+  if(state.games.every(g=>g.played)||d>="2026-10-04"){completeRegularSeason();}
+  else state.lastMessage=today.length?`${today.length}試合を消化しました。`:`${dateStr(new Date(state.currentDate))}へ進みました。`;
+  updateBGM();
+  if(render)renderGame("schedule");
 }
-function nextGame(){let d=state.currentDate.slice(0,10),g=state.games.find(g=>!g.played&&g.date>=d&& (g.home===state.controlTeam||g.away===state.controlTeam));if(!g){advanceDay();return;}state.currentDate=g.date+"T00:00:00Z";advanceDay();}
+function advanceDay(){
+  if(!state){renderTitle();return;}
+  if(state.phase==="cs"){playCS();return;}
+  if(state.phase==="japan"){playJapan();return;}
+  if(state.phase==="offseason"){renderGame("schedule");return;}
+  processOneDay(true);
+}
+function nextGame(){
+  if(!state)return;
+  if(state.phase!=="regular"){advanceDay();return;}
+  ensureSchedule();
+  const cur=state.currentDate.slice(0,10);
+  const g=state.games.find(x=>!x.played&&x.date>=cur&&(x.home===state.controlTeam||x.away===state.controlTeam));
+  if(!g){processOneDay(true);return;}
+  let guard=0;
+  while(state.phase==="regular"&&state.currentDate.slice(0,10)<g.date&&guard++<220)processOneDay(false);
+  if(state.phase==="regular")processOneDay(true);
+}
 function completeRegularSeason(){
   state.games.filter(g=>!g.played).forEach(()=>{});
   let league=state.teams;
@@ -271,10 +314,10 @@ function processOffseason(step){
   if(step===2){state.players.forEach(p=>{if(!p.retired&&p.contractYears<=1){p.freeAgent=true;}});state.lastMessage="FA権を持つ選手を公示しました。";}
   if(step===3){let targets=state.players.filter(p=>p.freeAgent&&p.teamId!==state.controlTeam&&!p.retired).sort((a,b)=>overall(b)-overall(a)).slice(0,2);targets.forEach(p=>{if(Math.random()<.45){p.teamId=state.controlTeam;p.freeAgent=false;p.contractYears=2;p.salary=Math.round((p.salary||1000)*1.25);}});state.lastMessage="FA補強を処理しました。";}
   if(step===4){for(let i=0;i<4;i++){let pos=Math.random()<.38?"P":(Math.random()<.5?"IF":"OF"),p=makePlayer(`${state.year+1}_rookie_${state.controlTeam}`,state.controlTeam,i+40,pos);p.name=NAMES[Math.floor(Math.random()*NAMES.length)]+"(新人)";p.age=18+Math.floor(Math.random()*3);p.talent=clamp100(55+Math.floor(Math.random()*40));p.potential=p.talent;p.development=p.talent>=80?"高成長":p.talent>=63?"普通":"低成長";p.minor=true;p.salary=700;p.contractYears=1;p.freeAgent=false;state.players.push(p);}state.lastMessage="ドラフトで新人4名を指名しました。";}
-  if(step===5){state.year++;state.currentDate=`${state.year}-03-27T00:00:00Z`;state.phase="regular";state.offseasonStep=0;state.generated=false;state.games=[];resetSeasonStats();state.players.forEach(p=>{if(p.retired)return;p.age++;if(p.contractYears>0)p.contractYears--;p.freeAgent=false;});autoLineup();autoRotation();ensureSchedule();state.lastMessage=`${state.year}年シーズン開幕。新しい一年が始まります。`;}
+  if(step===5){state.year++;state.currentDate=`${state.year}-03-27T00:00:00Z`;state.phase="regular";state.offseasonStep=0;state.generated=false;state.games=[];resetSeasonStats();state.players.forEach(p=>{if(p.retired)return;p.age++;if(p.contractYears>0)p.contractYears--;p.freeAgent=false;});autoLineup(false);autoRotation(false);ensureSchedule();state.lastMessage=`${state.year}年シーズン開幕。新しい一年が始まります。`;}
 }
 function migrateState(x){
-  let z=clone(x);z.version=7;z.teams=z.teams||{};z.players=z.players||[];z.lineups=z.lineups||{};z.rotation=z.rotation||{};z.phase=z.phase||"regular";z.offseasonStep=z.offseasonStep||0;z.seasonHistory=z.seasonHistory||[];z.lastMessage=z.lastMessage||"データをロードしました。";
+  let z=clone(x);z.version=9;z.teams=z.teams||{};z.players=z.players||[];z.lineups=z.lineups||{};z.rotation=z.rotation||{};z.phase=z.phase||"regular";z.offseasonStep=z.offseasonStep||0;z.seasonHistory=z.seasonHistory||[];z.lastMessage=z.lastMessage||"データをロードしました。";
   z.players.forEach(p=>{p.fatigue=p.fatigue||0;p.form=p.form||50;p.potential=p.potential||p.talent||60;p.development=p.development||"普通";p.retired=!!p.retired;p.freeAgent=!!p.freeAgent;p.salary=p.salary||900;p.contractYears=p.contractYears||1;p.special=p.special||[];p.catching=p.catching||0;p.trajectory=p.trajectory||0;});
   z.generated=false;ensureSchedule();return z;
 }
@@ -286,13 +329,13 @@ function playersView(){
   return `<div class="player-layout"><div class="panel player-list-panel"><div class="section-head"><div><h2>選手一覧</h2><small>${team(teamId).name}　${ps.length}人</small></div><span class="system-tag">ROSTER</span></div><div class="filters"><button class="filter-btn ${filter==="all"?"selected":""}" onclick="window.playerFilter='all';renderGame('players')">全選手</button><button class="filter-btn ${filter==="H"?"selected":""}" onclick="window.playerFilter='H';renderGame('players')">野手</button><button class="filter-btn ${filter==="P"?"selected":""}" onclick="window.playerFilter='P';renderGame('players')">投手</button></div><table class="player-table"><thead><tr><th>#</th><th>選手</th><th>位</th><th>総合</th><th>年齢</th><th>状態</th></tr></thead><tbody>${ps.map(p=>`<tr class="clickrow ${selected===p.id?"selected-row":""}" onclick="showPlayer('${p.id}')"><td>${p.number}</td><td>${p.name}</td><td><span class="pos-badge">${p.pos}</span></td><td>${ability(overall(p))}</td><td>${p.age}</td><td>${p.injury?`<span class=status-danger>${p.injury}</span>`:(p.minor?"二軍":`調${p.form}`)}</td></tr>`).join("")}</tbody></table></div><div class="panel player-detail-panel" id="playerDetail">${selected?"":`<div class=detail-empty>選手を選択してください</div>`}</div></div>`;
 }
 
-function renderTitle(){stopBGM();$("app").innerHTML=`<div class="title screen"><div class="title-box"><h2>PENNANT MANAGER</h2><p>ブラウザ型ペナントゲーム / Phase 7</p><div class="actions"><button class="primary" onclick="newGame()">はじめから</button><button onclick="loadScreen()">つづきから</button></div></div></div>`}
+function renderTitle(){stopBGM();$("app").innerHTML=`<div class="title screen"><div class="title-box"><h2>PENNANT MANAGER</h2><p>ブラウザ型ペナントゲーム / Phase 9</p><div class="actions"><button class="primary" onclick="newGame()">はじめから</button><button onclick="loadScreen()">つづきから</button></div></div></div>`}
 function newGame(){$("app").innerHTML=`<header><h1>球団選択</h1><small>操作球団を選択</small></header><div class="screen"><div class="team-grid">${TEAMS.map(t=>`<button class="team-card ${selectedTeam===t.id?"selected":""}" onclick="selectedTeam='${t.id}';newGame()"><strong>${t.name}</strong><span>${t.league} / ${t.city}</span></button>`).join("")}</div><div class="actions"><button onclick="renderTitle()">戻る</button><button class="primary" onclick="startGame()">この球団で開始</button></div></div>`}
-function startGame(){state=freshState(selectedTeam);ensureSchedule();unlockBGM();renderGame("schedule")}
-function loadScreen(){$("app").innerHTML=`<header><h1>つづきから</h1></header><div class="screen panel">${[1,2,3,4,5].map(s=>{let x=localStorage.getItem(SAVE_KEY+s)||localStorage.getItem(OLD_SAVE_KEY+s)||localStorage.getItem(OLD_SAVE_KEY2+s)||localStorage.getItem(OLD_SAVE_KEY3+s)||localStorage.getItem(OLD_SAVE_KEY4+s),label="空き";if(x){try{let z=JSON.parse(x);label=`${z.currentDate.slice(0,10)} / ${team(z.controlTeam).name}`}catch(e){}}return `<div class="match"><div>セーブ${s}<br><span class="small">${label}</span></div>${x?`<button onclick="load(${s})">ロード</button>`:`<button disabled>空き</button>`}</div>`}).join("")}<div class="actions" style="margin-top:16px"><button onclick="renderTitle()">戻る</button></div></div>`}
+function startGame(){try{state=freshState(selectedTeam);ensureSchedule();autoLineup(false);autoRotation(false);bgmUnlocked=true;renderGame("schedule");playCurrentBGM();}catch(e){console.error(e);alert("ゲーム開始処理でエラーが発生しました: "+e.message);state=null;renderTitle();}}
+function loadScreen(){$("app").innerHTML=`<header><h1>つづきから</h1></header><div class="screen panel">${[1,2,3,4,5].map(s=>{let x=localStorage.getItem(SAVE_KEY+s)||localStorage.getItem(OLD_SAVE_KEY0+s)||localStorage.getItem(OLD_SAVE_KEY+s)||localStorage.getItem(OLD_SAVE_KEY2+s)||localStorage.getItem(OLD_SAVE_KEY3+s)||localStorage.getItem(OLD_SAVE_KEY4+s)||localStorage.getItem(OLD_SAVE_KEY5+s),label="空き";if(x){try{let z=JSON.parse(x);label=`${z.currentDate.slice(0,10)} / ${team(z.controlTeam).name}`}catch(e){}}return `<div class="match"><div>セーブ${s}<br><span class="small">${label}</span></div>${x?`<button onclick="load(${s})">ロード</button>`:`<button disabled>空き</button>`}</div>`}).join("")}<div class="actions" style="margin-top:16px"><button onclick="renderTitle()">戻る</button></div></div>`}
 function safeRender(area){try{renderGame(area);}catch(e){console.error(e);state.lastMessage="画面表示でエラーが発生しました。日程データを再構築します。";state.generated=false;state.games=[];try{ensureSchedule();renderGame(area);}catch(e2){alert("画面の表示に失敗しました。ページを再読み込みしてください。");console.error(e2);}}}
 function nav(a){return `<div class="main-nav"><button class="${a==="schedule"?"active":""}" onclick="safeRender('schedule')">日程表</button><button class="${a==="players"?"active":""}" onclick="safeRender('players')">選手</button><button class="${a==="lineup"?"active":""}" onclick="safeRender('lineup')">采配</button><button class="${a==="newstrength"?"active":""}" onclick="safeRender('newstrength')">新戦力</button><button class="${a==="teaminfo"?"active":""}" onclick="safeRender('teaminfo')">球団情報</button><button class="${a==="save"?"active":""}" onclick="safeRender('save')">セーブ</button><button onclick="renderTitle()">タイトル画面に戻る</button></div>`}
-function renderGame(a="schedule"){if(!state){renderTitle();return;}ensureSchedule();let ct=team(state.controlTeam);let phaseText=state.phase==="regular"?"レギュラーシーズン":state.phase==="cs"?"クライマックスシリーズ":state.phase==="japan"?"日本シリーズ":"オフシーズン";$('app').innerHTML=`<header class="game-header"><div class="brand"><div class="brand-mark">PM</div><div><h1>${ct.name}</h1><small>${state.year}　${phaseText}</small></div></div><div class="header-date"><small>GAME DATE</small><b>${dateStr(new Date(state.currentDate))}</b><div class="header-tools"><button onclick="advanceDay()">▶ 次の日</button><button onclick="toggleBGM()">♪ BGM ${bgmEnabled?"ON":"OFF"}</button></div></div></header><div class="screen"><div class="season-ribbon"><span>${phaseText}</span><b>${dateStr(new Date(state.currentDate))}</b><span>操作球団：${ct.name}</span></div>${nav(a)}<div style="margin:14px 0"><div class="notice">${state.lastMessage}</div></div>${a==="schedule"?scheduleView():a==="players"?playersView():a==="lineup"?lineupView():a==="standings"?standingsView():a==="newstrength"?newStrengthView():a==="teaminfo"?teamInfoView():saveView()}</div><footer>PAWA-PENNANT INSPIRED / Phase 7</footer>`;updateBGM();if(a==="players"&&window.selectedPlayer)showPlayer(window.selectedPlayer)}
+function renderGame(a="schedule"){if(!state){renderTitle();return;}ensureSchedule();let ct=team(state.controlTeam);let phaseText=state.phase==="regular"?"レギュラーシーズン":state.phase==="cs"?"クライマックスシリーズ":state.phase==="japan"?"日本シリーズ":"オフシーズン";$('app').innerHTML=`<header class="game-header"><div class="brand"><div class="brand-mark">PM</div><div><h1>${ct.name}</h1><small>${state.year}　${phaseText}</small></div></div><div class="header-date"><small>GAME DATE</small><b>${dateStr(new Date(state.currentDate))}</b><div class="header-tools"><button onclick="advanceDay()">▶ 次の日</button><button onclick="toggleBGM()">♪ BGM ${bgmEnabled?"ON":"OFF"}</button></div></div></header><div class="screen"><div class="season-ribbon"><span>${phaseText}</span><b>${dateStr(new Date(state.currentDate))}</b><span>操作球団：${ct.name}</span></div>${nav(a)}<div style="margin:14px 0"><div class="notice">${state.lastMessage}</div></div>${a==="schedule"?scheduleView():a==="players"?playersView():a==="lineup"?lineupView():a==="standings"?standingsView():a==="newstrength"?newStrengthView():a==="teaminfo"?teamInfoView():saveView()}</div><footer>PAWA-PENNANT INSPIRED / Phase 9</footer>`;updateBGM();if(a==="players"&&window.selectedPlayer)showPlayer(window.selectedPlayer)}
 
 function scheduleView(){
   if(state.phase!=="regular")return postseasonView();
@@ -309,16 +352,16 @@ function scheduleView(){
   const ctl=state.teams[state.controlTeam];
   return `<div class="schedule-layout"><div><div class="pp-strip"><span>日程表</span><span>${state.year}年 ${cur.getUTCMonth()+1}月</span></div><div class="schedule-board">${cols}</div><div class="panel" style="margin-top:12px;padding:0"><div class="pp-strip"><span>本日の試合</span><span class="kbd">${dateStr(cur)}</span></div>${todayHtml}</div><div class="panel" style="margin-top:12px"><h3>シーズン状況</h3><div class="statline"><div class="statbox"><b>${ctl.wins}</b><span>勝利</span></div><div class="statbox"><b>${ctl.losses}</b><span>敗戦</span></div><div class="statbox"><b>${standings(team(state.controlTeam).league)[0]?.name===team(state.controlTeam).name?"1位":"-"}</b><span>リーグ順位</span></div><div class="statbox"><b>${Math.round(calcTeamPower(state.controlTeam))}</b><span>チーム力</span></div></div></div></div><div class="schedule-right"><div class="panel"><h3>シーズン操作</h3><div class="day-controls"><button class="primary" onclick="advanceDay()">▶ 次の日へ</button><button onclick="nextGame()">▶ 自球団の次の試合へ</button><button onclick="skipDays(7)">▶ 1週間進める</button></div><div class="subnav"><button onclick="jumpToMonth(6)">オールスター前へ</button><button onclick="jumpToDate('2026-10-05')">CSへ</button></div></div><div class="panel"><h3>チームメニュー</h3><div class="day-controls"><button onclick="safeRender('players')">選手データを見る</button><button onclick="safeRender('lineup')">采配・登録設定</button><button onclick="safeRender('newstrength')">新戦力を探す</button></div></div><div class="panel"><h3>現在の順位</h3>${standings(team(state.controlTeam).league).map((x,i)=>`<div class="rank-mini"><b>${i+1}</b><span>${x.name}</span><strong>${x.wins}-${x.losses}</strong></div>`).join("")}</div></div></div>`;
 }
-function skipDays(n){for(let i=0;i<n;i++){if(!state||state.phase!=="regular")break;advanceDay();if(state.phase!=="regular")break;}}
-function jumpToDate(d){state.currentDate=d+"T00:00:00Z";if(state.phase==="regular"&&d>"2026-10-04")completeRegularSeason();renderGame("schedule")}
-function jumpToMonth(month){let d=new Date(state.currentDate);d.setUTCMonth(month-1,1);state.currentDate=d.toISOString();state.lastMessage="日程をジャンプしました。";renderGame("schedule")}
+function skipDays(n){if(!state)return;n=Math.max(1,Math.min(30,Number(n)||1));for(let i=0;i<n&&state.phase==="regular";i++)processOneDay(false);renderGame("schedule");}
+function jumpToDate(d){if(!state)return;if(state.phase!=="regular")return renderGame("schedule");const target=new Date(d+"T00:00:00Z");if(target<new Date(state.currentDate)){state.lastMessage="過去の日付には戻れません。";return renderGame("schedule");}let guard=0;while(new Date(state.currentDate)<target&&state.phase==="regular"&&guard++<220)processOneDay(false);renderGame("schedule");}
+function jumpToMonth(month){if(!state||state.phase!=="regular")return renderGame("schedule");const target=new Date(Date.UTC(state.year,month-1,1));if(target<=new Date(state.currentDate)){state.lastMessage="すでにこの月を迎えています。";return renderGame("schedule");}let guard=0;while(new Date(state.currentDate)<target&&state.phase==="regular"&&guard++<220)processOneDay(false);state.lastMessage=`${month}月まで早送りしました。`;renderGame("schedule");}
 function postseasonView(){let title=state.phase==="cs"?"クライマックスシリーズ":state.phase==="japan"?"日本シリーズ":"オフシーズン";if(state.phase==="offseason")return offseasonView();return `<div class="grid2"><div class="panel"><div class="pp-strip"><span>${title}</span><span class="pp-yellow">${dateStr(new Date(state.currentDate))}</span></div><div class="result-banner" style="margin-top:12px">${state.lastMessage}</div><div class="roster-actions" style="margin-top:14px"><button class="primary" onclick="advanceDay()">▶ 次へ進む</button></div></div><div class="panel"><h3>シリーズ結果</h3>${(state.postseason?.results||[]).map(x=>`<div class="match"><span>${x}</span></div>`).join("")||`<p class=small>まだ結果はありません。</p>`}</div></div>`}
 function offseasonView(){let steps=["引退","FA","FA獲得","ドラフト","新年度"];return `<div class="offseason-card"><div class="panel"><div class="pp-strip"><span>オフシーズン</span><span>STEP ${state.offseasonStep}/5</span></div><div class="event-list" style="margin-top:12px">${steps.map((x,i)=>`<button class="event-btn ${state.offseasonStep>=i+1?"done":""}" onclick="processOffseason(${i+1});renderGame('schedule')">${state.offseasonStep>=i+1?"✓":"▶"} ${x}</button>`).join("")}</div><div class="notice" style="margin-top:12px">${state.lastMessage}</div></div><div class="panel"><h3>年度総括</h3><div class="statline"><div class="statbox"><b>${team(state.controlTeam).name}</b><span>操作球団</span></div><div class="statbox"><b>${state.teams[state.controlTeam].wins}</b><span>勝利数</span></div><div class="statbox"><b>${state.postseason?.champion?team(state.postseason.champion).name:"-"}</b><span>日本一</span></div><div class="statbox"><b>${teamPayroll(state.controlTeam).toLocaleString()}</b><span>年俸総額</span></div></div><h3 style="margin-top:18px">契約状況</h3>${state.players.filter(p=>p.teamId===state.controlTeam&&!p.retired).sort((a,b)=>b.salary-a.salary).slice(0,8).map(p=>`<div class="market-row"><div>${p.name}<span class=small> ${p.contractYears}年契約</span></div><b class=money>${(p.salary||0).toLocaleString()}万</b></div>`).join("")}</div></div>`}
 function showPlayer(id){let p=playerById(id),box=$("playerDetail");if(!box||!p)return;window.selectedPlayer=id;let status=p.injury?`<span class="status-danger">${p.injury} 残${p.injuryDays}日</span>`:`<span class="team-state">${p.minor?"二軍":"一軍"}</span>`;let header=`<div class="detail-title"><div><div class="player-number">${p.number}</div><div><h2 class="classic-title">${p.name}</h2><p>${p.age}歳　${p.pos}　${p.bats}打${p.throws}投　${status}</p></div></div><div class="overall-card rating-xl">${ability(overall(p))}<span>総合</span></div></div>`;let common=`<div class="mini-stats"><div><small>疲労</small><b>${p.fatigue}</b></div><div><small>調子</small><b>${p.form}</b></div><div><small>潜在能力</small><b>${p.potential||"-"}</b></div><div><small>成長タイプ</small><b>${p.development}</b></div></div>`;if(p.pos==="P")box.innerHTML=header+common+`<div class="ability-block"><h3>投手能力</h3><div class="ability-box"><div class="ability-cell"><span>球速</span><b class="raw-stat">${p.velocity}<small>km/h</small></b></div><div class="ability-cell"><span>コントロール</span>${ability(p.control)}</div><div class="ability-cell"><span>スタミナ</span>${ability(p.stamina)}</div><div class="ability-cell"><span>投球タイプ</span><b>${p.role}</b></div></div><div class="special-box"><h3>変化球・特殊能力</h3><div class="special-chips"><span>ストレート</span><span>カーブ</span>${p.special.map(x=>`<span>${x}</span>`).join("")}</div></div></div><h3 class="subhead">今季成績</h3><div class="statline large"><div class="statbox"><b>${p.wins}</b><span>勝利</span></div><div class="statbox"><b>${p.era.toFixed(2)}</b><span>防御率</span></div><div class="statbox"><b>${p.ip.toFixed(1)}</b><span>投球回</span></div><div class="statbox"><b>${p.so}</b><span>奪三振</span></div></div><div class="info-lines" style="margin-top:12px"><div><span>年俸</span><b class="money">${(p.salary||0).toLocaleString()}万円</b></div><div><span>契約年数</span><b>${p.contractYears||1}年</b></div></div>`;else box.innerHTML=header+common+`<div class="ability-block"><h3>野手能力</h3><div class="ability-box"><div class="ability-cell"><span>ミート</span>${ability(p.contact)}</div><div class="ability-cell"><span>パワー</span>${ability(p.power)}</div><div class="ability-cell"><span>走力</span>${ability(p.speed)}</div><div class="ability-cell"><span>肩力</span>${ability(p.arm)}</div><div class="ability-cell"><span>守備力</span>${ability(p.def)}</div><div class="ability-cell"><span>捕球</span>${ability(p.catching)}</div></div><div class="trajectory"><span>弾道</span>${[1,2,3,4].map(x=>`<i class="${x<=p.trajectory?"on":""}"></i>`).join("")}<b>${p.trajectory}</b></div><div class="special-box"><h3>特殊能力</h3><div class="special-chips">${p.special.map(x=>`<span>${x}</span>`).join("")}</div></div></div><h3 class="subhead">今季成績</h3><div class="statline large"><div class="statbox"><b>${p.avg.toFixed(3)}</b><span>打率</span></div><div class="statbox"><b>${p.hits}</b><span>安打</span></div><div class="statbox"><b>${p.hr}</b><span>本塁打</span></div><div class="statbox"><b>${p.rbi}</b><span>打点</span></div></div><div class="info-lines" style="margin-top:12px"><div><span>年俸</span><b class="money">${(p.salary||0).toLocaleString()}万円</b></div><div><span>契約年数</span><b>${p.contractYears||1}年</b></div></div>`}
 function lineupView(){let id=state.controlTeam,order=(state.lineups[id]||[]).map(playerById).filter(Boolean),rot=(state.rotation[id]||[]).map(playerById).filter(Boolean);let bench=state.players.filter(p=>p.teamId===id&&p.minor);return `<div class="grid2"><div class="panel"><h3>スターティングラインナップ</h3><ol class=depth-list>${order.map((p,i)=>`<li><b>${i+1}番</b>　${p.name} <span class=pos>${p.pos}</span>　<span class=small>疲${p.fatigue} 調${p.form}</span></li>`).join("")}</ol><div class=roster-actions><button onclick="autoLineup()">自動編成</button></div><h3 style="margin-top:18px">一軍・二軍</h3><p class=small>二軍選手：${bench.length}人</p><div class=roster-actions>${bench.slice(0,8).map(p=>`<button onclick="promote('${p.id}')">${p.name} 一軍昇格</button>`).join("")}</div></div><div class="panel"><h3>先発ローテーション</h3><ol class=depth-list>${rot.map((p,i)=>`<li>${i+1}　${p.name}　${p.velocity}km/h　制球${p.control}　疲${p.fatigue}</li>`).join("")}</ol><div class=roster-actions><button onclick="autoRotation()">自動編成</button></div><h3 style="margin-top:18px">状態管理</h3><p class=small>試合後に疲労が蓄積し、休養日に回復します。調子は日々変動し、怪我は一定確率で発生します。</p></div></div>`}
 function promote(id){let p=playerById(id);if(!p||!p.minor)return;let active=state.players.filter(x=>x.teamId===state.controlTeam&&!x.minor&&!x.injury);if(active.length>=28){let target=active.sort((a,b)=>rating(a)-rating(b))[0];target.minor=true;}p.minor=false;autoLineup();state.lastMessage=`${p.name}を一軍に昇格させました。`;renderGame("lineup")}
-function autoLineup(){let ps=state.players.filter(p=>p.teamId===state.controlTeam&&!p.minor&&!p.injury&&p.pos!=="P").sort((a,b)=>rating(b)-rating(a));state.lineups[state.controlTeam]=ps.slice(0,9).map(p=>p.id);state.lastMessage="打順を能力・コンディションを考慮して自動編成しました。";renderGame("lineup")}
-function autoRotation(){let ps=state.players.filter(p=>p.teamId===state.controlTeam&&!p.minor&&!p.injury&&p.pos==="P").sort((a,b)=>rating(b)-rating(a));state.rotation[state.controlTeam]=ps.slice(0,5).map(p=>p.id);state.lastMessage="先発ローテーションを能力・コンディションを考慮して自動編成しました。";renderGame("lineup")}
+function autoLineup(render=true){if(!state)return;let ps=state.players.filter(p=>p.teamId===state.controlTeam&&!p.retired&&!p.minor&&!p.injury&&p.pos!=="P").sort((a,b)=>rating(b)-rating(a));state.lineups=state.lineups||{};state.lineups[state.controlTeam]=ps.slice(0,9).map(p=>p.id);state.lastMessage="打順を能力・コンディションを考慮して自動編成しました。";if(render&&typeof renderGame==="function")renderGame("lineup")}
+function autoRotation(render=true){if(!state)return;let ps=state.players.filter(p=>p.teamId===state.controlTeam&&!p.retired&&!p.minor&&!p.injury&&p.pos==="P").sort((a,b)=>rating(b)-rating(a));state.rotation=state.rotation||{};state.rotation[state.controlTeam]=ps.slice(0,5).map(p=>p.id);state.lastMessage="先発ローテーションを能力・コンディションを考慮して自動編成しました。";if(render&&typeof renderGame==="function")renderGame("lineup")}
 function standingsView(){let row=(x,i)=>`<tr><td>${i+1}</td><td>${x.name}</td><td class=num>${x.wins}</td><td class=num>${x.losses}</td><td class=num>${x.ties}</td><td class=num>${x.runsFor-x.runsAgainst>0?"+":""}${x.runsFor-x.runsAgainst}</td></tr>`;return `<div class=grid2><div class=panel><h3>セ・リーグ</h3><table><thead><tr><th>順位</th><th>球団</th><th class=num>勝</th><th class=num>敗</th><th class=num>分</th><th class=num>得失</th></tr></thead><tbody>${standings("セ").map(row).join("")}</tbody></table></div><div class=panel><h3>パ・リーグ</h3><table><thead><tr><th>順位</th><th>球団</th><th class=num>勝</th><th class=num>敗</th><th class=num>分</th><th class=num>得失</th></tr></thead><tbody>${standings("パ").map(row).join("")}</tbody></table></div></div>`}
 function newStrengthView(){
   let own=state.players.filter(p=>p.teamId===state.controlTeam&&p.minor).sort((a,b)=>overall(b)-overall(a)).slice(0,6);
