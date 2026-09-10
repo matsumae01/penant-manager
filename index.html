@@ -2106,6 +2106,143 @@ function season(){
 })();
 </script>
 
+<style id="bgm8-19-final">
+/* BGM8.19: compact results / taller standings */
+#main .schedule-command-row{align-items:start!important}
+#main .schedule-results-panel .panel-body{min-height:0!important;height:auto!important}
+#main .schedule-results-half .v12-results-nav{margin-bottom:4px!important}
+#main .schedule-standings-panel .panel-body{min-height:170px!important}
+#main .schedule-standings-panel table{font-size:12px!important}
+#main .schedule-standings-panel th,#main .schedule-standings-panel td{padding:5px 6px!important;line-height:1.25!important}
+</style>
+<script>
+/* BGM8.19 canonical fixes */
+(function(){
+  const KEY=(y,m,d)=>gameDateKey(y,m,d);
+  function ensureArray(o,k){if(!Array.isArray(o[k]))o[k]=[];return o[k]}
+  function ensureEventStore(){ensureArray(S,'eventGameLogs');if(!S.eventFlags)S.eventFlags={allStar:false,cl:false,pl:false,japan:false};}
+  function eventGame(date,home,away,hs,as,kind,stage){
+    ensureEventStore();
+    S.eventGameLogs.push({date,home,away,homeScore:hs,awayScore:as,kind,stage:stage||''});
+  }
+  function clearEventKind(kind){ensureEventStore();S.eventGameLogs=S.eventGameLogs.filter(g=>g.kind!==kind)}
+  function scoreForSeed(a,b){const sa=(Number(a)||50)+R(-6,6), sb=(Number(b)||50)+R(-6,6);let x=Math.max(0,Math.round(2+sa/24+R(-1,2))),y=Math.max(0,Math.round(2+sb/24+R(-1,2)));if(x===y)x++;return [x,y]}
+  function standingsFor(ids){return ids.map(i=>S.standings.find(x=>x.team===teams[i])||{team:teams[i],w:0,l:0}).slice().sort((a,b)=>(b.w-b.l)-(a.w-a.l))}
+  function teamStrength(name){const idx=teams.indexOf(name),c=(S.cpuTeams||[]).find(x=>x.team===name);if(name===team())return dailyTeamStrength();return c?c.strength:52}
+  function simSeries(label,kind,dates,top,second,third,leagueName){
+    let a,b,wA=0,wB=0; const out=[];
+    if(label==='CS 1st'){
+      a=second;b=third;
+      for(let i=0;i<3;i++){[x,y]=scoreForSeed(teamStrength(a),teamStrength(b));out.push([dates[i],a,b,x,y,kind,label]);if(x>y)wA++;else wB++; if(wA===2||wB===2)break;}
+      return {winner:wA>=2?a:b,logs:out};
+    }
+    a=top;b=second; wA=2; // 2026 rule: 1位はアドバンテージ2勝。5勝先取の最大7試合制。
+    for(let i=0;i<6;i++){[x,y]=scoreForSeed(teamStrength(a),teamStrength(b));out.push([dates[i],a,b,x,y,kind,label]);if(x>y)wA++;else wB++;if(wA>=5||wB>=5)break;}
+    return {winner:wA>=5?a:b,logs:out};
+  }
+  function simulateChampionships(){
+    ensureEventStore();
+    clearEventKind('cs');clearEventKind('japanseries');
+    const cl=standingsFor(CENTRAL_TEAMS),pl=standingsFor(PACIFIC_TEAMS);
+    const dates1=[KEY(S.year,10,10),KEY(S.year,10,11),KEY(S.year,10,12)];
+    const dates2=[KEY(S.year,10,14),KEY(S.year,10,15),KEY(S.year,10,16),KEY(S.year,10,17),KEY(S.year,10,18),KEY(S.year,10,19),KEY(S.year,10,20)];
+    const c1=simSeries('CS 1st','cs',dates1,cl[0].team,cl[1].team,cl[2].team,'セ');
+    const p1=simSeries('CS 1st','cs',dates1,pl[0].team,pl[1].team,pl[2].team,'パ');
+    const c2=simSeries('CS Final','cs',dates2,cl[0].team,c1.winner,null,'セ');
+    const p2=simSeries('CS Final','cs',dates2,pl[0].team,p1.winner,null,'パ');
+    [...c1.logs,...p1.logs,...c2.logs,...p2.logs].forEach(g=>eventGame(...g));
+    const japanDates=[KEY(S.year,10,24),KEY(S.year,10,25),KEY(S.year,10,27),KEY(S.year,10,28),KEY(S.year,10,29),KEY(S.year,10,31),KEY(S.year,11,1)];
+    const japanHome=c2.winner, japanAway=p2.winner; let wh=0,wa=0;
+    for(let i=0;i<7;i++){
+      const home=i<2||i>=5?japanHome:japanAway, away=i<2||i>=5?japanAway:japanHome;
+      let [hs,as]=scoreForSeed(teamStrength(home),teamStrength(away));
+      eventGame(japanDates[i],home,away,hs,as,'japanseries','日本シリーズ 第'+(i+1)+'戦');
+      if(hs>as)wh++;else wa++; if(wh>=4||wa>=4)break;
+    }
+    S.championships={centralChampion:c2.winner,pacificChampion:p2.winner,japanChampion:wh>=4?japanHome:japanAway};
+    S.eventFlags.cl=true;S.eventFlags.pl=true;S.eventFlags.japan=true;
+    S.news.unshift(`${S.year}年CS・日本シリーズの全試合結果をシミュレーションしました。`);
+  }
+  function simulateAllStar(){
+    ensureEventStore();clearEventKind('allstar');
+    const date1=KEY(S.year,7,28),date2=KEY(S.year,7,29);
+    const cl=standingsFor(CENTRAL_TEAMS),pl=standingsFor(PACIFIC_TEAMS);
+    let [a,b]=scoreForSeed(cl[0]?cl[0].team:'セ・リーグ',pl[0]?pl[0].team:'パ・リーグ');eventGame(date1,'セ・リーグ','パ・リーグ',a,b,'allstar','オールスター 第1戦');
+    [a,b]=scoreForSeed(pl[0]?pl[0].team:'パ・リーグ',cl[0]?cl[0].team:'セ・リーグ');eventGame(date2,'パ・リーグ','セ・リーグ',a,b,'allstar','オールスター 第2戦');
+    S.eventFlags.allStar=true;S.news.unshift(`${S.year}年オールスターゲームの結果をシミュレーションしました。`);
+  }
+  function rebuildCalendar(year){
+    year=Number(year)||2026;
+    const inter=[];for(let d=new Date(year,4,26);d<=new Date(year,5,14);d.setDate(d.getDate()+1)){if(d.getDay()!==1)inter.push(KEY(year,d.getMonth()+1,d.getDate()));}
+    const normal=[];for(let d=new Date(year,2,27);d<=new Date(year,9,4);d.setDate(d.getDate()+1)){const k=KEY(year,d.getMonth()+1,d.getDate());if(!inter.includes(k)&&d.getDay()!==1)normal.push(k);}
+    const opening=[KEY(year,3,27),KEY(year,3,28),KEY(year,3,29),KEY(year,3,31)];
+    const rest=normal.filter(k=>!opening.includes(k));
+    const need=125-opening.length;
+    const picked=[];
+    for(let i=0;i<need;i++){const idx=Math.floor(i*rest.length/need);picked.push(rest[Math.min(rest.length-1,idx)]);}
+    return [...new Set([...opening,...picked,...inter])].sort();
+  }
+  window.seasonCalendar=rebuildCalendar;
+  window.playGameDay=function(){
+    const k=KEY(S.year,S.month,S.day); if(S.phase!=='regular'||k<KEY(S.year,3,27)||k>KEY(S.year,10,4))return false;
+    const sch=gameScheduleForToday();if(!sch)return false;
+    const me=S.standings[S.team],os=S.standings[sch.opponent];recoverInjuries();cpuManagementDay();
+    const strength=dailyTeamStrength(),opp=(S.cpuTeams||[]).find(x=>x.team===teams[sch.opponent]);let [myScore,oppScore]=scoreForSeed(strength,opp?opp.strength:52);
+    const won=myScore>oppScore;if(won){me.w++;S.wins++;S.money+=30}else{me.l++;S.losses++}if(oppScore>myScore)os.w++;else os.l++;
+    if(sch.interleague){const A=S.interleagueRecords[S.team],B=S.interleagueRecords[sch.opponent];if(won){A.w++;B.l++}else{B.w++;A.l++}}
+    addLeagueGameLog(sch.home?S.team:sch.opponent,sch.home?sch.opponent:S.team,myScore,oppScore);simulateOtherLeagueGames(schedulePairings(sch.index));
+    addGameLog({date:k,opponent:teams[sch.opponent],myScore,oppScore,result:won?'○':'●',home:sch.home,summary:`${team()}が${myScore}-${oppScore}で${won?'勝利':'敗戦'}。`,highlight:`${team()} ${myScore}-${oppScore} ${teams[sch.opponent]}`,keyPlays:[`${team()} ${myScore}-${oppScore} ${teams[sch.opponent]}。`],pitcherLine:'—',duration:`${R(2,4)}時間${R(5,59)}分`,gameNo:(S.gameNo||0)+1});
+    S.gameNo=(S.gameNo||0)+1;S.seasonGames=(S.seasonGames||0)+1;return true;
+  };
+  window.advanceDay=function(){
+    const k=KEY(S.year,S.month,S.day);
+    if(k===KEY(S.year,7,28)){simulateAllStar();window.selectedLeagueDate=k;S.day++;render();autoSave();return;}
+    if(k===KEY(S.year,7,29)){if(!S.eventFlags?.allStar)simulateAllStar();window.selectedLeagueDate=k;S.day++;render();autoSave();return;}
+    if(S.phase==='regular' && k>=KEY(S.year,3,27) && k<=KEY(S.year,10,4)){
+      const played=window.playGameDay();
+      if(!played){window.selectedLeagueDate=k;restOnTravelDay();S.news.push(`${S.year}年${S.month}月${S.day}日：移動日。次戦に備えてコンディションを調整します。`);}
+      else window.selectedLeagueDate=k;
+    }
+    const isLast=k===KEY(S.year,10,4);
+    const lastDay=new Date(S.year,S.month,0).getDate();
+    S.day++;
+    if(S.day>lastDay){S.day=1;S.month++;if(S.month>12){S.month=1;S.year++;}}
+    if(isLast){S.month=10;S.day=10;}
+    render();autoSave();
+  };
+  window.advanceToAllStar=function(){
+    const target=KEY(S.year,7,28);let guard=0;
+    while(KEY(S.year,S.month,S.day)<target&&guard++<400)oldAdvanceDay();
+    simulateAllStar();S.month=7;S.day=28;S.phase='regular';window.selectedLeagueDate=target;autoSave();render();
+  };
+  window.advanceToInterleague=function(){
+    const target=KEY(S.year,5,26);let guard=0;while(KEY(S.year,S.month,S.day)<target&&guard++<400)oldAdvanceDay();S.month=5;S.day=26;S.phase='regular';window.selectedLeagueDate=target;autoSave();render();
+  };
+  window.advanceToCS=function(){
+    const target=KEY(S.year,10,10);let guard=0;while(KEY(S.year,S.month,S.day)<=KEY(S.year,10,4)&&guard++<500){if(KEY(S.year,S.month,S.day)>=target)break;oldAdvanceDay();}
+    simulateChampionships();S.month=10;S.day=10;S.phase='regular';window.selectedLeagueDate=target;autoSave();render();
+  };
+  window.advanceToJapanSeries=function(){
+    simulateChampionships();S.month=10;S.day=24;S.phase='regular';window.selectedLeagueDate=KEY(S.year,10,24);S.news.unshift(`${S.year}年日本シリーズ開幕。${S.championships.centralChampion} vs ${S.championships.pacificChampion}。`);autoSave();render();
+  };
+  window.advanceToDraft=function(){S.month=10;S.day=22;S.phase='offseason';window.selectedLeagueDate=KEY(S.year,10,22);autoSave();render()};
+  window.advanceToSeasonEnd=function(){simulateChampionships();S.month=11;S.day=2;S.phase='offseason';window.selectedLeagueDate=KEY(S.year,11,2);autoSave();render()};
+  /* Load/title: keep the title load flow separate from game save management. */
+  window.openLoadScreen=function(){screen='menu';menuMode='load';render()};
+  window.continueGame=function(){openLoadScreen()};
+  window.loadSlot=function(i){const d=slotInfo(i);if(!d){alert('このセーブ枠にはデータがありません。');return}S=JSON.parse(JSON.stringify(d));migrate();migrateV7();screen='game';tab='season';menuMode='menu';window.rosterMode='list';window.selectedRosterId=null;window.selectedLeagueDate=KEY(S.year,S.month,S.day);startBgm('game');render()};
+  window.v13ReturnToTitle=function(){try{autoSave()}catch(e){}stopBgm();screen='title';menuMode='menu';render()};
+  window.returnTitle=function(){window.v13ReturnToTitle()};
+  /* New game must always open on 日程表. */
+  const oldConfirm=window.confirmNewGameSetup;
+  window.confirmNewGameSetup=function(){oldConfirm();tab='season';render()};
+  /* Remove legacy week buttons even when an old renderer leaks them. */
+  setTimeout(function(){document.querySelectorAll('button').forEach(function(b){if((b.textContent||'').includes(''))b.remove()})},0);
+  ensureEventStore();
+  if(!S.eventFlags)S.eventFlags={allStar:false,cl:false,pl:false,japan:false};
+  if(!S.championships)S.championships={centralChampion:null,pacificChampion:null,japanChampion:null};
+})();
+</script>
 </body></html>
 <style>
 /* BGM8.2: fixed two-column schedule command board */
@@ -2410,7 +2547,7 @@ function season(){
   const __season18=window.season;
   window.season=function(){
     const html=__season18();
-    return html.replace(/<button[^>]*onclick=\"advanceWeek\(\)\"[^>]*>1週間進める<\/button>/g,'').replace(/1週間進める/g,'');
+    return html;
   };
   ensureEventStore(); processSpecialEvents();
 })();
