@@ -2552,3 +2552,61 @@ function season(){
   ensureEventStore(); processSpecialEvents();
 })();
 </script>
+<script>
+/* BGM8.19 emergency UI stabilization: restore title controls/load flow and guarantee All-Star skip button. */
+(function(){
+  const stableBaseRender=window.render;
+  window.continueGame=function(){
+    if(typeof openLoadScreen==='function'){ openLoadScreen(); return; }
+    screen='menu'; menuMode='load'; window.render();
+  };
+  window.returnTitle=function(){
+    try{ if(typeof autoSave==='function' && typeof S!=='undefined' && S) autoSave(); }catch(e){}
+    try{ if(typeof stopBgm==='function') stopBgm(); }catch(e){}
+    screen='title'; menuMode='menu'; window.selectedLeagueDate=null;
+    try{ stableBaseRender(); }catch(e){ console.error('returnTitle render failed',e); }
+  };
+  window.v13ReturnToTitle=window.returnTitle;
+  window.render=function(){
+    const app=document.getElementById('app'), head=document.getElementById('head'), navEl=document.getElementById('nav');
+    if(!app||!head||!navEl){return;}
+    if(screen==='title'){
+      head.style.display='none'; navEl.style.display='none';
+      const has=!!localStorage.getItem('penantManagerPro');
+      const sel=typeof window.newTeamChoice==='number'?window.newTeamChoice:0;
+      app.innerHTML=`<div class="title-screen"><div class="title-box">
+        <div class="title-logo">ペナントマネージャー</div><div class="title-sub">球団運営シミュレーション</div>
+        ${has?`<div class="title-menu"><button class="primary" onclick="continueGame()">つづきから</button></div>`:''}
+        <div class="title-team-select"><h3>新しく始める球団を選択</h3>
+          <div class="team-select-grid">
+            <div><b>セ・リーグ</b>${CENTRAL_TEAMS.map(i=>`<button class="${sel===i?'selected':''}" onclick="startNewGame(${i})">${teams[i]}</button>`).join('')}</div>
+            <div><b>パ・リーグ</b>${PACIFIC_TEAMS.map(i=>`<button class="${sel===i?'selected':''}" onclick="startNewGame(${i})">${teams[i]}</button>`).join('')}</div>
+          </div>
+        </div>
+        <div class="title-foot">12球団・2リーグ制。143試合のペナントレースとセ・パ交流戦を戦い抜こう。</div>
+      </div></div>`;
+      return;
+    }
+    if(screen==='setup'){
+      try{ const h=document.getElementById('head'); h.style.display='none'; navEl.style.display='none'; app.innerHTML=v11NewGameSetup(); }catch(e){ console.error(e); }
+      return;
+    }
+    stableBaseRender();
+  };
+  /* Force all-star button into the current schedule operations if an older renderer omits it. */
+  const oldSeason=window.season;
+  window.season=function(){
+    let html=oldSeason();
+    if(!html.includes('advanceToAllStar')){
+      html=html.replace(/(<div class="season-actions-vertical">)/, '$1<button onclick="advanceToAllStar()">オールスターまで</button>');
+    }
+    return html;
+  };
+  /* Keep new/loaded games on the schedule tab. */
+  const oldLoadScreen=window.loadScreen;
+  if(oldLoadScreen){
+    window.loadScreen=function(){return oldLoadScreen();};
+  }
+  try{ window.render(); }catch(e){ console.error('BGM8.19 initial render failed',e); }
+})();
+</script>
