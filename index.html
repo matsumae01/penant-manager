@@ -34,6 +34,13 @@
 .market-table-v14{width:100%;border-collapse:collapse;font-size:10px}.market-table-v14 th{background:#173f78;color:#fff;padding:6px}.market-table-v14 td{padding:6px;border-bottom:1px solid #ccd8e5;background:#fff}.market-table-v14 tr:hover td{background:#edf7ff}.market-table-v14 .me td{background:#fff3bf}
 @media(max-width:900px){.order-shell-v14{grid-template-columns:1fr}.dugout-v14{grid-template-columns:1fr}.ability-grid-v14{grid-template-columns:1fr}.quick-strip-v14{grid-template-columns:1fr 1fr}.schedule-board-v14{grid-template-columns:repeat(5,minmax(145px,1fr))}}
 
+
+/* V15 polish: strong cursor and role color coding */
+.position-square{width:21px;height:21px;font-size:10px;box-shadow:inset 0 1px rgba(255,255,255,.78),0 1px 1px rgba(0,0,0,.18)}
+.pawa-player-table tr.focus td:first-child:before{content:'▶';display:inline-block;margin-right:5px;color:#d83a2e;font-weight:1000}
+.pawa-player-table tr.focus td{background:#fff1a4!important;border-top:1px solid #e5c94d;border-bottom:1px solid #e5c94d}
+.pawa-detail-card.pitcher{border-top:4px solid #cf3a3a}.pawa-detail-card.catcher{border-top:4px solid #2d7fbb}.pawa-detail-card.infield{border-top:4px solid #b08a17}.pawa-detail-card.outfield{border-top:4px solid #3d9448}
+.pawa-detail-card.pitcher .pawa-detail-head{background:linear-gradient(90deg,#8f2d34,#c55a62)}.pawa-detail-card.catcher .pawa-detail-head{background:linear-gradient(90deg,#225d8f,#3d8fbd)}
 </style>
 </head>
 <body><div id="app"></div>
@@ -45,7 +52,7 @@ const TEAMS=[
 const TEAM_BASE={tigers:84,carp:74,baystars:80,giants:82,swallows:72,dragons:70,hawks:86,fighters:81,marines:76,eagles:71,buffaloes:79,lions:68};
 const NAMES=["青木","石川","伊藤","井上","岡田","加藤","木村","久保","小川","佐々木","高橋","田中","中村","西村","藤井","松本","森","山口","山田","吉田","渡辺","佐藤","鈴木","山本","小林","斎藤","清水","阿部","池田","後藤","近藤","前田","村上","林","橋本","柴田","原","宮本","横山","長谷川","福田","金子","藤田","岡本","中島","中川","石井","遠藤","野口","小松"];
 const SPECIAL_H=["チャンス","対左投手","盗塁","流し打ち","粘り打ち","選球眼","広角打法","逆境○","ケガしにくさ","初球○"];const SPECIAL_P=["対ピンチ","ノビ","キレ○","回復","奪三振","対左打者","打たれ強さ","クイック","逃げ球","低め○"];
-const VERSION=13,SAVE_KEY="pennant_manager_next_v13",OLD_KEYS=["pennant_manager_next_v12","pennant_manager_next_v11","pennant_manager_next_v10","pennant_manager_next_v9","pennant_manager_next_v8","pennant_manager_next_v7","pennant_manager_next_v6","pennant_manager_next_v5","pennant_manager_next_v4","pennant_manager_next_v3"];
+const VERSION=15,SAVE_KEY="pennant_manager_next_v15",OLD_KEYS=["pennant_manager_next_v14","pennant_manager_next_v13","pennant_manager_next_v12","pennant_manager_next_v11","pennant_manager_next_v10","pennant_manager_next_v9","pennant_manager_next_v8","pennant_manager_next_v7","pennant_manager_next_v6","pennant_manager_next_v5","pennant_manager_next_v4","pennant_manager_next_v3"];
 let state=null,selectedTeam=TEAMS[0].id,currentView="schedule",selectedPlayer=null,selectedPlayerTab="ability",playerFilter="all",scoutFilter="all",selectedProspect=null;
 const $=id=>document.getElementById(id),team=id=>TEAMS.find(t=>t.id===id);const clamp=(v,a=1,b=100)=>Math.max(a,Math.min(b,Math.round(v)));const clamp01=v=>Math.max(0,Math.min(1,v));
 function dateObj(s){return new Date(s+"T00:00:00Z")}function dateIso(d){return d.toISOString().slice(0,10)}function dateLabel(s){const d=dateObj(s),w=["日","月","火","水","木","金","土"];return (d.getUTCMonth()+1)+"月"+d.getUTCDate()+"日（"+w[d.getUTCDay()]+"）"}function fullDate(s){const d=dateObj(s),w=["日","月","火","水","木","金","土"];return d.getUTCFullYear()+"年"+(d.getUTCMonth()+1)+"月"+d.getUTCDate()+"日（"+w[d.getUTCDay()]+"）"}
@@ -84,16 +91,18 @@ function signFA(id){const p=playerById(id);if(!p||!p.freeAgent||state.offseason.
 function advanceOffseason(){const s=state.offseason.step;if(s===0){state.players.forEach(p=>{if(!p.retired&&p.age>=38&&Math.random()<.52)p.retired=true;if(!p.retired&&p.contractYears<=1)p.freeAgent=true});state.offseason.faList=state.players.filter(p=>p.freeAgent&&!p.retired).map(p=>p.id);state.offseason.step=1;state.lastMessage="引退・契約整理が完了しました。"}else if(s===1){state.offseason.step=2;state.lastMessage="FA交渉期間です。"}else if(s===2){state.offseason.step=3;state.lastMessage="ドラフト候補を調査できます。"}else if(s===3){state.offseason.step=4;state.lastMessage="ドラフトが終了しました。新年度へ進めます。"}else newSeason();renderGame("schedule")}
 function newSeason(){state.seasonHistory.push({year:state.year,champion:state.postseason?.champion||null,wins:state.teams[state.controlTeam].wins});state.year++;state.currentDate=seasonDates(state.year)[0];state.phase="regular";state.postseason=null;state.offseason={step:0,candidates:[],faList:[]};state.players.forEach(p=>{if(p.retired)return;p.age++;if(p.contractYears>0)p.contractYears--;p.fatigue=Math.max(0,p.fatigue-25);p.form=clamp(p.form+(50-p.form)*.2);const drift=p.age<29?(p.development==="高成長"?1.8:.9):(p.age>33?-1.2:.3);if(p.pos==="P"){p.control=clamp(p.control+drift*(Math.random()-.25));p.stamina=clamp(p.stamina+drift*.8*(Math.random()-.25));p.velocity=clamp(p.velocity+drift*.25*(Math.random()-.25),125,165)}else ["contact","power","speed","def","arm","catching"].forEach(k=>p[k]=clamp(p[k]+drift*(Math.random()-.25)));p.avg=0;p.atBats=0;p.hits=0;p.hr=0;p.rbi=0;p.era=0;p.ip=0;p.er=0;p.so=0;p.wins=0;p.saves=0;p.freeAgent=false});TEAMS.forEach(t=>Object.assign(state.teams[t.id],{wins:0,losses:0,ties:0,runsFor:0,runsAgainst:0,streak:"-",money:Math.min(18000,state.teams[t.id].money+2500)}));state.games=[];state.lineups={};state.rotation={};ensureSchedule();ensureLineupsAll();state.lastMessage=state.year+"年シーズン開幕。"}
 function phaseText(){return state.phase==="regular"?"レギュラーシーズン":state.phase==="cs"?"クライマックスシリーズ":state.phase==="japan"?"日本シリーズ":"オフシーズン"}
-/* BGM: repository-local first, GitHub raw as fallback. User gesture unlocks playback. */
-let bgmAudio=null,bgmUnlocked=false,currentBgm="",bgmSourceIndex=0;const BGM_FALLBACK_ROOT="https://raw.githubusercontent.com/matsumae01/penant-manager/main/";
+/* BGM: one persistent Audio instance. Navigation/rerender never restarts the current song. */
+let bgmAudio=null,bgmUnlocked=false,currentBgm="",currentBgmFile="",bgmSourceIndex=0,bgmRetryPending=false;const BGM_FALLBACK_ROOT="https://raw.githubusercontent.com/matsumae01/penant-manager/main/";
 function trackForDate(){const m=dateObj(state?.currentDate||"2026-03-27").getUTCMonth()+1;return m<=5?"COLOR.mp3":m<=8?"Skyline.mp3":m<=11?"Tears_in_the_Quiet_Rain.mp3":"Sunlit_Path.mp3"}
 function bgmSources(file){const local=new URL(file,document.baseURI).href;return [local,BGM_FALLBACK_ROOT+file]}
-function initBGM(){if(bgmAudio)return;bgmAudio=new Audio();bgmAudio.loop=true;bgmAudio.preload="auto";bgmAudio.volume=state?.settings?.volume??.5;bgmAudio.addEventListener("error",()=>{if(bgmSourceIndex===0){bgmSourceIndex=1;currentBgm="";playBGM()}})}
-function playBGM(){if(!state||!state.settings?.bgm||!bgmUnlocked)return;initBGM();const file=trackForDate(),sources=bgmSources(file),src=sources[bgmSourceIndex];if(currentBgm!==src){currentBgm=src;bgmAudio.src=src;bgmAudio.load()}bgmAudio.volume=state.settings.volume??.5;const p=bgmAudio.play();if(p?.catch)p.catch(()=>{})}
-function unlockBGM(){bgmUnlocked=true;initBGM();playBGM()}
-function stopBGM(){if(!bgmAudio)return;bgmAudio.pause();bgmAudio.removeAttribute("src");bgmAudio.load();currentBgm="";bgmSourceIndex=0}
-function toggleBGM(){if(!state)return;state.settings.bgm=!state.settings.bgm;if(state.settings.bgm){bgmSourceIndex=0;unlockBGM()}else stopBGM();renderGame(currentView)}
-document.addEventListener("pointerdown",()=>{if(state?.settings?.bgm){bgmUnlocked=true;playBGM()}},{passive:true});
+function initBGM(){if(bgmAudio)return;bgmAudio=new Audio();bgmAudio.loop=true;bgmAudio.preload="auto";bgmAudio.volume=state?.settings?.volume??.5;bgmAudio.setAttribute("playsinline","");bgmAudio.addEventListener("error",()=>{if(currentBgmFile&&bgmSourceIndex===0){bgmSourceIndex=1;currentBgm="";loadBGMTrack(currentBgmFile)}else bgmRetryPending=true})}
+function loadBGMTrack(file){initBGM();const src=bgmSources(file)[bgmSourceIndex];currentBgmFile=file;currentBgm=src;bgmAudio.src=src;bgmAudio.load()}
+function playBGM(){if(!state||!state.settings?.bgm||!bgmUnlocked)return;initBGM();const file=trackForDate();if(currentBgmFile!==file||!bgmAudio.src){bgmSourceIndex=0;loadBGMTrack(file)}bgmAudio.volume=state.settings.volume??.5;if(!bgmAudio.paused){bgmRetryPending=false;return}const p=bgmAudio.play();if(p?.then)p.then(()=>{bgmRetryPending=false}).catch(()=>{bgmRetryPending=true})}
+function unlockBGM(){bgmUnlocked=true;playBGM()}
+function forceBGMFromGesture(){if(!state)return;bgmUnlocked=true;playBGM()}
+function stopBGM(){if(!bgmAudio)return;bgmAudio.pause();bgmAudio.removeAttribute("src");currentBgm="";currentBgmFile="";bgmSourceIndex=0;bgmRetryPending=false}
+function toggleBGM(){if(!state)return;state.settings.bgm=!state.settings.bgm;if(state.settings.bgm){bgmUnlocked=true;playBGM()}else if(bgmAudio)bgmAudio.pause();renderGame(currentView)}
+document.addEventListener("pointerdown",forceBGMFromGesture,{passive:true});
 
 function ensureV13State(){
  if(!state)return;
@@ -166,7 +175,7 @@ renderGame=function(a='schedule'){
   if(!state)return renderTitle();
   ensureV13State();currentView=a;ensureSchedule();ensureLineupsAll();
   const ct=team(state.controlTeam),played=state.games.filter(g=>g.played).length,pct=Math.round(played/Math.max(1,state.games.length)*100);
-  $('app').innerHTML='<header class="game-header"><div class="brand"><div class="brand-mark">PM</div><div><h1>'+ct.name+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ年数 '+(state.seasonHistory.length+1)+'</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ '+(state.settings.bgm?'BGM ON':'BGM OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+ct.name+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div>'+nav(a)+'<div class="notice '+(state.lastMessage.includes('成立')||state.lastMessage.includes('保存')?'ok':'')+'">'+state.lastMessage+'</div>'+({schedule:scheduleView,players:playersView,lineup:tacticsView,newstrength:newStrengthView,teaminfo:teamInfoView,save:saveView}[a]||scheduleView)()+'</main><footer style="padding:18px;text-align:center;font-size:10px;color:#6d7f95">ORIGINAL BROWSER PENNANT / baseball management homage / Phase 13</footer>';
+  $('app').innerHTML='<header class="game-header"><div class="brand"><div class="brand-mark">PM</div><div><h1>'+ct.name+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ年数 '+(state.seasonHistory.length+1)+'</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ '+(state.settings.bgm?'BGM ON':'BGM OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+ct.name+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div>'+nav(a)+'<div class="notice '+(state.lastMessage.includes('成立')||state.lastMessage.includes('保存')?'ok':'')+'">'+state.lastMessage+'</div>'+({schedule:scheduleView,players:playersView,lineup:tacticsView,newstrength:newStrengthView,teaminfo:teamInfoView,save:saveView}[a]||scheduleView)()+'</main><footer style="padding:18px;text-align:center;font-size:10px;color:#6d7f95">ORIGINAL BROWSER PENNANT / Power baseball UI homage / V15</footer>';
   if(a==='players')showPlayer(selectedPlayer);playBGM();
 };
 const _playersView12=playersView;
@@ -239,7 +248,7 @@ function abilityRankClassV14(v){return 'rank-'+rankOf(v)}
 function compactStatusV14(p){if(p.injury)return '<span class="pill bad">'+p.injury+' '+p.injuryDays+'日</span>';if(p.minor)return '<span class="pill">二軍</span>';if(p.form>=82)return '<span class="pill good">絶好調</span>';if(p.form>=66)return '<span class="pill good">好調</span>';if(p.form<=22)return '<span class="pill bad">絶不調</span>';if(p.form<=39)return '<span class="pill bad">不調</span>';return '<span class="pill">ふつう</span>'}
 function ensureV14State(){
  if(!state)return;
- state.version=14;
+ state.version=15;
  state.settings=state.settings||{};state.settings.bgm=state.settings.bgm!==false;state.settings.volume=Number.isFinite(Number(state.settings.volume))?Number(state.settings.volume):.5;
  state.news=Array.isArray(state.news)?state.news:[];state.teamAbilities=state.teamAbilities||{};state.market=state.market||{tradeCooldown:0};
  TEAMS.forEach(t=>{state.teamAbilities[t.id]=state.teamAbilities[t.id]||['守備重視','若手育成']});
@@ -249,12 +258,7 @@ function ensureV14State(){
 }
 const _ensureV13State=ensureV13State;ensureV13State=function(){_ensureV13State();ensureV14State()};
 
-/* 音声再生: ユーザー操作中に確実にplay()を呼び、失敗時は次の操作で再試行 */
-let bgmRetryPending=false;
-const _initBGM13=initBGM;initBGM=function(){_initBGM13();if(bgmAudio){bgmAudio.preload='auto';bgmAudio.setAttribute('playsinline','');bgmAudio.oncanplay=()=>{if(bgmRetryPending&&state?.settings?.bgm){bgmRetryPending=false;const r=bgmAudio.play();if(r?.catch)r.catch(()=>{})}}}};
-const _playBGM13=playBGM;playBGM=function(){if(!state||!state.settings?.bgm||!bgmUnlocked)return;try{initBGM();const file=trackForDate(),srcs=bgmSources(file);if(currentBgm!==srcs[bgmSourceIndex]){currentBgm=srcs[bgmSourceIndex];bgmAudio.src=currentBgm;bgmAudio.load()}bgmAudio.volume=state.settings.volume??.5;const p=bgmAudio.play();if(p?.then)p.then(()=>{bgmRetryPending=false}).catch(()=>{bgmRetryPending=true})}catch(e){bgmRetryPending=true}};
-function forceBGMFromGesture(){if(state?.settings?.bgm){bgmUnlocked=true;bgmSourceIndex=0;playBGM()}}
-document.addEventListener('click',forceBGMFromGesture,true);
+/* Persistent BGM controller is defined above. */
 document.addEventListener('keydown',forceBGMFromGesture,true);
 
 /* セーブ移行: V13以前のデータをV14表示モデルへ安全に昇格 */
@@ -278,7 +282,7 @@ function v14PlayersView(){
 }
 
 function showPlayerV14(id){
- selectedPlayer=id;const p=playerById(id),box=$('playerDetail');if(!p||!box)return;const grade=rankOf(overall(p)),type=posKindV14(p),status=compactStatusV14(p);let out='<div class="pawa-detail-card"><div class="pawa-detail-head"><div><div class="name">'+p.name+'</div><div class="sub">'+posSquareV14(p)+'　背番号 '+p.number+'　'+p.age+'歳　'+(p.pos==='P'?'投手':'野手')+'　'+p.bats+'打 / '+p.throws+'投</div></div><div class="overall-badge-v14"><b>'+grade+'</b><small>総合　'+overall(p)+'</small></div></div><div class="detail-tabs-v14"><button class="active">能力</button><button>成績</button><button>契約</button></div>';
+ selectedPlayer=id;const p=playerById(id),box=$('playerDetail');if(!p||!box)return;const grade=rankOf(overall(p)),type=posKindV14(p),status=compactStatusV14(p);let out='<div class="pawa-detail-card '+type+'"><div class="pawa-detail-head"><div><div class="name">'+p.name+'</div><div class="sub">'+posSquareV14(p)+'　背番号 '+p.number+'　'+p.age+'歳　'+(p.pos==='P'?'投手':'野手')+'　'+p.bats+'打 / '+p.throws+'投</div></div><div class="overall-badge-v14"><b>'+grade+'</b><small>総合　'+overall(p)+'</small></div></div><div class="detail-tabs-v14"><button class="active">能力</button><button>成績</button><button>契約</button></div>';
  if(p.pos==='P'){
    out+='<div class="pitching-panel-v14"><div class="pitchline"><b>球速</b><div class="meter"><i style="width:'+Math.max(0,Math.min(100,(p.velocity-120)*2.2))+'%"></i></div><strong>'+p.velocity+' km/h</strong></div><div class="pitchline"><b>コントロール</b>'+ability(p.control)+'<strong>'+p.control+'</strong></div><div class="pitchline"><b>スタミナ</b>'+ability(p.stamina)+'<strong>'+p.stamina+'</strong></div></div>';
    out+='<div class="ability-grid-v14">'+[['対ピンチ',55+(p.control%35)],['対左打者',50+(p.control%38)],['ノビ',48+(p.velocity-132)*2],['キレ',48+(p.control%40)],['奪三振',48+(p.velocity-138)*2],['クイック',42+(p.stamina%35)]].map(x=>'<div class="ability-row-v14 special"><span class="lab">'+x[0]+'</span>'+ability(x[1])+'</div>').join('')+'</div>';
