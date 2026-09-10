@@ -32,294 +32,55 @@ td.num,th.num{text-align:right}.badge{display:inline-block;padding:2px 7px;borde
 .match .teams{flex:1}.match .score{min-width:70px;text-align:right;font-weight:700}.win{color:var(--good)}.loss{color:var(--danger)}
 footer{padding:20px;color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:760px){.team-grid{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.title-box h2{font-size:30px}}
+
+.player-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.selected-row{background:#28394b}.small{font-size:12px;color:var(--muted)}.rating{font-weight:700}.bar{height:6px;background:#303845;border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:#6fa9d8}.pos{font-size:11px;padding:2px 6px;border:1px solid var(--line);border-radius:5px}.statline{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.statbox{background:var(--panel2);padding:10px;border-radius:6px;text-align:center}.statbox b{display:block;font-size:18px}.roster-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.clickrow{cursor:pointer}.clickrow:hover{background:#222c38}.depth-list{margin:0;padding:0;list-style:none}.depth-list li{padding:9px;border-bottom:1px solid #313947}.depth-list li:last-child{border:0}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 "use strict";
-
-/* =========================================================
-   PENNANT MANAGER NEXT
-   Phase 1: state / schedule / simulation / standings / save-load
-   ========================================================= */
-
-const TEAMS = [
-  {id:"tigers", name:"阪神タイガース", league:"セ", power:84},
-  {id:"carp", name:"広島東洋カープ", league:"セ", power:74},
-  {id:"baystars", name:"横浜DeNAベイスターズ", league:"セ", power:80},
-  {id:"giants", name:"読売ジャイアンツ", league:"セ", power:82},
-  {id:"swallows", name:"東京ヤクルトスワローズ", league:"セ", power:72},
-  {id:"dragons", name:"中日ドラゴンズ", league:"セ", power:70},
-  {id:"hawks", name:"福岡ソフトバンクホークス", league:"パ", power:86},
-  {id:"fighters", name:"北海道日本ハムファイターズ", league:"パ", power:81},
-  {id:"marines", name:"千葉ロッテマリーンズ", league:"パ", power:76},
-  {id:"eagles", name:"東北楽天ゴールデンイーグルス", league:"パ", power:71},
-  {id:"buffaloes", name:"オリックス・バファローズ", league:"パ", power:79},
-  {id:"lions", name:"埼玉西武ライオンズ", league:"パ", power:68}
-];
-
-const SAVE_KEY = "pennant_manager_next_v1";
-let state = null;
-let selectedTeam = TEAMS[0].id;
-
-const $ = id => document.getElementById(id);
-const team = id => TEAMS.find(t=>t.id===id);
-
-function isoDate(y,m,d){ return new Date(Date.UTC(y,m-1,d)); }
-function dateStr(dt){
-  const w=["日","月","火","水","木","金","土"];
-  return `${dt.getUTCFullYear()}/${String(dt.getUTCMonth()+1).padStart(2,"0")}/${String(dt.getUTCDate()).padStart(2,"0")}（${w[dt.getUTCDay()]}）`;
-}
-function clone(x){return JSON.parse(JSON.stringify(x));}
-
-function freshState(controlTeam){
-  const teams = {};
-  TEAMS.forEach(t=>teams[t.id]={id:t.id,wins:0,losses:0,ties:0,runsFor:0,runsAgainst:0,streak:"-"});
-  return {
-    version:1, year:2026, currentDate:"2026-03-27T00:00:00Z",
-    phase:"regular-preseason", controlTeam,
-    teams, games:[], generated:false, history:[],
-    lastMessage:"ゲームを開始しました。"
-  };
-}
-
-/* ---------- Schedule ---------- */
-function generateSchedule(){
-  // Deterministic round-robin skeleton. The first 3/27 card is fixed,
-  // later cards are generated from rotating pairings.
-  const games=[];
-  const start=isoDate(2026,3,27), end=isoDate(2026,10,4);
-  let dayIndex=0;
-  const pairsByLeague = {};
-  for(const league of ["セ","パ"]){
-    const ids=TEAMS.filter(t=>t.league===league).map(t=>t.id);
-    pairsByLeague[league]=[];
-    for(let r=0;r<ids.length-1;r++){
-      for(let i=0;i<ids.length;i++){
-        const a=ids[i], b=ids[(i+r+1)%ids.length];
-        if(i<((i+r+1)%ids.length)) pairsByLeague[league].push([a,b]);
-      }
-    }
-  }
-  // Create a useful daily skeleton: Mon is a travel/off day; Tue-Sun have 3 games.
-  for(let dt=new Date(start); dt<=end; dt.setUTCDate(dt.getUTCDate()+1)){
-    if(dt.getUTCDay()===1) continue;
-    const ds=dt.toISOString().slice(0,10);
-    const round=Math.floor((dt-start)/86400000);
-    ["セ","パ"].forEach((league,li)=>{
-      const pairs=pairsByLeague[league];
-      const p0=(round*3+li*2)%pairs.length;
-      for(let k=0;k<3;k++){
-        const p=pairs[(p0+k)%pairs.length];
-        if(!p) continue;
-        // Home/away alternates by round.
-        const home=(round+k+li)%2===0?p[0]:p[1];
-        const away=home===p[0]?p[1]:p[0];
-        games.push({date:ds,home,away,played:false,homeScore:null,awayScore:null});
-      }
-    });
-  }
-  // Fixed opening day cards, replacing duplicate generated cards on 3/27.
-  const opening = [
-    ["tigers","giants"],["carp","baystars"],["swallows","dragons"],
-    ["hawks","marines"],["fighters","eagles"],["buffaloes","lions"]
-  ];
-  const filtered=games.filter(g=>g.date!=="2026-03-27");
-  opening.forEach(([home,away])=>filtered.push({date:"2026-03-27",home,away,played:false,homeScore:null,awayScore:null}));
-  filtered.sort((a,b)=>a.date.localeCompare(b.date));
-  return filtered;
-}
-
-function ensureSchedule(){
-  if(!state.generated){state.games=generateSchedule();state.generated=true;}
-}
-
-/* ---------- Simulation ---------- */
-function randn(){
-  let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
-  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-}
-function scoreFor(powerDiff){
-  const mean=3.1 + powerDiff/32;
-  let x=Math.round(mean + randn()*1.9);
-  return Math.max(0,Math.min(15,x));
-}
-function playGame(g){
-  const h=team(g.home), a=team(g.away);
-  const diff=(h.power-a.power)+2.5;
-  let hs=scoreFor(diff), as=scoreFor(-diff);
-  // Avoid excessive ties but allow them.
-  if(hs===as && Math.random()<0.55){
-    if(Math.random()<0.5) hs++; else as++;
-  }
-  g.played=true;g.homeScore=hs;g.awayScore=as;
-  const H=state.teams[g.home], A=state.teams[g.away];
-  H.runsFor+=hs;H.runsAgainst+=as;A.runsFor+=as;A.runsAgainst+=hs;
-  if(hs>as){H.wins++;A.losses++;H.streak="W";A.streak="L";}
-  else if(as>hs){A.wins++;H.losses++;A.streak="W";H.streak="L";}
-  else {H.ties++;A.ties++;H.streak="T";A.streak="T";}
-}
-
-function gamesOn(date){return state.games.filter(g=>g.date===date);}
-function simulateCurrentDay(){
-  ensureSchedule();
-  const gs=gamesOn(state.currentDate.slice(0,10));
-  gs.forEach(g=>{if(!g.played)playGame(g);});
-  const dt=new Date(state.currentDate); dt.setUTCDate(dt.getUTCDate()+1);
-  state.currentDate=dt.toISOString();
-  state.lastMessage=gs.length
-    ? `${gs.length}試合をシミュレートしました。`
-    : "今日は試合がありません。";
-  updatePhase();
-}
-function simulateUntilNextGame(){
-  ensureSchedule();
-  let dt=new Date(state.currentDate);
-  for(let i=0;i<40;i++){
-    const ds=dt.toISOString().slice(0,10);
-    if(gamesOn(ds).length){state.currentDate=dt.toISOString();return;}
-    dt.setUTCDate(dt.getUTCDate()+1);
-  }
-}
-function updatePhase(){
-  const d=state.currentDate.slice(0,10);
-  if(d<"2026-03-27")state.phase="before";
-  else if(d<="2026-10-04")state.phase="regular";
-  else state.phase="offseason";
-}
-
-function standings(league){
-  return TEAMS.filter(t=>t.league===league).map(t=>({...t,...state.teams[t.id]}))
-    .sort((a,b)=>(b.wins-a.wins)||(a.losses-b.losses)||((b.runsFor-b.runsAgainst)-(a.runsFor-a.runsAgainst)));
-}
-
-/* ---------- Persistence ---------- */
-function save(slot){
-  localStorage.setItem(SAVE_KEY+"_"+slot,JSON.stringify(state));
-  state.lastMessage=`セーブ${slot}に保存しました。`;
-  renderGame();
-}
-function load(slot){
-  const raw=localStorage.getItem(SAVE_KEY+"_"+slot);
-  if(!raw){alert("このスロットにはセーブデータがありません。");return;}
-  state=JSON.parse(raw);renderGame();
-}
-function saveExists(slot){return !!localStorage.getItem(SAVE_KEY+"_"+slot);}
-
-/* ---------- UI ---------- */
-function render(){
-  if(!state) renderTitle(); else renderGame();
-}
-function renderTitle(){
-  $("app").innerHTML=`
-  <div class="title screen">
-    <div class="title-box">
-      <h2>PENNANT MANAGER</h2>
-      <p>システム重視・ブラウザ型ペナントゲーム 開発版</p>
-      <div class="actions">
-        <button class="primary" onclick="showNewGame()">はじめから</button>
-        <button onclick="showLoad()">つづきから</button>
-      </div>
-      <footer>Phase 1 / 日程・試合・順位・セーブシステム</footer>
-    </div>
-  </div>`;
-}
-function showNewGame(){
-  $("app").innerHTML=`<header><h1>球団選択</h1><small>操作する球団を選択してください</small></header>
-  <div class="screen">
-    <div class="team-grid">${TEAMS.map(t=>`
-      <button class="team-card ${t.id===selectedTeam?"selected":""}" onclick="selectTeam('${t.id}')">
-        <strong>${t.name}</strong><span>${t.league}リーグ / 初期戦力 ${t.power}</span>
-      </button>`).join("")}</div>
-    <div class="actions">
-      <button onclick="renderTitle()">戻る</button>
-      <button class="primary" onclick="startNew()">この球団で開始</button>
-    </div>
-  </div>`;
-}
-function selectTeam(id){selectedTeam=id;showNewGame();}
-function startNew(){state=freshState(selectedTeam);ensureSchedule();renderGame();}
-function showLoad(){
-  $("app").innerHTML=`<header><h1>つづきから</h1><small>セーブデータを選択</small></header>
-  <div class="screen"><div class="panel">${[1,2,3,4,5].map(s=>{
-    const raw=localStorage.getItem(SAVE_KEY+"_"+s);
-    let label="空き";
-    if(raw){try{const x=JSON.parse(raw);label=`${x.year}年 / ${x.currentDate.slice(0,10)} / ${team(x.controlTeam)?.name||""}`;}catch(e){}}
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #313947">
-      <span>セーブ${s}　<span class="badge">${label}</span></span>
-      ${raw?`<button onclick="load(${s})">ロード</button>`:`<button disabled>空き</button>`}
-    </div>`;
-  }).join("")}</div><div class="actions" style="margin-top:16px"><button onclick="renderTitle()">戻る</button></div></div>`;
-}
-
-function nav(active){
-  return `<div class="nav">
-    <button class="${active==="schedule"?"active":""}" onclick="renderGame('schedule')">日程</button>
-    <button class="${active==="standings"?"active":""}" onclick="renderGame('standings')">順位</button>
-    <button class="${active==="save"?"active":""}" onclick="renderGame('save')">セーブ</button>
-  </div>`;
-}
-
-function renderGame(active="schedule"){
-  ensureSchedule();updatePhase();
-  const ct=team(state.controlTeam);
-  $("app").innerHTML=`
-  <header><div><h1>${ct.name}</h1><small>${state.year}年 / ${state.phase}</small></div><div>${dateStr(new Date(state.currentDate))}</div></header>
-  <div class="screen">${nav(active)}
-    <div style="margin:14px 0">${state.lastMessage?`<div class="notice">${state.lastMessage}</div>`:""}</div>
-    ${active==="schedule"?scheduleView():active==="standings"?standingsView():saveView()}
-  </div>
-  <footer>この版はゲームシステムの土台。画面演出よりシミュレーション基盤を優先しています。</footer>`;
-}
-
-function scheduleView(){
-  const ds=state.currentDate.slice(0,10), today=gamesOn(ds);
-  const upcoming=state.games.filter(g=>!g.played && g.date>=ds).slice(0,18);
-  return `<div class="grid2">
-    <div class="panel">
-      <h3>本日の試合　${ds}</h3>
-      ${today.length?today.map(matchHTML).join(""):`<p style="color:var(--muted)">本日は試合がありません。</p>`}
-      <div class="actions" style="margin-top:16px;justify-content:flex-start">
-        <button class="primary" onclick="nextDay()">次の日へ</button>
-        <button onclick="nextGameDay()">次の試合日へ</button>
-      </div>
-    </div>
-    <div class="panel">
-      <h3>直近の日程</h3>
-      ${upcoming.map(g=>`<div class="match"><div class="teams"><small>${g.date}</small><br>${team(g.away).name} vs ${team(g.home).name}</div><div class="score">-</div></div>`).join("")}
-    </div>
-  </div>`;
-}
-function matchHTML(g){
-  const mine=g.home===state.controlTeam||g.away===state.controlTeam;
-  const hs=g.homeScore,as=g.awayScore;
-  return `<div class="match">
-    <div class="teams"><b class="${mine?"win":""}">${team(g.away).name}</b> vs <b>${team(g.home).name}</b></div>
-    <div class="score">${g.played?`${as} - ${hs}`:"-"}</div>
-  </div>`;
-}
-function nextDay(){simulateCurrentDay();renderGame("schedule");}
-function nextGameDay(){simulateUntilNextGame();renderGame("schedule");}
-
-function standingsView(){
-  const row=(x,i)=>`<tr><td>${i+1}</td><td>${x.name}</td><td class="num">${x.wins}</td><td class="num">${x.losses}</td><td class="num">${x.ties}</td><td class="num">${x.runsFor-x.runsAgainst>0?"+":""}${x.runsFor-x.runsAgainst}</td></tr>`;
-  return `<div class="grid2">
-    <div class="panel"><h3>セ・リーグ</h3><table><thead><tr><th>順位</th><th>球団</th><th class="num">勝</th><th class="num">敗</th><th class="num">分</th><th class="num">得失</th></tr></thead><tbody>${standings("セ").map(row).join("")}</tbody></table></div>
-    <div class="panel"><h3>パ・リーグ</h3><table><thead><tr><th>順位</th><th>球団</th><th class="num">勝</th><th class="num">敗</th><th class="num">分</th><th class="num">得失</th></tr></thead><tbody>${standings("パ").map(row).join("")}</tbody></table></div>
-  </div>`;
-}
-function saveView(){
-  return `<div class="panel"><h3>セーブデータ</h3>
-    ${[1,2,3,4,5].map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #313947">
-      <span>セーブ${s}　${saveExists(s)?'<span class="badge">保存済み</span>':'<span class="badge">空き</span>'}</span>
-      <button onclick="save(${s})">保存</button>
-    </div>`).join("")}
-    <div class="actions" style="margin-top:18px"><button class="danger" onclick="if(confirm('タイトル画面に戻りますか？')){state=null;renderTitle()}">タイトル画面に戻る</button></div>
-  </div>`;
-}
-
-render();
+const TEAMS=[
+{id:"tigers",name:"阪神タイガース",league:"セ",city:"兵庫",power:84},{id:"carp",name:"広島東洋カープ",league:"セ",city:"広島",power:74},{id:"baystars",name:"横浜DeNAベイスターズ",league:"セ",city:"神奈川",power:80},{id:"giants",name:"読売ジャイアンツ",league:"セ",city:"東京",power:82},{id:"swallows",name:"東京ヤクルトスワローズ",league:"セ",city:"東京",power:72},{id:"dragons",name:"中日ドラゴンズ",league:"セ",city:"愛知",power:70},
+{id:"hawks",name:"福岡ソフトバンクホークス",league:"パ",city:"福岡",power:86},{id:"fighters",name:"北海道日本ハムファイターズ",league:"パ",city:"北海道",power:81},{id:"marines",name:"千葉ロッテマリーンズ",league:"パ",city:"千葉",power:76},{id:"eagles",name:"東北楽天ゴールデンイーグルス",league:"パ",city:"宮城",power:71},{id:"buffaloes",name:"オリックス・バファローズ",league:"パ",city:"大阪",power:79},{id:"lions",name:"埼玉西武ライオンズ",league:"パ",city:"埼玉",power:68}];
+const SAVE_KEY="pennant_manager_next_v2"; let state=null,selectedTeam=TEAMS[0].id;
+const $=id=>document.getElementById(id),team=id=>TEAMS.find(t=>t.id===id),clone=x=>JSON.parse(JSON.stringify(x));
+function dateStr(dt){const w=["日","月","火","水","木","金","土"];return `${dt.getUTCFullYear()}/${String(dt.getUTCMonth()+1).padStart(2,"0")}/${String(dt.getUTCDate()).padStart(2,"0")}（${w[dt.getUTCDay()]}）`}
+function ageAt(birth,year){return year-Number(birth.slice(0,4));}
+const NAMES=["青木","石川","伊藤","井上","岡田","加藤","木村","久保","小川","佐々木","高橋","田中","中村","西村","藤井","松本","森","山口","山田","吉田","渡辺","佐藤","鈴木","山本","小林","斎藤","清水","阿部","池田","後藤","近藤","前田","村上","林","橋本","柴田","原","宮本","横山","長谷川","福田","金子","藤田","岡本","中島","中川","石井","遠藤"];
+function makePlayer(id,tm,i,pos){let age=20+(i*7+tm.length)%17;let seed=(i*17+tm.length*13)%41;let power=48+seed+(pos==="P"?0:5);let contact=Math.max(35,62+((i*11+tm.length)%30));let speed=45+((i*9+seed)%45),def=45+((i*13+seed)%45),arm=45+((i*7+seed)%45);let talent=45+((i*19+tm.length)%51);return {id:`${tm}_${i}`,teamId:tm,name:NAMES[(i+tm.length)%NAMES.length]+(i%4?"":"Jr."),number:10+i,age,pos,bats:i%3===0?"左":"右",throws:i%4===0?"左":"右",contact,power,speed,def,arm,talent,stamina:pos==="P"?55+seed%35:0,control:pos==="P"?50+((i*5)%40):0,velocity:pos==="P"?140+seed%11:0,era:0,ip:0,hits:0,hr:0,rbi:0,avg:0,so:0,wins:0,saves:0,role:pos==="P"?(i<5?"SP":"RP"):"BENCH",active:true,minor:false};}
+function makeRoster(tm){let ps=[];for(let i=0;i<30;i++){let pos=i<12?"P":i===12?"C":i<17?"IF":i<21?"OF":"IF";ps.push(makePlayer(tm.id,tm.id,i,pos));}return ps;}
+function freshState(control){let teams={};TEAMS.forEach(t=>teams[t.id]={id:t.id,wins:0,losses:0,ties:0,runsFor:0,runsAgainst:0,streak:"-"});let players=[];TEAMS.forEach(t=>players.push(...makeRoster(t)));return {version:2,year:2026,currentDate:"2026-03-27T00:00:00Z",phase:"regular",controlTeam:control,teams,players,games:[],generated:false,lastMessage:"ゲームを開始しました。",lineups:{},rotation:{}};}
+function schedule(){const games=[],start=new Date("2026-03-27T00:00:00Z"),end=new Date("2026-10-04T00:00:00Z");for(let dt=new Date(start);dt<=end;dt.setUTCDate(dt.getUTCDate()+1)){if(dt.getUTCDay()===1)continue;let d=dt.toISOString().slice(0,10),r=Math.floor((dt-start)/86400000);for(const l of ["セ","パ"]){let ids=TEAMS.filter(t=>t.league===l).map(t=>t.id);let shift=(r*3+(l==="パ"?2:0))%ids.length;let used=new Set();for(let k=0;k<3;k++){let a=ids[(shift+k*2)%ids.length],b=ids[(shift+k*2+1)%ids.length];if(a===b||used.has(a)||used.has(b))continue;used.add(a);used.add(b);let home=(r+k)%2?b:a,away=home===a?b:a;games.push({date:d,home,away,played:false,homeScore:null,awayScore:null});}}}let open=[["tigers","giants"],["carp","baystars"],["swallows","dragons"],["hawks","marines"],["fighters","eagles"],["buffaloes","lions"]];return games.filter(g=>g.date!=="2026-03-27").concat(open.map(x=>({date:"2026-03-27",home:x[0],away:x[1],played:false,homeScore:null,awayScore:null}))).sort((a,b)=>a.date.localeCompare(b.date));}
+function ensureSchedule(){if(!state.generated){state.games=schedule();state.generated=true;initializeLineups();}}
+function initializeLineups(){TEAMS.forEach(t=>{let ps=state.players.filter(p=>p.teamId===t.id);let hitters=ps.filter(p=>p.pos!=="P").sort((a,b)=>(b.contact+b.power)-(a.contact+a.power));let pitchers=ps.filter(p=>p.pos==="P");state.lineups[t.id]=hitters.slice(0,9).map(p=>p.id);state.rotation[t.id]=pitchers.slice(0,5).map(p=>p.id);});}
+function playerById(id){return state.players.find(p=>p.id===id)}
+function rating(p){return p.pos==="P"?Math.round((p.velocity-130)*1.5+p.control+p.stamina):Math.round(p.contact+p.power+p.speed+p.def+p.arm)}
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function calcTeamPower(id){let lineup=(state.lineups[id]||[]).map(playerById).filter(Boolean),rot=(state.rotation[id]||[]).map(playerById).filter(Boolean);let bat=lineup.reduce((s,p)=>s+p.contact*.45+p.power*.35+p.speed*.1+p.def*.1,0)/Math.max(1,lineup.length);let pit=rot.reduce((s,p)=>s+(p.velocity-130)*2+p.control*.5+p.stamina*.3,0)/Math.max(1,rot.length);return bat+pit*.65}
+function playGame(g){let hp=calcTeamPower(g.home),ap=calcTeamPower(g.away),diff=(hp-ap)/20+1;let hs=Math.max(0,Math.min(15,Math.round(3+diff+gauss()*2))),as=Math.max(0,Math.min(15,Math.round(3-diff*.7+gauss()*2)));if(hs===as){if(Math.random()<.5)hs++;else as++;}g.played=true;g.homeScore=hs;g.awayScore=as;let H=state.teams[g.home],A=state.teams[g.away];H.runsFor+=hs;H.runsAgainst+=as;A.runsFor+=as;A.runsAgainst+=hs;if(hs>as){H.wins++;A.losses++;H.streak="W";A.streak="L"}else{A.wins++;H.losses++;A.streak="W";H.streak="L"}updatePlayerStats(g);}
+function updatePlayerStats(g){let home=state.lineups[g.home]||[],away=state.lineups[g.away]||[];let n=home.length||1;home.map(playerById).filter(Boolean).forEach((p,i)=>{let pa=3+Math.random()*2,h=Math.max(0,Math.round(pa*(p.contact/100)*(.55+Math.random()*.55)));p.hits+=h;p.hr+=Math.random()<p.power/250?h>0?1:0:0;p.rbi+=Math.max(0,Math.round(h*.55));p.avg=p.hits/Math.max(1,Math.round((state.games.filter(x=>x.played&&((x.home===p.teamId)||(x.away===p.teamId))).length)*3.8))});away.map(playerById).filter(Boolean).forEach(p=>{let pa=3+Math.random()*2,h=Math.max(0,Math.round(pa*(p.contact/100)*(.55+Math.random()*.55)));p.hits+=h;p.hr+=Math.random()<p.power/250?h>0?1:0:0;p.rbi+=Math.max(0,Math.round(h*.55));p.avg=p.hits/Math.max(1,Math.round((state.games.filter(x=>x.played&&((x.home===p.teamId)||(x.away===p.teamId))).length)*3.8))});}
+function gamesOn(d){return state.games.filter(g=>g.date===d)}
+function advanceDay(){ensureSchedule();let d=state.currentDate.slice(0,10),gs=gamesOn(d);gs.filter(g=>!g.played).forEach(playGame);let dt=new Date(state.currentDate);dt.setUTCDate(dt.getUTCDate()+1);state.currentDate=dt.toISOString();state.lastMessage=gs.length?`${gs.length}試合をシミュレートしました。`:`${dateStr(new Date(state.currentDate))}は移動日です。`;renderGame("schedule")}
+function nextGame(){ensureSchedule();let dt=new Date(state.currentDate);for(let i=0;i<40;i++){dt.setUTCDate(dt.getUTCDate()+1);if(gamesOn(dt.toISOString().slice(0,10)).length){state.currentDate=dt.toISOString();break}}renderGame("schedule")}
+function standings(l){return TEAMS.filter(t=>t.league===l).map(t=>({...t,...state.teams[t.id]})).sort((a,b)=>b.wins-a.wins||a.losses-b.losses)}
+function save(slot){localStorage.setItem(SAVE_KEY+slot,JSON.stringify(state));state.lastMessage=`セーブ${slot}に保存しました。`;renderGame("save")}
+function load(slot){let x=localStorage.getItem(SAVE_KEY+slot);if(!x)return alert("データがありません。");state=JSON.parse(x);if(!state.players){alert("旧版セーブは新システムと互換性がありません。新しく開始してください。");return}renderGame("schedule")}
+function renderTitle(){$("app").innerHTML=`<div class="title screen"><div class="title-box"><h2>PENNANT MANAGER</h2><p>ブラウザ型ペナントゲーム / Phase 2</p><div class="actions"><button class="primary" onclick="newGame()">はじめから</button><button onclick="loadScreen()">つづきから</button></div></div></div>`}
+function newGame(){$("app").innerHTML=`<header><h1>球団選択</h1><small>操作球団を選択</small></header><div class="screen"><div class="team-grid">${TEAMS.map(t=>`<button class="team-card ${selectedTeam===t.id?"selected":""}" onclick="selectedTeam='${t.id}';newGame()"><strong>${t.name}</strong><span>${t.league} / ${t.city}</span></button>`).join("")}</div><div class="actions"><button onclick="renderTitle()">戻る</button><button class="primary" onclick="startGame()">この球団で開始</button></div></div>`}
+function startGame(){state=freshState(selectedTeam);ensureSchedule();renderGame("schedule")}
+function loadScreen(){$("app").innerHTML=`<header><h1>つづきから</h1></header><div class="screen panel">${[1,2,3,4,5].map(s=>{let x=localStorage.getItem(SAVE_KEY+s),label="空き";if(x){try{let z=JSON.parse(x);label=`${z.currentDate.slice(0,10)} / ${team(z.controlTeam).name}`}catch(e){}}return `<div class="match"><div>セーブ${s}<br><span class="small">${label}</span></div>${x?`<button onclick="load(${s})">ロード</button>`:`<button disabled>空き</button>`}</div>`}).join("")}<div class="actions" style="margin-top:16px"><button onclick="renderTitle()">戻る</button></div></div>`}
+function nav(a){return `<div class="nav"><button class="${a==="schedule"?"active":""}" onclick="renderGame('schedule')">日程</button><button class="${a==="players"?"active":""}" onclick="renderGame('players')">選手</button><button class="${a==="lineup"?"active":""}" onclick="renderGame('lineup')">采配</button><button class="${a==="standings"?"active":""}" onclick="renderGame('standings')">順位</button><button class="${a==="save"?"active":""}" onclick="renderGame('save')">セーブ</button></div>`}
+function renderGame(a="schedule"){ensureSchedule();let ct=team(state.controlTeam);$("app").innerHTML=`<header><div><h1>${ct.name}</h1><small>${state.year}年</small></div><div>${dateStr(new Date(state.currentDate))}</div></header><div class="screen">${nav(a)}<div style="margin:14px 0"><div class="notice">${state.lastMessage}</div></div>${a==="schedule"?scheduleView():a==="players"?playersView():a==="lineup"?lineupView():a==="standings"?standingsView():saveView()}</div><footer>Phase 2 / 選手・能力・起用・個人成績を追加</footer>`}
+function scheduleView(){let d=state.currentDate.slice(0,10),today=gamesOn(d),up=state.games.filter(g=>!g.played&&g.date>=d).slice(0,14);return `<div class="grid2"><div class="panel"><h3>本日の試合</h3>${today.length?today.map(g=>`<div class="match"><div class="teams"><b>${team(g.away).name}</b> vs <b>${team(g.home).name}</b></div><div class="score">${g.played?`${g.awayScore} - ${g.homeScore}`:"-"}</div></div>`).join(""):"<p class=small>試合はありません。</p>"}<div class="roster-actions"><button class="primary" onclick="advanceDay()">次の日へ</button><button onclick="nextGame()">次の試合日へ</button></div></div><div class="panel"><h3>今後の日程</h3>${up.map(g=>`<div class="match"><div><span class=small>${g.date}</span><br>${team(g.away).name} vs ${team(g.home).name}</div></div>`).join("")}</div></div>`}
+function playersView(){let ps=state.players.filter(p=>p.teamId===state.controlTeam),q=window.playerFilter||"ALL";let shown=q==="ALL"?ps:ps.filter(p=>p.pos===q);return `<div class="player-grid"><div class="panel"><h3>選手一覧</h3><div class="filters">${["ALL","P","C","IF","OF"].map(x=>`<button onclick="playerFilter='${x}';renderGame('players')">${x==="ALL"?"全選手":x}</button>`).join("")}</div><table><thead><tr><th>背番号</th><th>選手</th><th>守備</th><th>年齢</th><th class=num>能力</th><th>状態</th></tr></thead><tbody>${shown.map(p=>`<tr class="clickrow" onclick="showPlayer('${p.id}')"><td>${p.number}</td><td>${p.name}</td><td><span class=pos>${p.pos}</span></td><td>${p.age}</td><td class=num>${rating(p)}</td><td>${p.minor?"二軍":"一軍"}</td></tr>`).join("")}</tbody></table></div><div class="panel" id="playerDetail"><h3>選手詳細</h3><p class=small>選手をクリックしてください。</p></div></div>`}
+function showPlayer(id){let p=playerById(id),box=$("playerDetail");if(!box)return;box.innerHTML=p.pos==="P"?`<h3>${p.name}</h3><p><span class=pos>${p.pos}</span> ${p.age}歳 / ${p.throws}投</p><div class=statline><div class=statbox><b>${p.velocity}</b>球速</div><div class=statbox><b>${p.control}</b>制球</div><div class=statbox><b>${p.stamina}</b>スタミナ</div><div class=statbox><b>${rating(p)}</b>能力</div></div><h3 style="margin-top:18px">今季成績</h3><table><tr><td>勝利</td><td>${p.wins}</td></tr><tr><td>防御率</td><td>${p.era.toFixed(2)}</td></tr><tr><td>奪三振</td><td>${p.so}</td></tr><tr><td>セーブ</td><td>${p.saves}</td></tr></table>`:`<h3>${p.name}</h3><p><span class=pos>${p.pos}</span> ${p.age}歳 / ${p.bats}打</p><div class=statline><div class=statbox><b>${p.contact}</b>ミート</div><div class=statbox><b>${p.power}</b>パワー</div><div class=statbox><b>${p.speed}</b>走力</div><div class=statbox><b>${rating(p)}</b>能力</div></div><h3 style="margin-top:18px">今季成績</h3><table><tr><td>打率</td><td>${p.avg.toFixed(3)}</td></tr><tr><td>安打</td><td>${p.hits}</td></tr><tr><td>本塁打</td><td>${p.hr}</td></tr><tr><td>打点</td><td>${p.rbi}</td></tr></table>`}
+function lineupView(){let id=state.controlTeam,order=(state.lineups[id]||[]).map(playerById).filter(Boolean),rot=(state.rotation[id]||[]).map(playerById).filter(Boolean);return `<div class="grid2"><div class="panel"><h3>スターティングラインナップ</h3><ol class=depth-list>${order.map((p,i)=>`<li><b>${i+1}番</b>　${p.name} <span class=pos>${p.pos}</span><span class=small>　ミート${p.contact} パワー${p.power}</span></li>`).join("")}</ol><div class=roster-actions><button onclick="autoLineup()">自動編成</button></div></div><div class="panel"><h3>先発ローテーション</h3><ol class=depth-list>${rot.map((p,i)=>`<li>${i+1}　${p.name}　${p.velocity}km/h　制球${p.control}</li>`).join("")}</ol><div class=roster-actions><button onclick="autoRotation()">自動編成</button></div></div></div>`}
+function autoLineup(){let ps=state.players.filter(p=>p.teamId===state.controlTeam&&!p.minor&&p.pos!=="P").sort((a,b)=>rating(b)-rating(a));state.lineups[state.controlTeam]=ps.slice(0,9).map(p=>p.id);state.lastMessage="打順を能力順で自動編成しました。";renderGame("lineup")}
+function autoRotation(){let ps=state.players.filter(p=>p.teamId===state.controlTeam&&!p.minor&&p.pos==="P").sort((a,b)=>rating(b)-rating(a));state.rotation[state.controlTeam]=ps.slice(0,5).map(p=>p.id);state.lastMessage="先発ローテーションを自動編成しました。";renderGame("lineup")}
+function standingsView(){let row=(x,i)=>`<tr><td>${i+1}</td><td>${x.name}</td><td class=num>${x.wins}</td><td class=num>${x.losses}</td><td class=num>${x.ties}</td><td class=num>${x.runsFor-x.runsAgainst>0?"+":""}${x.runsFor-x.runsAgainst}</td></tr>`;return `<div class=grid2><div class=panel><h3>セ・リーグ</h3><table><thead><tr><th>順位</th><th>球団</th><th class=num>勝</th><th class=num>敗</th><th class=num>分</th><th class=num>得失</th></tr></thead><tbody>${standings("セ").map(row).join("")}</tbody></table></div><div class=panel><h3>パ・リーグ</h3><table><thead><tr><th>順位</th><th>球団</th><th class=num>勝</th><th class=num>敗</th><th class=num>分</th><th class=num>得失</th></tr></thead><tbody>${standings("パ").map(row).join("")}</tbody></table></div></div>`}
+function saveView(){return `<div class=panel><h3>セーブデータ</h3>${[1,2,3,4,5].map(s=>`<div class=match><span>セーブ${s}　${localStorage.getItem(SAVE_KEY+s)?"保存済み":"空き"}</span><button onclick="save(${s})">保存</button></div>`).join("")}<div class=actions style="margin-top:16px"><button class=danger onclick="if(confirm('タイトル画面に戻りますか？')){state=null;renderTitle()}">タイトル画面に戻る</button></div></div>`}
+renderTitle();
 </script>
 </body>
 </html>
