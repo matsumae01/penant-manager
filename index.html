@@ -2177,4 +2177,282 @@ button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7
   window.addEventListener('load',function(){setTimeout(kickBgmV30,0)},{once:true});
 })();
 </script>
+
+<script>
+/* V31: schedule control layout, NPB-style dual standings, and stronger automatic BGM start. */
+(function(){
+  const TEAM_META = {
+    tigers:{short:'阪神',league:'セ'},carp:{short:'広島',league:'セ'},baystars:{short:'DeNA',league:'セ'},giants:{short:'巨人',league:'セ'},swallows:{short:'ヤクルト',league:'セ'},dragons:{short:'中日',league:'セ'},
+    hawks:{short:'ソフトバンク',league:'パ'},fighters:{short:'日本ハム',league:'パ'},marines:{short:'ロッテ',league:'パ'},eagles:{short:'楽天',league:'パ'},buffaloes:{short:'オリックス',league:'パ'},lions:{short:'西武',league:'パ'}
+  };
+  function escV31(x){return String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c]));}
+  function teamRowV31(id){const r=state?.teams?.[id]||{};const m=TEAM_META[id]||{short:id,league:''};return {id,short:m.short,league:m.league,wins:Number(r.wins)||0,losses:Number(r.losses)||0,ties:Number(r.ties)||0};}
+  function standingsRowsV31(league){
+    const ids=Object.keys(TEAM_META).filter(id=>TEAM_META[id].league===league);
+    const rows=ids.map(teamRowV31).map(x=>({...x,games:x.wins+x.losses+x.ties,runDiff:(Number(state.teams[x.id]?.runsFor)||0)-(Number(state.teams[x.id]?.runsAgainst)||0)}));
+    rows.sort((a,b)=>b.wins-a.wins || a.losses-b.losses || b.runDiff-a.runDiff);
+    const leader=rows[0];
+    rows.forEach((x,i)=>{x.rank=i+1;x.pct=(x.wins+x.losses)?x.wins/(x.wins+x.losses):0;x.gb=leader?((leader.wins-x.wins)+(x.losses-leader.losses))/2:0;});
+    return rows;
+  }
+  function dualStandingsHTML(){
+    const renderLeague=(league,title)=>{
+      const rows=standingsRowsV31(league);
+      return '<section class="v31-stand-block"><div class="v31-stand-title"><b>'+title+'</b><span>チーム勝敗表</span></div><table class="v31-stand-table"><thead><tr><th>順位</th><th>チーム</th><th>試合</th><th>勝</th><th>敗</th><th>分</th><th>勝率</th><th>差</th></tr></thead><tbody>'+rows.map(r=>{
+        const cls=r.id===state.controlTeam?' ctl':'';
+        return '<tr class="'+cls+'"><td class="num">'+r.rank+'</td><td class="team-name">'+escV31(r.short)+'</td><td>'+r.games+'</td><td>'+r.wins+'</td><td>'+r.losses+'</td><td>'+r.ties+'</td><td>'+r.pct.toFixed(3).replace(/^0/, '')+'</td><td>'+ (r.rank===1?'－':r.gb.toFixed(1))+'</td></tr>';
+      }).join('')+'</tbody></table></section>';
+    };
+    return '<div class="v31-dual-standings">'+renderLeague('セ','セントラル・リーグ')+renderLeague('パ','パシフィック・リーグ')+'</div>';
+  }
+  function patchScheduleDOMV31(){
+    if(!state || currentView!=='schedule') return;
+    // Keep the primary controls physically fixed: result slot first, next-day slot second.
+    const toolbar=document.querySelector('.v25-toolbar .v25-actions');
+    if(toolbar){
+      let next=Array.from(toolbar.querySelectorAll('button')).find(b=>/次の日へ/.test(b.textContent));
+      let result=Array.from(toolbar.querySelectorAll('button')).find(b=>/試合結果/.test(b.textContent));
+      if(next){
+        if(!result){result=document.createElement('button');result.className='result-slot v31-result-placeholder';result.textContent='試合結果なし';result.disabled=true;}
+        else result.classList.add('result-slot');
+        if(result.parentElement!==toolbar) toolbar.appendChild(result);
+        if(next.parentElement!==toolbar) toolbar.appendChild(next);
+        toolbar.insertBefore(result,toolbar.firstChild);
+        toolbar.insertBefore(next,result.nextSibling);
+      }
+    }
+    // Replace the compact one-league standings card with the NPB-style dual table.
+    const panels=Array.from(document.querySelectorAll('.v25-panel'));
+    const p=panels.find(el=>/順位表/.test(el.querySelector('.hd')?.textContent||''));
+    if(p){
+      p.outerHTML='<section class="v25-panel v31-stand-panel"><div class="hd"><span>順位表</span><span>NPB形式</span></div><div class="bd">'+dualStandingsHTML()+'</div></section>';
+    }
+  }
+  // Wrap the final renderer so the post-render DOM adjustments survive all future safeRender calls.
+  const baseRender=window.renderGame;
+  if(typeof baseRender==='function' && !window.__v31RenderWrapped){
+    window.__v31RenderWrapped=true;
+    window.renderGame=function(view){const r=baseRender(view);if((view||window.currentView)==='schedule'){setTimeout(patchScheduleDOMV31,0);}return r;};
+    try{renderGame=window.renderGame}catch(e){}
+  }
+  const baseSafe=window.safeRender;
+  if(typeof baseSafe==='function' && !window.__v31SafeWrapped){
+    window.__v31SafeWrapped=true;
+    window.safeRender=function(view){const r=baseSafe(view);if(view==='schedule')setTimeout(patchScheduleDOMV31,0);return r;};
+    try{safeRender=window.safeRender}catch(e){}
+  }
+  // When daily progression returns to the schedule, patch once more after the next tick.
+  const oldNext=window.nextDay;
+  if(typeof oldNext==='function' && !window.__v31NextWrapped){
+    window.__v31NextWrapped=true;
+    window.nextDay=function(){const r=oldNext.apply(this,arguments);setTimeout(patchScheduleDOMV31,0);return r;};
+    try{nextDay=window.nextDay}catch(e){}
+  }
+  // BGM: never require the explicit BGM button. Attempt playback immediately when a state exists,
+  // then retry on visibility/focus. Browser autoplay policy may still require a prior user gesture.
+  function autoplayBGMV31(){
+    try{
+      if(!window.state || !window.state.settings?.bgm) return;
+      bgmUnlocked=true;
+      initBGM();
+      const file=trackForDate();
+      if(currentBgmFile!==file || !bgmAudio.src){bgmSourceIndex=0;loadBGMTrack(file);}
+      bgmAudio.volume=window.state.settings.volume??0.5;
+      const pr=bgmAudio.play();
+      if(pr&&pr.catch)pr.catch(()=>{bgmRetryPending=true;});
+    }catch(e){console.warn('V31 BGM autoplay',e)}
+  }
+  window.kickBgmV31=autoplayBGMV31;
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoplayBGMV31()});
+  window.addEventListener('focus',autoplayBGMV31);
+  // Try immediately for already-running games / restored state.
+  setTimeout(autoplayBGMV31,0);
+})();
+</script>
+<style id="v31-style">
+.v31-result-placeholder{visibility:hidden;pointer-events:none}
+.v25-toolbar .v25-actions .result-slot,.v25-toolbar .v25-actions .primary{min-width:142px;box-sizing:border-box}
+.v31-stand-panel{grid-column:1 / -1}
+.v31-dual-standings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v31-stand-block{border:1px solid #a8bfd4;background:#f8fbfe}
+.v31-stand-title{display:flex;justify-content:space-between;align-items:center;padding:7px 9px;background:linear-gradient(#e8f3ff,#cfe2f5);border-bottom:2px solid #376aa0;color:#17386f;font-size:11px}
+.v31-stand-title span{font-size:9px;color:#58708a}
+.v31-stand-table{width:100%;border-collapse:separate;border-spacing:1px;font-size:9px;table-layout:fixed}
+.v31-stand-table th{padding:4px 2px;background:#214d84;color:#fff;font-weight:1000;text-align:center}
+.v31-stand-table td{padding:5px 2px;background:#fff;border-bottom:1px solid #d7e1eb;text-align:center;font-variant-numeric:tabular-nums}
+.v31-stand-table tr:nth-child(even) td{background:#eef5fb}
+.v31-stand-table tr.ctl td{background:#fff0a6;font-weight:1000}
+.v31-stand-table td.team-name{text-align:left;padding-left:6px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v31-stand-table td.num{font-weight:1000;color:#17386f}
+@media(max-width:900px){.v31-dual-standings{grid-template-columns:1fr}.v25-toolbar .v25-actions .result-slot,.v25-toolbar .v25-actions .primary{min-width:128px}}
+</style>
+
+
+<script>
+/* ================= V32: DAILY FLOW / BGM / OFFSEASON STABILITY =================
+   - One render per "next day" press: removes the visible UI flicker caused by stacked wrappers.
+   - Keeps the daily-results button immediately LEFT of the next-day button at all times.
+   - Makes offseason dates advance day-by-day after 11/5 instead of getting stuck on a single date.
+   - Attempts BGM playback directly from the user's start/load gesture without requiring a BGM button.
+*/
+(function(){
+  function addDaysV32(iso, days){
+    const d=dateObj(iso); d.setUTCDate(d.getUTCDate()+days); return dateIso(d);
+  }
+  function escV32(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+  window.showDailyResultsV32=function(){
+    if(!state || !state.dailyResults || !Array.isArray(state.dailyResults.games)){
+      state && (state.lastMessage='前日の試合結果はありません。');
+      return;
+    }
+    const dr=state.dailyResults;
+    const rows=dr.games.map(g=>{
+      const own=g.home===state.controlTeam||g.away===state.controlTeam;
+      const aw=g.awayScore==null?'－':g.awayScore, hw=g.homeScore==null?'－':g.homeScore;
+      const winner=g.awayScore>g.homeScore?g.away:g.homeScore>g.awayScore?g.home:null;
+      return '<div class="v32-daily-game '+(own?'own':'')+'"><div class="v32-team">'+escV32(team(g.away).short)+'</div><b class="v32-score">'+aw+'</b><span class="v32-dash">－</span><b class="v32-score">'+hw+'</b><div class="v32-team home">'+escV32(team(g.home).short)+'</div>'+(winner?'<span class="v32-mark">'+(winner===state.controlTeam?'勝':'')+'</span>':'')+'</div>';
+    }).join('');
+    const modal=document.createElement('div');modal.id='v32-results-modal';modal.className='v32-modal';
+    modal.innerHTML='<div class="v32-modal-card"><div class="v32-modal-head"><div><b>前日の試合結果</b><small>'+escV32(fullDate(dr.date))+'　全'+dr.games.length+'試合</small></div><button onclick="document.getElementById(\'v32-results-modal\')?.remove()">×</button></div><div class="v32-modal-body">'+(rows||'<div class="notice">試合結果はありません。</div>')+'</div><div class="v32-modal-foot">○ 閉じる</div></div>';
+    document.body.appendChild(modal);
+  };
+
+  function buildProgressButtonsV32(){
+    if(!state||currentView!=='schedule')return;
+    const actionHost=document.querySelector('.schedule-toolbar .actions') || document.querySelector('.v25-toolbar .v25-actions');
+    if(!actionHost)return;
+    actionHost.innerHTML='';
+    const has=!!(state.dailyResults&&Array.isArray(state.dailyResults.games)&&state.dailyResults.games.length);
+    const resultBtn=document.createElement('button');
+    resultBtn.className='v32-result-btn';
+    resultBtn.textContent=has?'前日の試合結果':'試合結果なし';
+    resultBtn.disabled=!has;
+    resultBtn.onclick=()=>window.showDailyResultsV32();
+    const nextBtn=document.createElement('button');
+    nextBtn.className='primary v32-next-btn';
+    nextBtn.textContent='▶ 次の日へ';
+    nextBtn.onclick=()=>window.nextDay();
+    actionHost.appendChild(resultBtn);
+    actionHost.appendChild(nextBtn);
+
+    document.querySelectorAll('.side-stack button').forEach(b=>{
+      if(/次の日へ|1日進める|一週間進める|1週間進める/.test(b.textContent))b.style.display='none';
+    });
+    // Remove legacy result/next buttons in other schedule toolbars so only the fixed pair remains.
+    document.querySelectorAll('.v25-toolbar .v25-actions button').forEach(b=>{
+      if(b!==resultBtn&&b!==nextBtn)b.style.display='none';
+    });
+  }
+
+  function autoStartBGMV32(){
+    try{
+      if(!state || !state.settings?.bgm) return;
+      bgmUnlocked=true; initBGM();
+      const file=trackForDate();
+      if(currentBgmFile!==file || !bgmAudio.src){
+        bgmSourceIndex=0; currentBgmFile=file;
+        const src=bgmSources(file)[0];
+        bgmAudio.src=src; bgmAudio.loop=true; bgmAudio.preload='auto'; bgmAudio.volume=state.settings.volume??.5;
+        // Do not call load() here: on some browsers the extra load step can break the gesture->play chain.
+      }
+      bgmAudio.volume=state.settings.volume??.5;
+      const pr=bgmAudio.play();
+      if(pr&&pr.catch)pr.catch(()=>{bgmRetryPending=true;});
+    }catch(e){bgmRetryPending=true;console.warn('V32 BGM',e)}
+  }
+  window.autoStartBGMV32=autoStartBGMV32;
+
+  // Replace the stacked nextDay wrappers with one final, single-render implementation.
+  window.nextDay=function(){
+    if(!state){renderTitle();return;}
+    try{
+      unlockBGM(); ensureSchedule();
+      if(typeof ensureV19State==='function')ensureV19State(state);
+      if(state.phase==='regular'){
+        const date=state.currentDate;
+        const gs=gamesOn(date).filter(g=>!g.played);
+        gs.forEach(g=>window.simulateGame(g));
+        TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{
+          if(p.retired)return;
+          p.fatigue=Math.max(0,(p.fatigue||0)-2);
+          p.form=clamp(p.form+(50-p.form)*.04);
+          if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null;}
+        }));
+        state.dailyResults={date,games:gs.map(g=>({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}))};
+        const own=gs.find(g=>g.home===state.controlTeam||g.away===state.controlTeam)||null;
+        state.lastResult=own;
+        const d=dateObj(date);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);
+        if(!state.games.some(g=>!g.played))finishRegularSeason();
+        state.lastMessage=gs.length?fullDate(date)+'の全球団の試合結果を反映しました。':'本日は試合がありません。';
+      }else if(state.phase==='cs'||state.phase==='japan'){
+        advanceSeries();
+        state.dailyResults=null;
+        state.lastResult=null;
+      }else{
+        // Offseason still moves one calendar day at a time. The management step changes at stage boundaries,
+        // but the date always advances so the calendar can never appear stuck on 11/5.
+        const before=state.currentDate;
+        {
+          const next=addDaysV32(state.currentDate,1);
+          if(next>=(state.year+1)+'-03-27'){
+            window.newSeason();
+          }else{
+            state.currentDate=next;
+            const month=Number(next.slice(5,7)),day=Number(next.slice(8,10));
+            if(month===11&&day===5){state.offseason.step=0;}
+            else if(month===11&&day===20){state.offseason.step=1;state.lastMessage='契約更改・戦力外通告の期間です。';}
+            else if(month===12&&day===6){state.offseason.step=2;state.lastMessage='FA交渉期間です。';}
+            else if(month===1&&day===16){state.offseason.step=3;state.lastMessage='ドラフト候補の調査期間です。';}
+            else if(month===2&&day===1){state.offseason.step=4;state.lastMessage='ドラフト会議・春季キャンプの準備期間です。';}
+            else if(!state.lastMessage||before===state.currentDate){state.lastMessage=fullDate(next)+'へ進みました。';}
+          }
+        }
+        state.dailyResults=null;state.lastResult=null;
+      }
+      currentView='schedule';
+      // Exactly one render per button press; no nested safeRender()/renderGame() calls here.
+      if(typeof window.renderGame==='function')window.renderGame('schedule');else renderGame('schedule');
+      setTimeout(buildProgressButtonsV32,0);
+      autoStartBGMV32();
+    }catch(e){
+      console.error('V32 nextDay',e);
+      state.lastMessage='日程進行中にエラーが発生しました：'+(e&&e.message?e.message:'不明なエラー');
+      currentView='schedule';
+      try{renderGame('schedule');setTimeout(buildProgressButtonsV32,0);}catch(_){renderTitle();}
+    }
+  };
+  try{nextDay=window.nextDay}catch(e){}
+
+  // Make "this team -> start" and load explicitly attempt audio in the same user gesture.
+  const oldStartV32=window.startGame;
+  if(typeof oldStartV32==='function'&&!window.__v32StartWrapped){
+    window.__v32StartWrapped=true;
+    window.startGame=function(control){const r=oldStartV32(control);autoStartBGMV32();return r;};
+  }
+  const oldLoadV32=window.loadSlot;
+  if(typeof oldLoadV32==='function'&&!window.__v32LoadWrapped){
+    window.__v32LoadWrapped=true;
+    window.loadSlot=function(slot){const r=oldLoadV32(slot);autoStartBGMV32();return r;};
+  }
+
+  function patchV32(){buildProgressButtonsV32();}
+  const oldRenderV32=window.renderGame;
+  if(typeof oldRenderV32==='function'&&!window.__v32RenderWrapped){
+    window.__v32RenderWrapped=true;
+    window.renderGame=function(view){const r=oldRenderV32(view);if((view||window.currentView)==='schedule')setTimeout(patchV32,0);return r;};
+  }
+  setTimeout(()=>{if(state&&currentView==='schedule'){patchV32();autoStartBGMV32();}},0);
+})();
+</script>
+<style id="v32-style">
+.v32-result-btn,.v32-next-btn{min-width:152px;min-height:38px;font-weight:1000}
+.v32-modal{position:fixed;inset:0;z-index:99999;background:rgba(4,17,38,.72);display:grid;place-items:center;padding:18px}
+.v32-modal-card{width:min(860px,96vw);max-height:86vh;overflow:hidden;background:#f6fbff;border:4px solid #244f88;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.v32-modal-head{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(#3774b4,#1f4d86);color:#fff;padding:10px 14px;border-bottom:3px solid #f4c62d}
+.v32-modal-head b{display:block;font-size:16px}.v32-modal-head small{display:block;font-size:9px;opacity:.9;margin-top:2px}.v32-modal-head button{width:34px;height:30px;border:1px solid #fff3;background:#17385f;color:#fff;font-size:20px;font-weight:1000}
+.v32-modal-body{padding:12px;max-height:68vh;overflow:auto}.v32-daily-game{display:grid;grid-template-columns:1fr 34px 16px 34px 1fr 30px;gap:4px;align-items:center;padding:7px 8px;background:#fff;border-bottom:1px solid #d6e1ec;font-size:11px}.v32-daily-game:nth-child(even){background:#eef5fb}.v32-daily-game.own{background:#fff2ba;font-weight:1000;box-shadow:inset 5px 0 0 #e4b920}.v32-daily-game .v32-team.home{text-align:left}.v32-daily-game .v32-team:first-child{text-align:right}.v32-score{text-align:center}.v32-dash{text-align:center;color:#789}.v32-mark{font-size:10px;color:#c18400;text-align:center}
+.v32-modal-foot{padding:8px 12px;background:#0d1730;color:#fff;text-align:right;font-size:10px}
+.schedule-toolbar .actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;min-height:40px}
+</style>
 </body></html>
