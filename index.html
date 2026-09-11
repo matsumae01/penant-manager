@@ -2882,250 +2882,161 @@ button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7
   }
 })();
 </script>
-</body></html>
-<style id="v34-final-style">
-  /* V34: stable schedule controls — result LEFT, next-day RIGHT, fixed position. */
-  .schedule-toolbar .actions,
-  .v25-actions,
-  .v33-actions,
-  .v34-actions{
-    display:flex !important;
-    align-items:center !important;
-    justify-content:flex-end !important;
-    gap:8px !important;
-    min-width:330px !important;
-    min-height:44px !important;
-  }
-  .v34-result-btn,.v34-next-btn{min-width:150px !important;height:40px !important;box-sizing:border-box}
+
+<style id="v37-style">
+  .v37-schedule-root{background:linear-gradient(#eef8ff,#c6dced);border:3px solid #456f9d;box-shadow:inset 0 0 0 2px #fff,0 4px 10px #001a4d44;border-radius:8px;overflow:hidden}
+  .v37-consolebar{height:52px;display:flex;align-items:center;gap:8px;padding:0 10px;background:linear-gradient(#173e79,#071a43);border-bottom:3px solid #f3d34c;color:#fff}
+  .v37-console-title{display:flex;align-items:center;gap:8px;min-width:290px;font-weight:1000}.v37-console-title small{display:block;color:#b9dcff;font-size:8px;letter-spacing:.14em}.v37-console-hints{margin-left:auto;display:flex;gap:4px;font-size:10px;font-weight:1000}.v37-console-hints span{padding:5px 9px;border-radius:14px;border:2px solid #526f9f;background:linear-gradient(#33466f,#111e3e)}
+  .v37-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px;align-items:center;padding:8px 10px;background:linear-gradient(#e8f5fd,#c7deee);border-bottom:1px solid #7aa0c4}
+  .v37-toolbar-title{font-size:16px;font-weight:1000;color:#173a70}.v37-toolbar-sub{font-size:9px;color:#5d7690}
+  .v37-fixed-actions{display:grid;grid-template-columns:165px 165px;gap:10px;width:340px;height:42px;justify-self:end}
+  .v37-fixed-actions button{width:165px;height:42px;box-sizing:border-box;font-weight:1000;border-radius:5px}
+  .v37-fixed-actions .result-btn{background:linear-gradient(#eaf4ff,#d8e7f5);border:2px solid #6d8fb4;color:#214775}.v37-fixed-actions .result-btn.empty{visibility:hidden;pointer-events:none}
+  .v37-fixed-actions .next-btn{background:linear-gradient(#fff08a,#e1b72d);border:2px solid #b18c1c;color:#173a70;font-size:12px;box-shadow:inset 0 1px #fff,0 2px 2px #0002}
+  .v37-callout{padding:7px 10px;background:linear-gradient(#fff8c9,#ffef96);border:2px solid #deb933;color:#183c71;font-size:10px;font-weight:1000}
+  .v37-daygrid{display:grid;grid-template-columns:repeat(7,minmax(118px,1fr));gap:4px;padding:6px;background:linear-gradient(#d6ecf8,#b7d0e3);overflow:auto}
+  .v37-day{min-height:172px;background:linear-gradient(#fbfeff,#e5f1f8);border:2px solid #8ea8c0;border-radius:5px;box-shadow:inset 0 1px #fff,0 1px 2px #0002}.v37-day.today{border-color:#e9bd2a;box-shadow:0 0 0 2px #fff2b1 inset,0 0 0 2px #e8b62c}.v37-day .head{display:flex;justify-content:space-between;gap:4px;padding:5px 6px;background:linear-gradient(#d9edf8,#a9c9e2);border-bottom:2px solid #6f97bd;color:#183d72;font-weight:1000;font-size:10px}.v37-day.today .head{background:linear-gradient(#fff5ad,#f0cb43)}.v37-day .phase{font-size:8px;color:#6e7c90}.v37-match{display:grid;grid-template-columns:1fr 38px;align-items:center;gap:4px;padding:5px;border-bottom:1px dotted #9db0c1;font-size:9px;font-weight:1000}.v37-match.own{background:#fff3b6}.v37-match .teams div{line-height:1.05}.v37-score{text-align:center;font-size:13px;color:#163b72}.v37-score.win{color:#d22d37}.v37-score.loss{color:#4f739b}.v37-offday{display:grid;place-items:center;height:110px;color:#6e8298;font-weight:1000;font-size:10px}
+  .v37-lower{display:grid;grid-template-columns:1.35fr .65fr;gap:8px;margin-top:8px}.v37-panel{background:linear-gradient(#fdfefe,#e9f3fa);border:2px solid #7197ba;border-radius:7px;box-shadow:inset 0 0 0 1px #fff,0 2px 5px #0002;overflow:hidden}.v37-panel .hd{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;background:linear-gradient(#336ab0,#17467f);border-left:8px solid #f2d14b;color:#fff;font-size:11px;font-weight:1000}.v37-panel .bd{padding:6px}.v37-resultgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.v37-resultmini{display:grid;grid-template-columns:1fr 34px;gap:4px;align-items:center;padding:5px;background:linear-gradient(#fff,#edf4f9);border:1px solid #a0b3c6;border-radius:4px}.v37-resultmini.own{border:2px solid #eea533;background:linear-gradient(#fff6bf,#fff0a2)}.v37-resultmini .t{font-size:8px;line-height:1.05;font-weight:1000}.v37-resultmini .s{font-size:14px;text-align:center;font-weight:1000;color:#193e73}.v37-resultmini .s.win{color:#d43137}.v37-standings{width:100%;border-collapse:collapse;font-size:8px}.v37-standings th{background:#214987;color:#fff;padding:4px}.v37-standings td{padding:4px;border-bottom:1px solid #d1dce6;text-align:center}.v37-standings td:first-child{text-align:left}.v37-standings tr.self td{background:#fff2b2;font-weight:1000}.v37-note{font-size:9px;color:#5d7188}
+  #app.v37-busy{pointer-events:none}
+  #app.v37-suppress-paint{visibility:hidden}
+  @media(max-width:1000px){.v37-daygrid{grid-template-columns:repeat(4,minmax(150px,1fr))}.v37-lower{grid-template-columns:1fr}.v37-toolbar{grid-template-columns:1fr 340px}}
+  @media(max-width:700px){.v37-toolbar{grid-template-columns:1fr}.v37-fixed-actions{justify-self:start}.v37-daygrid{grid-template-columns:repeat(2,minmax(145px,1fr))}.v37-resultgrid{grid-template-columns:1fr}.v37-console-hints{display:none}}
 </style>
-<script>
-(function(){
-  // V34: the old HTML contains several historical nextDay implementations.
-  // Always call the latest window.nextDay implementation from visible controls.
-  function normalizeScheduleControls(){
-    try{
-      if(!window.state || window.currentView!=='schedule') return;
-      const host=document.querySelector('.schedule-toolbar .actions') || document.querySelector('.v25-toolbar .v25-actions');
-      if(!host) return;
-      host.style.display='flex';
-      host.style.alignItems='center';
-      host.style.justifyContent='flex-end';
-      host.style.gap='8px';
-      host.style.minWidth='330px';
-      // Hide every historical button in this host.
-      Array.from(host.querySelectorAll('button')).forEach(b=>{b.style.display='none';});
-      let result=host.querySelector('.v34-result-btn');
-      if(!result){
-        result=document.createElement('button');
-        result.className='v34-result-btn';
-        host.appendChild(result);
-      }
-      let next=host.querySelector('.v34-next-btn');
-      if(!next){
-        next=document.createElement('button');
-        next.className='v34-next-btn primary';
-        host.appendChild(next);
-      }
-      const dr=window.state.dailyResults;
-      const has=!!(dr&&Array.isArray(dr.games)&&dr.games.length);
-      result.textContent=has?'前日の試合結果':'試合結果なし';
-      result.disabled=!has;
-      result.style.display='inline-flex';
-      result.style.visibility='visible';
-      result.style.pointerEvents=has?'auto':'none';
-      result.onclick=function(){ if(window.showDailyResultsV32) window.showDailyResultsV32(); };
-      next.textContent='▶ 次の日へ';
-      next.style.display='inline-flex';
-      next.style.visibility='visible';
-      next.style.pointerEvents='auto';
-      next.onclick=function(ev){
-        if(ev) ev.preventDefault();
-        // Important: explicitly call the window property so old lexical nextDay bindings
-        // cannot intercept the click.
-        if(typeof window.nextDay==='function') window.nextDay();
-      };
-    }catch(e){console.warn('V34 controls',e)}
-  }
-  window.normalizeScheduleControls=normalizeScheduleControls;
-
-  // Re-apply after every schedule render, but do not alter the game state.
-  const oldRender=window.renderGame;
-  if(typeof oldRender==='function' && !window.__v34RenderWrapped){
-    window.__v34RenderWrapped=true;
-    window.renderGame=function(view){
-      const r=oldRender(view);
-      if((view||window.currentView)==='schedule') requestAnimationFrame(normalizeScheduleControls);
-      return r;
-    };
-  }
-  // Keep inline HTML clicks on the latest global implementation.
-  window.__v34Ready=true;
-  setTimeout(normalizeScheduleControls,0);
-
-  // V34 BGM: keep trying automatically. Browser autoplay policy may still require a gesture;
-  // the game never restarts the current track merely because the screen was re-rendered.
-  function tryAutoplayV34(){
-    try{
-      if(!window.state || !window.state.settings?.bgm) return;
-      if(typeof window.autoplayBGM33==='function'){ window.autoplayBGM33(); return; }
-      if(typeof window.autoStartBGMV32==='function'){ window.autoStartBGMV32(); return; }
-      if(typeof window.playBGM==='function'){ window.playBGM(); }
-    }catch(e){ /* browser autoplay rejection is intentionally silent */ }
-  }
-  window.addEventListener('load',()=>setTimeout(tryAutoplayV34,50));
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden) setTimeout(tryAutoplayV34,0);});
-  window.addEventListener('pageshow',()=>setTimeout(tryAutoplayV34,0));
-})();
-</script>
-
-<style id="v35-final-style">
-  /* V35: schedule controls — result LEFT, next-day RIGHT, fixed footprint. */
-  .v35-controlbar{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important;min-width:340px!important;min-height:44px!important}
-  .v35-controlbar button{width:160px!important;min-width:160px!important;height:42px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
-  .v35-controlbar .v35-result.is-empty{visibility:hidden!important;pointer-events:none!important}
-  #app.v35-busy{pointer-events:none!important}
-</style>
-<script>
+<script id="v37-final-authority">
 (function(){
   'use strict';
-  /* V35: one authoritative next-day path. It does not call any historical nextDay wrapper. */
-  function v35DatePlusOne(iso){
-    const d=dateObj(iso); d.setUTCDate(d.getUTCDate()+1); return dateIso(d);
+  window.__v37SuppressRender=false;
+  window.__v37Busy=false;
+
+  function v37Esc(s){return String(s??'').replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])})}
+  function v37Winner(g){
+    const own=g.home===state.controlTeam||g.away===state.controlTeam;
+    if(!own) return false;
+    return g.home===state.controlTeam ? g.homeScore>g.awayScore : g.awayScore>g.homeScore;
   }
-  function v35RenderSchedule(){
-    try{
-      currentView='schedule';
-      ensureSchedule();
-      ensureLineupsAll();
-      if(typeof ensureV23State==='function')ensureV23State(state);
-      if(typeof ensureV19State==='function')ensureV19State(state);
-      if(typeof render25==='function'){
-        render25('schedule');
-      }else if(typeof window.renderGame==='function'){
-        window.renderGame('schedule');
-      }else{
-        renderGame('schedule');
-      }
-      // Normalize controls after the DOM exists, without another render.
-      requestAnimationFrame(v35NormalizeControls);
-    }catch(e){
-      console.error('V35 render schedule',e);
-      try{ currentView='schedule'; if(state)state.lastMessage='日程画面の更新でエラーが発生しました：'+(e.message||e); }catch(_){}
+  function v37Standings(league){
+    const arr=standings(league).map(x=>({id:x.id,name:x.name,short:x.short,wins:x.wins,losses:x.losses,ties:state.teams[x.id]?.ties||0,runsFor:x.runsFor||0,runsAgainst:x.runsAgainst||0}));
+    const leader=arr[0];
+    return arr.map(x=>{const gp=x.wins+x.losses+x.ties;const pct=gp?((x.wins+.5*x.ties)/gp):0;const gb=leader?((leader.wins-x.wins)+(x.losses-leader.losses))/2:0;return {...x,gp,pct,gb}});
+  }
+  function v37StandingTable(league){
+    const rows=v37Standings(league);
+    return '<table class="v37-standings"><thead><tr><th>順位</th><th>球団</th><th>試合</th><th>勝</th><th>敗</th><th>分</th><th>勝率</th><th>差</th></tr></thead><tbody>'+rows.map((x,i)=>'<tr class="'+(x.id===state.controlTeam?'self':'')+'"><td>'+(i+1)+'</td><td style="text-align:left">'+v37Esc(x.short)+'</td><td>'+x.gp+'</td><td>'+x.wins+'</td><td>'+x.losses+'</td><td>'+x.ties+'</td><td>'+x.pct.toFixed(3).replace(/^0/, '')+'</td><td>'+ (i===0?'－':x.gb.toFixed(1))+'</td></tr>').join('')+'</tbody></table>';
+  }
+  function v37DayCard(d){
+    const dd=dateObj(d), today=d===state.currentDate, gs=gamesOn(d), type=dd.getUTCDay()===1?'移動日':'';
+    let body='';
+    if(gs.length){
+      body=gs.map(function(g){const own=g.home===state.controlTeam||g.away===state.controlTeam;const uw=own&&v37Winner(g);const ul=own&&!uw&&g.played;return '<div class="v37-match '+(own?'own':'')+'"><div class="teams"><div>'+v37Esc(team(g.away).short)+'</div><div>'+v37Esc(team(g.home).short)+'</div></div><div class="v37-score '+(uw?'win':ul?'loss':'')+'">'+(g.played?g.awayScore+'<br>'+g.homeScore:'－')+'</div></div>'}).join('');
+    }else body='<div class="v37-offday">'+(type||'試合なし')+'</div>';
+    return '<div class="v37-day '+(today?'today':'')+'"><div class="head"><span>'+dateLabel(d)+'</span><span class="phase">'+(today?'本日':type)+'</span></div>'+body+'</div>';
+  }
+  function v37ScheduleHtml(){
+    const cur=dateObj(state.currentDate),days=[];for(let i=0;i<7;i++){const d=new Date(cur);d.setUTCDate(d.getUTCDate()+i);days.push(dateIso(d));}
+    const daily=state.dailyResults&&Array.isArray(state.dailyResults.games)?state.dailyResults.games:[];
+    const played=state.games.filter(g=>g.played).length,ctl=state.teams[state.controlTeam];
+    const own=daily.find(g=>g.home===state.controlTeam||g.away===state.controlTeam);
+    const ownText=own?((own.home===state.controlTeam?own.homeScore>own.awayScore:own.awayScore>own.homeScore)?'勝利':'敗戦')+'　'+team(own.away).short+' '+own.awayScore+' - '+own.homeScore+' '+team(own.home).short:'自軍の試合なし';
+    return '<div id="v37-schedule-root" class="v37-schedule-root"><div class="v37-consolebar"><div class="v37-console-title"><span class="orb">⚾</span><div><b>日程表</b><small>PENNANT / SEASON SCHEDULE</small></div></div><div class="v37-console-hints"><span>△▽ 日程</span><span>N 次の日</span><span>○ 決定</span></div></div><div class="v37-toolbar"><div><div class="v37-toolbar-title">'+fullDate(state.currentDate)+'</div><div class="v37-toolbar-sub">'+state.year+'年度　'+phaseText()+'　｜　消化 '+played+' / '+state.games.length+'試合</div></div><div class="v37-fixed-actions"><button class="result-btn '+(daily.length?'':'empty')+'" data-v37-result>前日の試合結果</button><button class="next-btn" data-v37-next>▶ 次の日へ</button></div></div><div class="v37-callout">速報　'+v37Esc(ownText)+'<span style="float:right">'+ctl.wins+'勝 '+ctl.losses+'敗　勝率 '+((ctl.wins+ctl.losses)?(ctl.wins/(ctl.wins+ctl.losses)).toFixed(3):'.000')+'</span></div><div class="v37-daygrid">'+days.map(v37DayCard).join('')+'</div><div class="v37-lower"><section class="v37-panel"><div class="hd"><span>前日の試合結果</span><span>'+ (daily.length?dateLabel(state.dailyResults.date)+'　全'+daily.length+'試合':'－')+'</span></div><div class="bd"><div class="v37-resultgrid">'+(daily.length?daily.map(function(g){const own=g.home===state.controlTeam||g.away===state.controlTeam;return '<div class="v37-resultmini '+(own?'own':'')+'"><div class="t">'+v37Esc(team(g.away).short)+'<br>'+v37Esc(team(g.home).short)+'</div><div class="s '+(v37Winner(g)?'win':'')+'">'+g.awayScore+'<br>'+g.homeScore+'</div></div>'}).join(''):'<div class="notice">まだ前日の試合結果はありません。</div>')+'</div></div></section><section class="v37-panel"><div class="hd"><span>セントラル・リーグ</span><span>順位表</span></div><div class="bd">'+v37StandingTable('セ')+'</div><div class="hd" style="margin-top:6px"><span>パシフィック・リーグ</span><span>順位表</span></div><div class="bd">'+v37StandingTable('パ')+'</div></section></div></div>';
+  }
+  function v37BindSchedule(){
+    const root=document.getElementById('v37-schedule-root');if(!root)return;
+    document.querySelectorAll('.header-tools button').forEach(function(b){ if(/1日進む|次の日へ/.test(b.textContent||'')) b.style.display='none'; });
+    const result=root.querySelector('[data-v37-result]'),next=root.querySelector('[data-v37-next]');
+    if(result)result.onclick=function(e){e.preventDefault();e.stopPropagation();if(state.dailyResults&&state.dailyResults.games&&state.dailyResults.games.length&&typeof window.showDailyResultsV32==='function')window.showDailyResultsV32();else if(typeof window.showDailyResults==='function')window.showDailyResults();};
+    if(next)next.onclick=function(e){e.preventDefault();e.stopPropagation();window.nextDay();};
+  }
+  function v37PatchSchedule(){
+    if(!state||currentView!=='schedule')return;
+    const root=document.getElementById('v37-schedule-root');
+    if(!root){return window.__v37OriginalRenderGame('schedule');}
+    const tmp=document.createElement('div');tmp.innerHTML=v37ScheduleHtml();const newRoot=tmp.firstElementChild;root.replaceWith(newRoot);v37BindSchedule();
+    const hd=document.querySelector('.header-date b');if(hd)hd.textContent=fullDate(state.currentDate);
+    const ribbonDate=document.querySelector('.season-ribbon b');if(ribbonDate)ribbonDate.textContent=fullDate(state.currentDate);
+  }
+  function v37RenderGame(view){
+    if(window.__v37SuppressRender)return;
+    const v=view||currentView||'schedule';
+    if(v==='schedule'){
+      window.__v37OriginalRenderGame('schedule');
+      v37BindSchedule();
+      return;
     }
+    const r=window.__v37OriginalRenderGame(v);
+    document.querySelectorAll('.header-tools button').forEach(function(b){ if(/1日進む|次の日へ/.test(b.textContent||'')) b.style.display=''; });
+    return r;
   }
-  function v35NormalizeControls(){
+  // Capture the pre-V37 renderer exactly once, then make V37 authoritative.
+  window.__v37OriginalRenderGame=window.renderGame;
+  window.renderGame=v37RenderGame;try{renderGame=v37RenderGame}catch(_){ }
+  // A clean, single source of truth for the schedule view.
+  scheduleView=v37ScheduleHtml;window.scheduleView=scheduleView;
+
+  function v37StartBGM(){
     try{
-      if(!state || currentView!=='schedule')return;
-      const host=document.querySelector('.v25-toolbar .v25-actions')||document.querySelector('.schedule-toolbar .actions')||document.querySelector('.v25-actions');
-      if(!host)return;
-      host.classList.add('v35-controlbar');
-      // Remove/hide every old button in this specific toolbar.
-      Array.from(host.querySelectorAll('button')).forEach(b=>{b.style.display='none';});
-      let result=host.querySelector('.v35-result');
-      if(!result){result=document.createElement('button');result.className='v35-result';host.appendChild(result);}
-      let next=host.querySelector('.v35-next');
-      if(!next){next=document.createElement('button');next.className='v35-next primary';host.appendChild(next);}
-      const dr=state.dailyResults;
-      const has=!!(dr&&Array.isArray(dr.games)&&dr.games.length);
-      result.textContent='前日の試合結果';
-      result.classList.toggle('is-empty',!has);
-      result.disabled=!has;
-      result.onclick=function(ev){ev.preventDefault();ev.stopPropagation(); if(typeof window.showDailyResultsV32==='function')window.showDailyResultsV32();};
-      next.textContent='▶ 次の日へ';
-      next.onclick=function(ev){ev.preventDefault();ev.stopPropagation();window.nextDay();};
-    }catch(e){console.warn('V35 normalize controls',e)}
+      if(!state||state.settings?.bgm===false)return;
+      bgmUnlocked=true;initBGM();
+      const file=trackForDate();
+      if(currentBgmFile!==file||!bgmAudio.src){
+        currentBgmFile=file;bgmSourceIndex=0;bgmAudio.src=bgmSources(file)[0];bgmAudio.load();
+      }
+      bgmAudio.loop=true;bgmAudio.preload='auto';bgmAudio.playsInline=true;bgmAudio.autoplay=true;bgmAudio.muted=false;bgmAudio.volume=state.settings.volume??0.5;
+      const pr=bgmAudio.play();if(pr&&pr.catch)pr.catch(function(){bgmRetryPending=true});
+    }catch(e){bgmRetryPending=true}
   }
-  function v35Advance(){
+  window.v37StartBGM=v37StartBGM;
+
+  function v37Advance(){
     if(!state){renderTitle();return;}
-    const app=document.getElementById('app');
-    if(app&&app.classList.contains('v35-busy'))return;
+    const app=document.getElementById('app');if(window.__v37Busy)return;window.__v37Busy=true;if(app)app.classList.add('v37-busy');
+    window.__v37SuppressRender=true;
     try{
-      if(app)app.classList.add('v35-busy');
-      // Do not rely on old unlock/retry wrappers for state flow.
-      try{ if(typeof window.autoplayBGM33==='function')window.autoplayBGM33(); else if(typeof window.playBGM==='function')window.playBGM(); }catch(_){ }
-      ensureSchedule();
+      if(typeof ensureSchedule==='function')ensureSchedule();
       if(typeof ensureV23State==='function')ensureV23State(state);
       if(typeof ensureV19State==='function')ensureV19State(state);
       if(state.phase==='regular'){
-        const date=state.currentDate;
-        const todayGames=gamesOn(date).filter(g=>!g.played);
-        // Simulate the whole league day exactly once.
-        todayGames.forEach(g=>{
-          if(typeof window.simulateGame==='function') window.simulateGame(g);
-          else if(typeof simulateGame==='function') simulateGame(g);
-        });
-        TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{
-          if(p.retired)return;
-          p.fatigue=Math.max(0,(p.fatigue||0)-2);
-          p.form=clamp(p.form+(50-p.form)*0.04);
-          if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null;}
-        }));
-        state.dailyResults={date,games:todayGames.map(g=>({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}))};
-        const own=todayGames.find(g=>g.home===state.controlTeam||g.away===state.controlTeam);
-        state.lastResult=own?{...own}:null;
-        const nextDate=v35DatePlusOne(date);
-        state.currentDate=nextDate;
-        if(!state.games.some(g=>!g.played) && typeof finishRegularSeason==='function') finishRegularSeason();
-        state.lastMessage=todayGames.length?(fullDate(date)+'の全球団の試合結果を反映しました。'):'本日は試合がありません。';
+        const date=state.currentDate;const games=gamesOn(date).filter(g=>!g.played);
+        games.forEach(function(g){if(typeof window.simulateGame==='function')window.simulateGame(g);else if(typeof simulateGame==='function')simulateGame(g)});
+        TEAMS.forEach(function(t){teamPlayers(t.id).forEach(function(p){if(p.retired)return;p.fatigue=Math.max(0,(p.fatigue||0)-2);p.form=clamp(p.form+(50-p.form)*.04);if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null}})});
+        state.dailyResults={date:date,games:games.map(g=>({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}))};
+        const own=games.find(g=>g.home===state.controlTeam||g.away===state.controlTeam);state.lastResult=own?{...own}:null;
+        const d=dateObj(date);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);
+        if(!state.games.some(g=>!g.played)&&typeof finishRegularSeason==='function')finishRegularSeason();
+        state.lastMessage=games.length?fullDate(date)+'の全球団の試合結果を反映しました。':'本日は試合がありません。';
       }else if(state.phase==='cs'||state.phase==='japan'){
-        if(typeof advanceSeries==='function')advanceSeries();
-        state.dailyResults=null; state.lastResult=null;
+        if(typeof advanceSeries==='function')advanceSeries();state.dailyResults=null;state.lastResult=null;
       }else{
-        const nextDate=v35DatePlusOne(state.currentDate);
-        if(nextDate >= ((state.year+1)+'-03-27')){
-          if(typeof newSeason==='function')newSeason();
-          else {state.year+=1;state.currentDate=state.year+'-03-27';state.phase='regular';}
-          state.dailyResults=null; state.lastResult=null;
-        }else{
-          state.currentDate=nextDate;
-          state.dailyResults=null; state.lastResult=null;
-          state.lastMessage=fullDate(nextDate)+'へ進みました。';
-        }
+        const d=dateObj(state.currentDate);d.setUTCDate(d.getUTCDate()+1);const next=dateIso(d);
+        if(next>=String(state.year+1)+'-03-27'){if(typeof newSeason==='function')newSeason();else{state.year++;state.currentDate=state.year+'-03-27';state.phase='regular'}state.dailyResults=null;state.lastResult=null;}
+        else{state.currentDate=next;state.dailyResults=null;state.lastResult=null;state.lastMessage=fullDate(next)+'へ進みました。'}
       }
-      // One render only. Never call a legacy nextDay and never renderTitle on normal failures.
-      v35RenderSchedule();
-    }catch(e){
-      console.error('V35 nextDay',e);
-      if(state){
-        state.lastMessage='日程進行エラー：'+(e&&e.message?e.message:'不明なエラー');
-        // Keep the player in the game; render the schedule instead of returning to title.
-        try{v35RenderSchedule();}catch(_){ }
-      }
-    }finally{
-      if(app)requestAnimationFrame(()=>app.classList.remove('v35-busy'));
+    }catch(e){console.error('V37 nextDay',e);state.lastMessage='日程進行エラー：'+(e&&e.message?e.message:'不明なエラー')}
+    finally{
+      window.__v37SuppressRender=false;currentView='schedule';
+      const root=document.getElementById('v37-schedule-root');
+      if(root)v37PatchSchedule();else{window.__v37OriginalRenderGame('schedule');v37BindSchedule();}
+      window.__v37Busy=false;if(app)app.classList.remove('v37-busy');
+      v37StartBGM();
     }
   }
-  window.nextDay=v35Advance;
-  try{nextDay=v35Advance}catch(_){ }
-  window.v35NormalizeControls=v35NormalizeControls;
-  // Patch renderGame only for the schedule controls; do not add another nextDay wrapper.
-  const rg=window.renderGame;
-  if(typeof rg==='function'&&!window.__v35RenderWrapped){
-    window.__v35RenderWrapped=true;
-    window.renderGame=function(view){
-      const r=rg(view);
-      if((view||currentView)==='schedule')requestAnimationFrame(v35NormalizeControls);
-      return r;
-    };
-    try{renderGame=window.renderGame}catch(_){ }
-  }
-  // Best-effort automatic BGM. Browser autoplay policy may still reject audible autoplay.
-  function v35AutoBGM(){
+  window.nextDay=v37Advance;try{nextDay=v37Advance}catch(_){ }
+
+  window.startGame=function(control){
     try{
-      if(!state||!state.settings||state.settings.bgm===false)return;
-      if(typeof window.autoplayBGM33==='function')window.autoplayBGM33();
-      else if(typeof window.playBGM==='function')window.playBGM();
-    }catch(_){ }
-  }
-  window.addEventListener('load',()=>setTimeout(v35AutoBGM,50));
-  window.addEventListener('pageshow',()=>setTimeout(v35AutoBGM,50));
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(v35AutoBGM,50);});
-  // Keyboard next-day is mapped directly to the final authoritative function.
-  document.addEventListener('keydown',e=>{
-    if((e.key==='n'||e.key==='N'||e.code==='Space') && state && currentView==='schedule'){
-      e.preventDefault(); window.nextDay();
-    }
-  });
-  setTimeout(()=>{if(state&&currentView==='schedule')v35NormalizeControls();v35AutoBGM();},0);
+      const id=TEAMS.some(t=>t.id===control)?control:TEAMS[0].id;
+      bgmUnlocked=true;state=freshState(id);if(typeof ensureV13State==='function')ensureV13State();if(typeof ensureV14State==='function')ensureV14State();if(typeof ensureSchedule==='function')ensureSchedule();if(typeof ensureLineupsAll==='function')ensureLineupsAll();currentView='schedule';selectedPlayer=null;selectedPlayerTab='ability';state.lastMessage=team(id).name+'でペナントを開始しました。';
+      v37StartBGM();
+      window.__v37OriginalRenderGame('schedule');v37BindSchedule();
+    }catch(e){console.error('V37 startGame',e);if(state)state.lastMessage='ゲーム開始に失敗しました：'+(e&&e.message?e.message:'不明なエラー');renderTitle();}
+  };
+
+  // Do not claim this bypasses autoplay policy. We only retry; if the browser blocks audible autoplay,
+  // there is no standards-compliant way for JavaScript to force it.
+  window.addEventListener('load',function(){setTimeout(v37StartBGM,20)});
+  window.addEventListener('pageshow',function(){setTimeout(v37StartBGM,20)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(v37StartBGM,20)});
+  document.addEventListener('keydown',function(e){if(!state||currentView!=='schedule')return;if(e.key==='n'||e.key==='N'||e.code==='Space'){e.preventDefault();window.nextDay()}});
+  setTimeout(function(){if(state&&currentView==='schedule'){window.__v37OriginalRenderGame('schedule');v37BindSchedule()}v37StartBGM()},0);
 })();
 </script>
+</body></html>
