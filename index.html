@@ -3039,4 +3039,162 @@ button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7
   setTimeout(function(){if(state&&currentView==='schedule'){window.__v37OriginalRenderGame('schedule');v37BindSchedule()}v37StartBGM()},0);
 })();
 </script>
+
+<!-- V38 FINAL SCHEDULE AUTHORITY -->
+<script id="v38-final-authority">
+(function(){
+  'use strict';
+  const v38OriginalRender = window.__v37OriginalRenderGame || window.renderGame;
+
+  function v38Esc(s){return String(s??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])})}
+
+  function v38RenderSchedule(){
+    if(!state){renderTitle();return;}
+    currentView='schedule';
+    try{ensureSchedule();ensureLineupsAll();}catch(e){console.error('V38 ensure',e)}
+    const ct=team(state.controlTeam);
+    const pct=Math.round((state.games.filter(g=>g.played).length/(state.games.length||858))*100);
+    const app=document.getElementById('app');
+    if(!app)return;
+    const content=(typeof v37ScheduleHtml==='function')?v37ScheduleHtml():(typeof scheduleView==='function'?scheduleView():'');
+    // One and only one schedule render. No legacy schedule renderer is called here.
+    app.innerHTML='<header class="game-header game-header-v16 v38-header">'+
+      '<div class="brand"><div class="brand-mark">PM</div><div><h1>'+v38Esc(ct.name)+'</h1><small>'+state.year+'年度　'+v38Esc(phaseText())+'</small></div></div>'+
+      '<div class="header-date"><b>'+v38Esc(fullDate(state.currentDate))+'</b><div class="header-tools">'+
+      '<button onclick="safeRender(\'schedule\')">日程表</button>'+
+      '<button onclick="unlockBGM();renderGame(currentView)">♪ BGM '+(state.settings&&state.settings.bgm?'ON':'OFF')+'</button>'+
+      '</div></div></header>'+
+      '<main class="screen v38-screen"><div class="season-ribbon"><span class="phase">'+v38Esc(phaseText())+'</span><b>'+v38Esc(fullDate(state.currentDate))+'</b><span>操作球団：'+v38Esc(ct.name)+'</span></div>'+
+      '<div class="season-progress"><i style="width:'+pct+'%"></i></div>'+nav('schedule')+
+      '<div class="notice">'+v38Esc(state.lastMessage||'')+'</div>'+content+
+      '</main><footer style="padding:18px;text-align:center;font-size:10px;color:#6d7f95">ORIGINAL BROWSER PENNANT / baseball management homage</footer>';
+    // Bind V38 controls directly. V37's binder lives inside its private scope.
+    const root=document.getElementById('v37-schedule-root');
+    if(root){
+      const resultBtn=root.querySelector('[data-v37-result]');
+      const nextBtn=root.querySelector('[data-v37-next]');
+      if(resultBtn)resultBtn.onclick=function(e){e.preventDefault();e.stopPropagation();if(state.dailyResults&&state.dailyResults.games&&state.dailyResults.games.length&&typeof window.showDailyResultsV32==='function')window.showDailyResultsV32();else if(typeof window.showDailyResults==='function')window.showDailyResults();};
+      if(nextBtn)nextBtn.onclick=function(e){e.preventDefault();e.stopPropagation();window.nextDay();};
+    }
+    // Enforce the exact button order/position after the DOM exists.
+    if(root){
+      const box=root.querySelector('.v37-fixed-actions');
+      if(box){
+        box.style.display='flex';box.style.flexDirection='row';box.style.alignItems='center';box.style.justifyContent='flex-end';box.style.gap='8px';box.style.width='378px';box.style.height='42px';
+        const result=box.querySelector('[data-v37-result]');
+        const next=box.querySelector('[data-v37-next]');
+        [result,next].forEach(function(b){if(b){b.style.display='block';b.style.position='static';b.style.width='185px';b.style.height='42px';b.style.margin='0';}});
+        if(result && next){box.appendChild(result);box.appendChild(next);}
+      }
+    }
+  }
+
+  function v38RenderGame(view){
+    const v=view||currentView||'schedule';
+    if(v==='schedule')return v38RenderSchedule();
+    return v38OriginalRender(v);
+  }
+
+  function v38SafeRender(view){
+    try{
+      currentView=view;
+      return v38RenderGame(view);
+    }catch(e){
+      console.error('V38 safeRender',e);
+      if(state){state.lastMessage='画面表示でエラーが発生したため日程表へ戻しました。';return v38RenderSchedule();}
+      return renderTitle();
+    }
+  }
+
+  function v38NextDay(){
+    if(window.__v38Busy)return;
+    if(!state){renderTitle();return;}
+    window.__v38Busy=true;
+    const oldCurrent=currentView;
+    try{
+      // IMPORTANT: do not call renderGame/safeRender while processing a day.
+      // This keeps the browser from painting the legacy UI between states.
+      if(typeof ensureSchedule==='function')ensureSchedule();
+      if(typeof ensureV23State==='function')ensureV23State(state);
+      if(typeof ensureV19State==='function')ensureV19State(state);
+      if(state.phase==='regular'){
+        const date=state.currentDate;
+        const games=gamesOn(date).filter(function(g){return !g.played;});
+        games.forEach(function(g){
+          if(typeof window.simulateGame==='function')window.simulateGame(g);
+          else if(typeof simulateGame==='function')simulateGame(g);
+        });
+        TEAMS.forEach(function(t){
+          teamPlayers(t.id).forEach(function(p){
+            if(p.retired)return;
+            p.fatigue=Math.max(0,(p.fatigue||0)-2);
+            p.form=clamp((p.form||50)+(50-(p.form||50))*0.04);
+            if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0){p.injury=null;p.injuryDays=0;}}
+          });
+        });
+        state.dailyResults={date:date,games:games.map(function(g){return {id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore};})};
+        const own=games.find(function(g){return g.home===state.controlTeam||g.away===state.controlTeam;});
+        state.lastResult=own?Object.assign({},own):null;
+        const d=dateObj(date);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);
+        if(!state.games.some(function(g){return !g.played;}) && typeof finishRegularSeason==='function')finishRegularSeason();
+        state.lastMessage=games.length?fullDate(date)+'の全球団の試合結果を反映しました。':'本日は試合がありません。';
+      }else if(state.phase==='cs'||state.phase==='japan'){
+        if(typeof advanceSeries==='function')advanceSeries();
+        state.dailyResults=null;state.lastResult=null;
+      }else{
+        const d=dateObj(state.currentDate);d.setUTCDate(d.getUTCDate()+1);const next=dateIso(d);
+        if(next>=String(state.year+1)+'-03-27'){
+          if(typeof window.newSeason==='function')window.newSeason();
+          else if(typeof newSeason==='function')newSeason();
+          state.dailyResults=null;state.lastResult=null;
+        }else{
+          state.currentDate=next;state.dailyResults=null;state.lastResult=null;state.lastMessage=fullDate(next)+'へ進みました。';
+        }
+      }
+    }catch(e){
+      console.error('V38 nextDay',e);
+      state.lastMessage='日程進行エラー：'+(e&&e.message?e.message:'不明なエラー');
+    }finally{
+      currentView='schedule';
+      // Exactly one paint of the new schedule state.
+      v38RenderSchedule();
+      window.__v38Busy=false;
+    }
+  }
+
+  // Use the V38 versions as the only global entry points used by inline buttons.
+  window.renderGame=v38RenderGame;
+  window.safeRender=v38SafeRender;
+  window.nextDay=v38NextDay;
+  try{renderGame=v38RenderGame;}catch(_){ }
+  try{safeRender=v38SafeRender;}catch(_){ }
+  try{nextDay=v38NextDay;}catch(_){ }
+
+  // Remove legacy daily-advance buttons whenever the schedule screen is rendered.
+  const style=document.createElement('style');
+  style.textContent='.v38-header .header-tools button:first-child{display:none!important}.v38-header .header-tools{gap:6px}.v38-screen .main-nav{margin-bottom:8px}';
+  document.head.appendChild(style);
+
+  // Patch startGame without invoking the legacy render path for the first schedule paint.
+  window.startGame=function(control){
+    try{
+      const id=TEAMS.some(function(t){return t.id===control;})?control:TEAMS[0].id;
+      state=freshState(id);
+      if(typeof ensureV13State==='function')ensureV13State();
+      if(typeof ensureV14State==='function')ensureV14State();
+      if(typeof ensureSchedule==='function')ensureSchedule();
+      if(typeof ensureLineupsAll==='function')ensureLineupsAll();
+      currentView='schedule';selectedPlayer=null;selectedPlayerTab='ability';
+      state.lastMessage=team(id).name+'でペナントを開始しました。';
+      if(typeof window.v37StartBGM==='function')window.v37StartBGM();
+      else if(typeof playBGM==='function'){bgmUnlocked=true;playBGM();}
+      v38RenderSchedule();
+      return true;
+    }catch(e){console.error('V38 startGame',e);if(state)state.lastMessage='ゲーム開始に失敗しました：'+(e&&e.message?e.message:'不明なエラー');renderTitle();return false;}
+  };
+
+  // Re-render the authoritative schedule once after script installation if a game is already active.
+  if(state && currentView==='schedule')v38RenderSchedule();
+})();
+</script>
 </body></html>
