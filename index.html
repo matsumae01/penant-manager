@@ -120,7 +120,7 @@ const TEAMS=[
 const TEAM_BASE={tigers:84,carp:74,baystars:80,giants:82,swallows:72,dragons:70,hawks:86,fighters:81,marines:76,eagles:71,buffaloes:79,lions:68};
 const NAMES=["青木","石川","伊藤","井上","岡田","加藤","木村","久保","小川","佐々木","高橋","田中","中村","西村","藤井","松本","森","山口","山田","吉田","渡辺","佐藤","鈴木","山本","小林","斎藤","清水","阿部","池田","後藤","近藤","前田","村上","林","橋本","柴田","原","宮本","横山","長谷川","福田","金子","藤田","岡本","中島","中川","石井","遠藤","野口","小松"];
 const SPECIAL_H=["チャンス","対左投手","盗塁","流し打ち","粘り打ち","選球眼","広角打法","逆境○","ケガしにくさ","初球○"];const SPECIAL_P=["対ピンチ","ノビ","キレ○","回復","奪三振","対左打者","打たれ強さ","クイック","逃げ球","低め○"];
-const VERSION=19,SAVE_KEY="pennant_manager_next_v19",OLD_KEYS=["pennant_manager_next_v18","pennant_manager_next_v17","pennant_manager_next_v16","pennant_manager_next_v15","pennant_manager_next_v14","pennant_manager_next_v13","pennant_manager_next_v12","pennant_manager_next_v11","pennant_manager_next_v10","pennant_manager_next_v9","pennant_manager_next_v8","pennant_manager_next_v7","pennant_manager_next_v6","pennant_manager_next_v5","pennant_manager_next_v4","pennant_manager_next_v3"];
+const VERSION=23,SAVE_KEY="pennant_manager_next_v23",OLD_KEYS=["pennant_manager_next_v22","pennant_manager_next_v21","pennant_manager_next_v20","pennant_manager_next_v19","pennant_manager_next_v18","pennant_manager_next_v17","pennant_manager_next_v16","pennant_manager_next_v15","pennant_manager_next_v14","pennant_manager_next_v13","pennant_manager_next_v12","pennant_manager_next_v11","pennant_manager_next_v10","pennant_manager_next_v9","pennant_manager_next_v8","pennant_manager_next_v7","pennant_manager_next_v6","pennant_manager_next_v5","pennant_manager_next_v4","pennant_manager_next_v3"];
 let state=null,selectedTeam=TEAMS[0].id,currentView="schedule",selectedPlayer=null,selectedPlayerTab="ability",playerFilter="all",scoutFilter="all",selectedProspect=null;
 const $=id=>document.getElementById(id),team=id=>TEAMS.find(t=>t.id===id);const clamp=(v,a=1,b=100)=>Math.max(a,Math.min(b,Math.round(v)));const clamp01=v=>Math.max(0,Math.min(1,v));
 function dateObj(s){return new Date(s+"T00:00:00Z")}function dateIso(d){return d.toISOString().slice(0,10)}function dateLabel(s){const d=dateObj(s),w=["日","月","火","水","木","金","土"];return (d.getUTCMonth()+1)+"月"+d.getUTCDate()+"日（"+w[d.getUTCDay()]+"）"}function fullDate(s){const d=dateObj(s),w=["日","月","火","水","木","金","土"];return d.getUTCFullYear()+"年"+(d.getUTCMonth()+1)+"月"+d.getUTCDate()+"日（"+w[d.getUTCDay()]+"）"}
@@ -139,7 +139,7 @@ function loadSlot(slot){const x=findSave(slot);if(!x)return alert("このセー�
 function teamPlayers(id,includeRetired=false){return state.players.filter(p=>p.teamId===id&&(includeRetired||!p.retired))}function playerById(id){return state?.players?.find(p=>p.id===id)||null}function rating(p){return overall(p)+(p.form-50)*.07-p.fatigue*.08-(p.injury?20:0)}
 function lineupFor(id){const ex=(state.lineups[id]||[]).map(playerById).filter(p=>p&&p.teamId===id&&!p.retired&&!p.minor&&!p.injury&&p.pos!=="P");if(ex.length===9){state.lineups[id]=ex.map(p=>p.id);return ex;}const ps=teamPlayers(id).filter(p=>p.pos!=="P"&&!p.minor&&!p.injury).sort((a,b)=>rating(b)-rating(a)).slice(0,9);state.lineups[id]=ps.map(p=>p.id);return ps}function rotationFor(id){const ex=(state.rotation[id]||[]).map(playerById).filter(p=>p&&p.teamId===id&&!p.retired&&!p.minor&&!p.injury&&p.pos==="P");if(ex.length===5){state.rotation[id]=ex.map(p=>p.id);return ex;}const ps=teamPlayers(id).filter(p=>p.pos==="P"&&!p.minor&&!p.injury).sort((a,b)=>rating(b)-rating(a)).slice(0,5);state.rotation[id]=ps.map(p=>p.id);return ps}function ensureLineupsAll(){TEAMS.forEach(t=>{lineupFor(t.id);rotationFor(t.id)})}
 function teamAttack(id){const ps=lineupFor(id);return ps.reduce((a,p)=>a+p.contact*.38+p.power*.34+p.speed*.09+p.form*.07+p.special.length*.8,0)/Math.max(1,ps.length)}function teamPitch(id){const ps=rotationFor(id);return ps.reduce((a,p)=>a+(p.velocity-120)*.8+p.control*.46+p.stamina*.22+p.form*.05,0)/Math.max(1,ps.length)}function hitRate(p){return clamp01(.18+p.contact*.0022+p.form*.0009)}
-function updateHitterStats(id,score){lineupFor(id).forEach(p=>{const pa=3+Math.floor(Math.random()*3);let h=0,hr=0;p.atBats+=pa;for(let j=0;j<pa;j++){if(Math.random()<clamp01(p.power/100*.055)){hr++;h++}else if(Math.random()<hitRate(p))h++}p.hits+=h;p.hr+=hr;p.rbi+=Math.max(0,Math.round(score/9*(Math.random()*.9+.3)));p.avg=p.atBats?p.hits/p.atBats:0;p.career.totalHits=(p.career.totalHits||0)+h;p.career.totalHR=(p.career.totalHR||0)+hr})}
+function updateHitterStats(id,score){lineupFor(id).forEach(p=>{const pa=3+Math.floor(Math.random()*3);let h=0,hr=0;p.atBats+=pa;for(let j=0;j<pa;j++){if(Math.random()<clamp01(p.power/100*.055)){hr++;h++}else if(Math.random()<hitRate(p))h++}p.hits+=h;p.hr+=hr;p.rbi+=Math.max(0,Math.round(score/9*(Math.random()*.9+.3)));p.avg=p.atBats?p.hits/p.atBats:0;})}
 function updatePitchingStats(id,score,opp){const p=rotationFor(id)[0];if(!p)return;const ip=Math.max(4.1,Math.min(8.0,5.1+Math.random()*2.3));p.ip+=ip;p.er+=Math.max(0,score-Math.round(Math.random()*1.3));p.so+=Math.round(ip*(p.velocity-135)/8+Math.random()*2);p.era=p.ip?p.er*9/p.ip:0;if(score>opp)p.wins++}
 function wearAndTear(id){teamPlayers(id).forEach(p=>{if(p.retired)return;const used=lineupFor(id).some(x=>x.id===p.id)||rotationFor(id).some(x=>x.id===p.id);p.fatigue=clamp(p.fatigue+(used?5:0),0,100);p.form=clamp(p.form+(Math.random()<.5?-2:2));if(p.injury){p.injuryDays--;if(p.injuryDays<=0)p.injury=null}if(used&&!p.injury&&Math.random()<(p.fatigue>75?.012:.003)){p.injury=Math.random()<.6?"軽傷":"負傷";p.injuryDays=p.injury==="軽傷"?4+Math.floor(Math.random()*4):10+Math.floor(Math.random()*10);state.lastMessage=p.name+"が"+p.injury+"となりました。"}})}
 function simulateGame(g){ensureLineupsAll();const ah=teamAttack(g.away),hh=teamAttack(g.home),ap=teamPitch(g.away),hp=teamPitch(g.home);let as=Math.max(0,Math.round(3+(ah-hp)*.055+(Math.random()*3.8-1.9))),hs=Math.max(0,Math.round(3+(hh-ap)*.055+(Math.random()*3.8-1.9)));if(as===hs){if(Math.random()<.5)as++;else hs++}g.played=true;g.awayScore=as;g.homeScore=hs;const ar=state.teams[g.away],hr=state.teams[g.home];ar.runsFor+=as;ar.runsAgainst+=hs;hr.runsFor+=hs;hr.runsAgainst+=as;if(as>hs){ar.wins++;hr.losses++;ar.streak="W";hr.streak="L"}else{hr.wins++;ar.losses++;hr.streak="W";ar.streak="L"}updateHitterStats(g.away,as);updateHitterStats(g.home,hs);updatePitchingStats(g.away,as,hs);updatePitchingStats(g.home,hs,as);wearAndTear(g.away);wearAndTear(g.home)}
@@ -394,9 +394,9 @@ function newGame(){
   selectedTeam=TEAMS[0].id;
   bgmUnlocked=true;
   initBGM();
-  $('app').innerHTML='<div class="retro-title-v16"><div class="retro-card-v16"><div class="retro-title-logo-v16"><b>球団を選択</b><small>SELECT YOUR TEAM</small></div><div style="padding:18px"><div class="team-grid">'+TEAMS.map(t=>'<button class="team-card '+(selectedTeam===t.id?'selected':'')+'" onclick="selectedTeam=\''+t.id+'\';newGame()"><strong>'+t.name+'</strong><div class="team-meta"><span>'+t.league+'リーグ / '+t.city+'</span><span>戦力 '+TEAM_BASE[t.id]+'</span></div></button>').join('')+'</div><div class="actions" style="margin-top:14px;justify-content:space-between"><button onclick="renderTitle()">戻る</button><button class="primary" onclick="startGame(\''+selectedTeam+'\')">⚾ この球団で開始</button></div></div></div></div>';
+  $('app').innerHTML='<div class="retro-title-v16"><div class="retro-card-v16"><div class="retro-title-logo-v16"><b>球団を選択</b><small>SELECT YOUR TEAM</small></div><div style="padding:18px"><div class="team-grid">'+TEAMS.map(t=>'<button class="team-card '+(selectedTeam===t.id?'selected':'')+'" onclick="selectTeam(\''+t.id+'\')"><strong>'+t.name+'</strong><div class="team-meta"><span>'+t.league+'リーグ / '+t.city+'</span><span>戦力 '+TEAM_BASE[t.id]+'</span></div></button>').join('')+'</div><div class="actions" style="margin-top:14px;justify-content:space-between"><button onclick="renderTitle()">戻る</button><button class="primary" onclick="startGame(\''+selectedTeam+'\')">⚾ この球団で開始</button></div></div></div></div>';
 }
-function startGame(control){
+function startGameCore(control){
   try{
     const id=TEAMS.some(t=>t.id===control)?control:TEAMS[0].id;
     bgmUnlocked=true;
@@ -464,7 +464,7 @@ function ensureV19State(s){
     p.rookie=!!p.rookie;
     p.reveal=Number.isFinite(p.reveal)?p.reveal:(p.rookie?20:100);
     p.draftYear=p.draftYear||null;
-    p.contractDemand=Math.max(800,Math.round(Number(p.salary)||900));
+    if(!Number.isFinite(Number(p.contractDemand))||Number(p.contractDemand)<=0)p.contractDemand=Math.max(800,Math.round(Number(p.salary)||900));
     p.contractPreference=p.contractPreference|| (Math.random()<.45?'2年':'1年');
     p.fatigue=Number.isFinite(p.fatigue)?p.fatigue:0;
     p.form=Number.isFinite(p.form)?p.form:50;
@@ -695,7 +695,7 @@ window.v19RecordsView=function(){
 window.renderGame=function(a='schedule'){
   if(!state)return renderTitle();ensureV19State(state);ensureSchedule();ensureLineupsAll();currentView=a;const ct=team(state.controlTeam);const views={schedule:scheduleView,players:v19PlayersView,lineup:v19LineupView,newstrength:v19MarketView,teaminfo:teamInfoView,save:saveView,result:resultViewV19,awards:v19AwardsView,records:v19RecordsView};
   const pct=Math.round((state.games.filter(g=>g.played).length/858)*100);
-  $('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">PM</div><div><h1>'+ct.name+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ '+(state.seasonHistory.length+1)+'年目</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+ct.name+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div>'+v14Nav(a)+'<div class="notice '+(state.lastMessage.includes('成立')||state.lastMessage.includes('保存')||state.lastMessage.includes('勝利')?'ok':'')+'">'+state.lastMessage+'</div><div class="v19-subtabs"><button onclick="safeRender(\'records\')">記録</button><button onclick="safeRender(\'awards\')">タイトル・表彰</button>'+(state.lastResult?'<button class="result-link" onclick="safeRender(\'result\')">直近の試合結果</button>':'')+'</div>'+(views[a]||scheduleView)()+'</main><footer class="v19-footer">ORIGINAL BROWSER PENNANT　/　Original UI homage　/　V19</footer>';
+  $('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">PM</div><div><h1>'+ct.name+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ '+(state.seasonHistory.length+1)+'年目</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+ct.name+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div>'+v14Nav(a)+'<div class="notice '+(state.lastMessage.includes('成立')||state.lastMessage.includes('保存')||state.lastMessage.includes('勝利')?'ok':'')+'">'+state.lastMessage+'</div><div class="v19-subtabs"><button onclick="safeRender(\'records\')">記録</button><button onclick="safeRender(\'awards\')">タイトル・表彰</button>'+(state.lastResult?'<button class="result-link" onclick="safeRender(\'result\')">直近の試合結果</button>':'')+'</div>'+(views[a]||scheduleView)()+'</main><footer class="v19-footer">ORIGINAL BROWSER PENNANT　/　Original UI homage　/　V22</footer>';
   if(a==='players')showPlayerV19(selectedPlayer);playBGM();
 };
 
@@ -713,8 +713,11 @@ window.jumpToDate=function(target){if(!state||state.phase!=='regular')return;if(
 
 /* Enrich old saves at load/start. */
 const _renderTitle19=renderTitle;
-window.startGame=(function(orig){return function(control){orig(control);ensureV19State(state);state.lastResult=null;state.v19.marketTab='market';state.lastMessage=team(control).name+'でペナントを開始しました。';renderGame('schedule')}})(window.startGame);
-const _load19=loadSlot;window.loadSlot=function(slot){_load19(slot);if(state){ensureV19State(state);state.lastResult=null;renderGame('schedule')}};
+window.startGame=function(control){
+  try{return startGameCore(control);}
+  catch(e){console.error(e);state=null;alert('ゲーム開始に失敗しました。\n'+(e&&e.message?e.message:'不明なエラー'));renderTitle();return false;}
+};
+const _load19=loadSlot;window.loadSlot=function(slot){try{_load19(slot);if(state){ensureV19State(state);state.lastResult=null;renderGame('schedule')}}catch(e){console.error(e);alert('セーブデータの読み込みに失敗しました。\n'+(e&&e.message?e.message:'不明なエラー'))}};
 
 /* season-end award access from club information */
 const _teamInfo19=teamInfoView;
@@ -770,7 +773,7 @@ renderGame=function(a='schedule'){
   if(!state)return renderTitle();ensureV14State();currentView=a;const ct=team(state.controlTeam);const played=state.games.filter(g=>g.played).length,pct=Math.round(played/Math.max(1,state.games.length||858)*100);
   const views={schedule:scheduleView,players:playersView,lineup:tacticsView,newstrength:newStrengthView,teaminfo:teamInfoView,save:saveView,result:window.resultViewV19,awards:window.v19AwardsView,records:window.v19RecordsView};
   const body=(views[a]||scheduleView)();
-  $('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">⚾</div><div><h1>'+ct.name+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ '+(state.seasonHistory.length+1)+'年目</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+ct.name+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div><div class="classic-tabs-v20"><button class="'+(a==='schedule'?'active':'')+'" onclick="safeRender(\'schedule\')">日程表</button><button class="'+(a==='players'?'active':'')+' blue" onclick="safeRender(\'players\')">選手</button><button class="'+(a==='lineup'?'active':'')+' pink" onclick="safeRender(\'lineup\')">采配</button><button class="'+(a==='newstrength'?'active':'')+' green" onclick="safeRender(\'newstrength\')">新戦力</button><button class="'+(a==='teaminfo'?'active':'')+' gold" onclick="safeRender(\'teaminfo\')">球団情報</button><button class="'+(a==='save'?'active':'')+'" onclick="safeRender(\'save\')">セーブ</button><button onclick="renderTitle()">タイトルへ</button></div><div class="notice '+(state.lastMessage&&(/成立|保存|勝利|契約|指名/).test(state.lastMessage)?'ok':'')+'">'+state.lastMessage+'</div>'+(body||'')+'</main><footer class="v19-footer">ORIGINAL BROWSER PENNANT / CLASSIC POWER BASEBALL UI HOMAGE / V20</footer>';
+  $('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">⚾</div><div><h1>'+ct.name+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ '+(state.seasonHistory.length+1)+'年目</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+ct.name+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div><div class="classic-tabs-v20"><button class="'+(a==='schedule'?'active':'')+'" onclick="safeRender(\'schedule\')">日程表</button><button class="'+(a==='players'?'active':'')+' blue" onclick="safeRender(\'players\')">選手</button><button class="'+(a==='lineup'?'active':'')+' pink" onclick="safeRender(\'lineup\')">采配</button><button class="'+(a==='newstrength'?'active':'')+' green" onclick="safeRender(\'newstrength\')">新戦力</button><button class="'+(a==='teaminfo'?'active':'')+' gold" onclick="safeRender(\'teaminfo\')">球団情報</button><button class="'+(a==='save'?'active':'')+'" onclick="safeRender(\'save\')">セーブ</button><button onclick="renderTitle()">タイトルへ</button></div><div class="notice '+(state.lastMessage&&(/成立|保存|勝利|契約|指名/).test(state.lastMessage)?'ok':'')+'">'+state.lastMessage+'</div>'+(body||'')+'</main><footer class="v19-footer">ORIGINAL BROWSER PENNANT / CLASSIC POWER BASEBALL UI HOMAGE / V23</footer>';
   if(a==='players')showPlayerV20(selectedPlayer);playBGM();
  }catch(e){console.error(e);state&&(state.lastMessage='画面表示エラー：'+e.message);if(a!=='schedule')return renderGame('schedule');}
 };
@@ -794,10 +797,1338 @@ document.head.insertAdjacentHTML('beforeend',_v21Style);
 function moodV21(p){return p.injury?'●':p.form>=82?'☺':p.form<=22?'☹':p.form>=65?'🙂':'😐'}
 function cellV21(p){const role=roleClassV20(p),active=selectedPlayer===p.id?'focus':'';return `<div class="pawa-player-cell-v21 ${role} ${active}" onclick="showPlayerV21('${p.id}')"><div class="pawa-role-v21 ${role}">${posLabelV14(p)}</div><div><div class="name">${p.name}</div><div class="meta">${p.number}　${p.age}歳　${p.minor?'2軍':'1軍'}</div></div><div class="mood">${moodV21(p)}</div></div>`}
 function abilityCellV21(label,val){val=clamp(Math.round(val));return `<div class="pawa-ability-row-v21"><span class="label">${label}</span><span class="rank ${gradeColorClassV20(rankOf(val))}">${rankOf(val)}</span><div class="meter"><i style="width:${val}%"></i></div><span class="num">${val}</span></div>`}
-function showPlayerV21(id){selectedPlayer=id;const p=playerById(id);if(!p)return;const role=roleClassV20(p),g=rankOf(overall(p));const stats=p.pos==='P'?[['防御率',safeNum(p.era).toFixed(2)],['勝利',safeNum(p.wins)],['投球回',safeNum(p.ip).toFixed(1)],['奪三振',safeNum(p.so)]]:[['打率',(p.avg||0).toFixed(3).replace('0.','.')],['安打',safeNum(p.hits)],['本塁打',safeNum(p.hr)],['打点',safeNum(p.rbi)]];const rows=p.pos==='P'?[['球速',clamp((p.velocity-120)*2.2),p.velocity+' km/h'],['コントロール',p.control,ability(p.control)],['スタミナ',p.stamina,ability(p.stamina)],['対ピンチ',55+(p.control%35),ability(55+(p.control%35))],['対左打者',50+(p.control%38),ability(50+(p.control%38))],['ノビ',48+(p.velocity-132)*2,ability(48+(p.velocity-132)*2)],['キレ',48+(p.control%40),ability(48+(p.control%40))],['奪三振',48+(p.velocity-138)*2,ability(48+(p.velocity-138)*2)]]:[['弾道',p.trajectory*25,String(p.trajectory)],['ミート',p.contact,ability(p.contact)],['パワー',p.power,ability(p.power)],['走力',p.speed,ability(p.speed)],['肩力',p.arm,ability(p.arm)],['守備力',p.def,ability(p.def)],['捕球',p.catching,ability(p.catching)]];let body='';if(playerTabV21==='growth'){const future=Math.min(100,overall(p)+Math.max(-2,Math.min(8,p.age<25?Math.round((p.potential-55)/18):p.age>30?-Math.round((p.age-29)/3):0)));body=`<div class="pawa-growth-v21"><div class="box"><div class="box-title">現在能力</div><div class="bigval">${g} ${overall(p)}</div></div><div class="arrow">→</div><div class="box"><div class="box-title">成長予想</div><div class="bigval">${rankOf(future)} ${future}</div></div></div><div class="pawa-ability-grid-v21">${rows.map(r=>abilityCellV21(r[0],r[1])).join('')}</div>`}else if(playerTabV21==='season'){body=`<div class="pawa-subbar-v21">${p.name}　${state.year}年度成績</div><div class="pawa-stat-strip-v21">${stats.map(x=>`<div class="cell"><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div>`}else if(playerTabV21==='career'){const c=p.career||{};body=`<div class="pawa-subbar-v21">${p.name}　通算成績</div><div class="pawa-stat-strip-v21"><div class="cell"><small>通算安打</small><b>${safeNum(c.totalHits)}</b></div><div class="cell"><small>通算本塁打</small><b>${safeNum(c.totalHR)}</b></div><div class="cell"><small>通算勝利</small><b>${safeNum(c.totalWins)}</b></div><div class="cell"><small>出場年度</small><b>${safeNum(c.seasons)}</b></div></div>`}else{body=`<div class="pawa-ability-grid-v21">${rows.map(r=>abilityCellV21(r[0],r[1])).join('')}</div><div class="pawa-subbar-v21" style="margin-top:6px">特殊能力</div><div class="pawa-skill-grid-v21">${(p.special||[]).map(x=>`<span>${x}</span>`).join('')}</div>`}const html=`<div class="pawa-modal-backdrop-v21" onclick="if(event.target===this){playerTabV21='ability';selectedPlayer=null;safeRender('players')}"><div class="pawa-detail-v21 ${role}"><button class="pawa-close-v21" onclick="playerTabV21='ability';selectedPlayer=null;safeRender('players')">× 戻る</button><div class="pawa-detail-top-v21"><div class="pawa-name-v21"><span class="badge">${posLabelV14(p)}　${p.pos==='P'?'投手':'野手'}</span><div class="big">${p.name}</div><div class="meta">背番号 ${p.number}　${p.age}歳　${p.bats}打 / ${p.throws}投</div><div style="margin-top:5px;font-size:9px;color:#5d7793">守備位置　<b>${p.fieldPos||p.pos}</b>　｜　${p.minor?'2軍登録':'1軍登録'}</div></div><div class="pawa-grade-v21"><span class="g ${gradeColorClassV20(g)}">${g}</span><span class="n">${overall(p)}</span></div><div><div class="pawa-face-v21"></div><div style="text-align:center;font-size:8px;color:#52708d;margin-top:2px">調子　${formLabel(p)}</div></div></div><div class="pawa-stat-strip-v21">${stats.map(x=>`<div class="cell"><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div><div class="pawa-info-v21" style="padding:6px"><div class="cell"><small>FA権</small><b>${p.expiring?'あと1年':'取得前'}</b></div><div class="cell"><small>年俸</small><b>${p.salary.toLocaleString()}万円</b></div><div class="cell"><small>疲労</small><b>${p.fatigue}</b></div><div class="cell"><small>成長タイプ</small><b>${p.development}</b></div></div><div class="pawa-tabs-v21"><button class="${playerTabV21==='ability'?'active':''}" onclick="playerTabV21='ability';showPlayerV21('${p.id}')">選手能力</button><button class="${playerTabV21==='season'?'active':''}" onclick="playerTabV21='season';showPlayerV21('${p.id}')">年度別成績</button><button class="${playerTabV21==='career'?'active':''}" onclick="playerTabV21='career';showPlayerV21('${p.id}')">通算成績</button><button class="${playerTabV21==='growth'?'active':''}" onclick="playerTabV21='growth';showPlayerV21('${p.id}')">成長表</button></div><div class="pawa-detail-body-v21">${body}</div><div class="pawa-bottom-v21"><span class="dot">●</span><b>${p.name}の能力・成績を確認します。</b><span style="margin-left:auto">L/R タブ切替　○ 決定　× 戻る</span></div></div></div>`;const old=document.getElementById('playerDetail');if(old)old.innerHTML=html}
-function v21PlayersView(){const all=teamPlayers(state.controlTeam).filter(p=>!p.retired).filter(p=>playerFilter==='P'?p.pos==='P':playerFilter==='H'?p.pos!=='P':true).sort((a,b)=>overall(b)-overall(a));const one=all.filter(p=>!p.minor),two=all.filter(p=>p.minor);return `<div class="pawa-shell-v21"><div class="pawa-modebar-v21"><div class="pawa-brand-v21"><span class="ball">⚾</span><div><b>選手一覧</b><small>JIKKYOU PAWAFURU STYLE</small></div></div><div class="pawa-hints-v21"><span>△ チーム切替</span><span>× 戻る</span><span>○ 決定</span></div></div><div class="pawa-content-v21"><div class="pawa-top-tabs-v21"><button class="active">選手一覧</button><button>選手能力</button><button>投手能力</button><button>野手能力</button><button>守備・起用</button><button>プロフィール</button><button>成長表</button><button>選手特性</button></div><div class="pawa-subbar-v21"><span>${ctName()}　選手一覧</span><span>全 ${all.length}人　1軍 ${one.length}人　2軍 ${two.length}人</span></div><div class="actions" style="padding:6px 0 5px"><button class="${playerFilter==='all'?'primary':''}" onclick="playerFilter='all';safeRender('players')">全て</button><button class="${playerFilter==='P'?'primary':''}" onclick="playerFilter='P';safeRender('players')">投手</button><button class="${playerFilter==='H'?'primary':''}" onclick="playerFilter='H';safeRender('players')">野手</button></div><div class="pawa-list-shell-v21"><div class="pawa-section-title-v21"><span>1軍</span><span>選手を選択してください</span></div><div class="pawa-grid-v21">${one.length?one.map(cellV21).join(''):'<div class="notice">登録選手なし</div>'}</div><div class="pawa-section-title-v21" style="margin-top:7px"><span>2軍</span><span>育成・待機選手</span></div><div class="pawa-grid-v21">${two.length?two.map(cellV21).join(''):'<div class="notice">登録選手なし</div>'}</div></div><div id="playerDetail"></div><div class="pawa-bottom-v21"><span class="dot">●</span><b>選手の能力・成績を確認します。</b><span style="margin-left:auto">△▽ 選択　○ 決定　× 戻る</span></div></div></div>`}
+function showPlayerV21(id){selectedPlayer=id;const p=playerById(id);if(!p)return;const role=roleClassV20(p),g=rankOf(overall(p));const stats=p.pos==='P'?[['防御率',safeNum(p.era).toFixed(2)],['勝利',safeNum(p.wins)],['投球回',safeNum(p.ip).toFixed(1)],['奪三振',safeNum(p.so)]]:[['打率',(p.avg||0).toFixed(3).replace('0.','.')],['安打',safeNum(p.hits)],['本塁打',safeNum(p.hr)],['打点',safeNum(p.rbi)]];const rows=p.pos==='P'?[['球速',clamp((p.velocity-120)*2.2),p.velocity+' km/h'],['コントロール',p.control,ability(p.control)],['スタミナ',p.stamina,ability(p.stamina)],['対ピンチ',55+(p.control%35),ability(55+(p.control%35))],['対左打者',50+(p.control%38),ability(50+(p.control%38))],['ノビ',48+(p.velocity-132)*2,ability(48+(p.velocity-132)*2)],['キレ',48+(p.control%40),ability(48+(p.control%40))],['奪三振',48+(p.velocity-138)*2,ability(48+(p.velocity-138)*2)]]:[['弾道',p.trajectory*25,String(p.trajectory)],['ミート',p.contact,ability(p.contact)],['パワー',p.power,ability(p.power)],['走力',p.speed,ability(p.speed)],['肩力',p.arm,ability(p.arm)],['守備力',p.def,ability(p.def)],['捕球',p.catching,ability(p.catching)]];let body='';if(playerTabV21==='growth'){const future=Math.min(100,overall(p)+Math.max(-2,Math.min(8,p.age<25?Math.round((p.potential-55)/18):p.age>30?-Math.round((p.age-29)/3):0)));body=`<div class="pawa-growth-v21"><div class="box"><div class="box-title">現在能力</div><div class="bigval">${g} ${overall(p)}</div></div><div class="arrow">→</div><div class="box"><div class="box-title">成長予想</div><div class="bigval">${rankOf(future)} ${future}</div></div></div><div class="pawa-ability-grid-v21">${rows.map(r=>abilityCellV21(r[0],r[1])).join('')}</div>`}else if(playerTabV21==='season'){body=`<div class="pawa-subbar-v21">${p.name}　${state.year}年度成績</div><div class="pawa-stat-strip-v21">${stats.map(x=>`<div class="cell"><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div>`}else if(playerTabV21==='career'){const c=p.career||{};body=`<div class="pawa-subbar-v21">${p.name}　通算成績</div><div class="pawa-stat-strip-v21"><div class="cell"><small>通算安打</small><b>${safeNum(c.totalHits)}</b></div><div class="cell"><small>通算本塁打</small><b>${safeNum(c.totalHR)}</b></div><div class="cell"><small>通算勝利</small><b>${safeNum(c.totalWins)}</b></div><div class="cell"><small>出場年度</small><b>${safeNum(c.seasons)}</b></div></div>`}else{body=`<div class="pawa-ability-grid-v21">${rows.map(r=>abilityCellV21(r[0],r[1])).join('')}</div><div class="pawa-subbar-v21" style="margin-top:6px">特殊能力</div><div class="pawa-skill-grid-v21">${(p.special||[]).map(x=>`<span>${x}</span>`).join('')}</div>`}const html=`<div class="pawa-modal-backdrop-v21" onclick="if(event.target===this){playerTabV21='ability';closePlayerDetail()}"><div class="pawa-detail-v21 ${role}"><button class="pawa-close-v21" onclick="playerTabV21='ability';closePlayerDetail()">× 戻る</button><div class="pawa-detail-top-v21"><div class="pawa-name-v21"><span class="badge">${posLabelV14(p)}　${p.pos==='P'?'投手':'野手'}</span><div class="big">${p.name}</div><div class="meta">背番号 ${p.number}　${p.age}歳　${p.bats}打 / ${p.throws}投</div><div style="margin-top:5px;font-size:9px;color:#5d7793">守備位置　<b>${p.fieldPos||p.pos}</b>　｜　${p.minor?'2軍登録':'1軍登録'}</div></div><div class="pawa-grade-v21"><span class="g ${gradeColorClassV20(g)}">${g}</span><span class="n">${overall(p)}</span></div><div><div class="pawa-face-v21"></div><div style="text-align:center;font-size:8px;color:#52708d;margin-top:2px">調子　${formLabel(p)}</div></div></div><div class="pawa-stat-strip-v21">${stats.map(x=>`<div class="cell"><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div><div class="pawa-info-v21" style="padding:6px"><div class="cell"><small>FA権</small><b>${p.expiring?'あと1年':'取得前'}</b></div><div class="cell"><small>年俸</small><b>${p.salary.toLocaleString()}万円</b></div><div class="cell"><small>疲労</small><b>${p.fatigue}</b></div><div class="cell"><small>成長タイプ</small><b>${p.development}</b></div></div><div class="pawa-tabs-v21"><button class="${playerTabV21==='ability'?'active':''}" onclick="playerTabV21='ability';showPlayerV21('${p.id}')">選手能力</button><button class="${playerTabV21==='season'?'active':''}" onclick="playerTabV21='season';showPlayerV21('${p.id}')">年度別成績</button><button class="${playerTabV21==='career'?'active':''}" onclick="playerTabV21='career';showPlayerV21('${p.id}')">通算成績</button><button class="${playerTabV21==='growth'?'active':''}" onclick="playerTabV21='growth';showPlayerV21('${p.id}')">成長表</button></div><div class="pawa-detail-body-v21">${body}</div><div class="pawa-bottom-v21"><span class="dot">●</span><b>${p.name}の能力・成績を確認します。</b><span style="margin-left:auto">L/R タブ切替　○ 決定　× 戻る</span></div></div></div>`;const old=document.getElementById('playerDetail');if(old)old.innerHTML=html}
+function v21PlayersView(){const all=teamPlayers(state.controlTeam).filter(p=>!p.retired).filter(p=>playerFilter==='P'?p.pos==='P':playerFilter==='H'?p.pos!=='P':true).sort((a,b)=>overall(b)-overall(a));const one=all.filter(p=>!p.minor),two=all.filter(p=>p.minor);return `<div class="pawa-shell-v21"><div class="pawa-modebar-v21"><div class="pawa-brand-v21"><span class="ball">⚾</span><div><b>選手一覧</b><small>JIKKYOU PAWAFURU STYLE</small></div></div><div class="pawa-hints-v21"><span>△ チーム切替</span><span>× 戻る</span><span>○ 決定</span></div></div><div class="pawa-content-v21"><div class="pawa-top-tabs-v21"><button class="active">選手一覧</button><button>選手能力</button><button>投手能力</button><button>野手能力</button><button>守備・起用</button><button>プロフィール</button><button>成長表</button><button>選手特性</button></div><div class="pawa-subbar-v21"><span>${ctName()}　選手一覧</span><span>全 ${all.length}人　1軍 ${one.length}人　2軍 ${two.length}人</span></div><div class="actions" style="padding:6px 0 5px"><button class="${playerFilter==='all'?'primary':''}" onclick="setPlayerFilter('all')">全て</button><button class="${playerFilter==='P'?'primary':''}" onclick="setPlayerFilter('P')">投手</button><button class="${playerFilter==='H'?'primary':''}" onclick="setPlayerFilter('H')">野手</button></div><div class="pawa-list-shell-v21"><div class="pawa-section-title-v21"><span>1軍</span><span>選手を選択してください</span></div><div class="pawa-grid-v21">${one.length?one.map(cellV21).join(''):'<div class="notice">登録選手なし</div>'}</div><div class="pawa-section-title-v21" style="margin-top:7px"><span>2軍</span><span>育成・待機選手</span></div><div class="pawa-grid-v21">${two.length?two.map(cellV21).join(''):'<div class="notice">登録選手なし</div>'}</div></div><div id="playerDetail"></div><div class="pawa-bottom-v21"><span class="dot">●</span><b>選手の能力・成績を確認します。</b><span style="margin-left:auto">△▽ 選択　○ 決定　× 戻る</span></div></div></div>`}
 window.showPlayerV21=showPlayerV21;window.v21PlayersView=v21PlayersView;let playerTabV21='ability';playersView=v21PlayersView;showPlayerV20=showPlayerV21;
 
+
+/* ===== V22: daily-result schedule + title overhaul ===== */
+const _v22Style = `
+<style>
+/* Daily result strip: keep the player on the calendar after pressing "next day". */
+.daily-results-v22{margin-top:8px;border:2px solid #416fa7;background:linear-gradient(#f7fcff,#cfe1f0);box-shadow:inset 0 0 0 2px #fff,0 2px 5px #10295233}
+.daily-results-head-v22{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:linear-gradient(90deg,#173d7a,#2b6db1);color:#fff;border-left:7px solid #ffd43f;font-size:12px;font-weight:1000}
+.daily-results-grid-v22{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:6px;background:linear-gradient(#dceef8,#b8d3e8)}
+.daily-result-card-v22{display:grid;grid-template-columns:38px 1fr 48px;gap:4px;align-items:center;min-height:48px;padding:5px;background:linear-gradient(#fff,#eef4f9);border:1px solid #98abc0;box-shadow:inset 0 1px #fff}
+.daily-result-card-v22.own{border:2px solid #ef9b2d;background:linear-gradient(#fff6c3,#fff0a0);box-shadow:inset 0 0 0 1px #fff}
+.daily-result-card-v22 .time{font-size:8px;color:#6d8097;text-align:center}.daily-result-card-v22 .teams{font-size:9px;font-weight:1000;line-height:1.15}.daily-result-card-v22 .score{font-size:16px;font-weight:1000;color:#183d78;text-align:right;line-height:1.15}
+.daily-result-card-v22 .score.win{color:#d33333}.daily-result-card-v22 .score.loss{color:#4b6fa0}
+.v22-title-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:26px;overflow:hidden;background:radial-gradient(circle at 50% 22%,#3b6ca8 0,#123264 40%,#06142f 76%,#020817 100%);position:relative}
+.v22-title-screen:before{content:"";position:absolute;inset:-30%;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 4px,transparent 4px 18px);transform:rotate(-8deg)}
+.v22-title-screen:after{content:"";position:absolute;inset:auto 0 0;height:26%;background:linear-gradient(transparent,#020817);pointer-events:none}
+.v22-title-card{position:relative;z-index:1;width:min(1060px,96vw);min-height:680px;display:grid;grid-template-rows:auto 1fr auto;background:linear-gradient(180deg,#12366f 0,#091b43 70%,#06132d 100%);border:3px solid #6c9bd0;border-radius:14px;box-shadow:0 0 0 4px #071a3a,0 24px 55px #0009,inset 0 1px #d5efff;overflow:hidden}
+.v22-title-top{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:linear-gradient(90deg,#1d5aa7,#0d2d68);border-bottom:3px solid #f3d247;color:#fff}.v22-title-top .mark{display:flex;align-items:center;gap:9px;font-weight:1000}.v22-title-top .mark-ball{width:40px;height:30px;border:2px solid #bfe9ff;border-radius:12px;background:linear-gradient(#2e87cf,#164d94);display:grid;place-items:center}.v22-title-top small{font-size:9px;letter-spacing:.18em;color:#b9dfff}.v22-title-main{display:grid;place-items:center;padding:30px}.v22-logo{width:min(760px,92%);padding:20px 28px 24px;text-align:center;background:linear-gradient(180deg,#2d72bb,#123d82);border:4px solid #fff;outline:4px solid #1c4b96;clip-path:polygon(4% 0,96% 0,100% 50%,96% 100%,4% 100%,0 50%);box-shadow:0 0 0 8px #071f4b,0 12px 0 #050e25,0 18px 20px #0007}.v22-logo .jp{display:block;font-size:48px;font-weight:1000;letter-spacing:.08em;color:#fff;text-shadow:0 4px #082356,2px 0 #082356,-2px 0 #082356}.v22-logo .en{display:block;font-size:13px;letter-spacing:.28em;color:#fff3a3;margin-top:5px;font-weight:1000}.v22-title-menu{width:min(760px,92%);margin-top:28px;display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.v22-menu-list{display:grid;gap:6px}.v22-menu-btn{padding:12px 16px;text-align:left;border:2px solid #7ca2ca;border-radius:8px;background:linear-gradient(#eaf5ff,#c1d8ef);color:#173b73;font-size:15px;font-weight:1000;box-shadow:inset 0 1px #fff,0 2px #051b3f55}.v22-menu-btn.primary{background:linear-gradient(#fff4a6,#f2cc37);border-color:#fff;color:#16366c;box-shadow:inset 0 1px #fff,0 2px #9d7c12}.v22-menu-btn:hover{filter:brightness(1.05);transform:translateY(-1px)}.v22-sideinfo{padding:12px;border:2px solid #507aa6;background:linear-gradient(#173b76cc,#0a1d42dd);color:#dcecff}.v22-sideinfo .head{padding-bottom:5px;border-bottom:1px solid #6f99c0;color:#fff2a1;font-weight:1000}.v22-sideinfo .row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted #496886;font-size:9px}.v22-sideinfo .row:last-child{border-bottom:0}.v22-title-foot{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:linear-gradient(#0a2148,#06142d);border-top:1px solid #41658c;color:#a6c8e6;font-size:9px}.v22-title-foot b{color:#fff2a3}
+@media(max-width:900px){.daily-results-grid-v22{grid-template-columns:repeat(2,minmax(0,1fr))}.v22-title-menu{grid-template-columns:1fr}.v22-logo .jp{font-size:34px}.v22-title-card{min-height:620px}}
+@media(max-width:640px){.daily-results-grid-v22{grid-template-columns:1fr}.v22-title-screen{padding:10px}.v22-title-card{min-height:570px}.v22-logo .jp{font-size:27px}}
+</style>`;
+document.head.insertAdjacentHTML('beforeend',_v22Style);
+
+function v22Escape(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function v22DailyResults(){
+  const day=state?.dailyResults;if(!day||!Array.isArray(day.games)||!day.games.length)return '';
+  const games=day.games;
+  return '<div class="daily-results-v22"><div class="daily-results-head-v22"><span>前日の試合結果</span><span>'+dateLabel(day.date)+'　全'+games.length+'試合</span></div><div class="daily-results-grid-v22">'+games.map(g=>{
+    const own=g.home===state.controlTeam||g.away===state.controlTeam;
+    const userWin=own&&((g.home===state.controlTeam&&g.homeScore>g.awayScore)||(g.away===state.controlTeam&&g.awayScore>g.homeScore));
+    const userLoss=own&&!userWin;
+    return '<div class="daily-result-card-v22 '+(own?'own':'')+'"><div class="time">'+(own?'自軍':'他球団')+'</div><div class="teams">'+v22Escape(team(g.away).short)+'<br>'+v22Escape(team(g.home).short)+'</div><div class="score '+(userWin?'win':userLoss?'loss':'')+'">'+g.awayScore+'<br>'+g.homeScore+'</div></div>';
+  }).join('')+'</div></div>';
+}
+const _scheduleV22=scheduleView;
+scheduleView=function(){return _scheduleV22()+v22DailyResults()};
+
+/* Keep a result log, but never interrupt the daily calendar with a separate result screen. */
+window.nextDay=function(){
+  if(!state)return renderTitle();
+  unlockBGM();ensureV19State(state);ensureSchedule();
+  try{
+    if(state.phase==='regular'){
+      const date=state.currentDate;
+      const gs=gamesOn(date).filter(g=>!g.played);
+      gs.forEach(simulateGame);
+      TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{if(!p.retired){p.fatigue=Math.max(0,p.fatigue-2);p.form=clamp(p.form+(50-p.form)*.04)}}));
+      state.dailyResults={date,games:gs.map(g=>({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}))};
+      state.v19=state.v19||{};state.v19.resultHistory=state.v19.resultHistory||[];
+      gs.forEach(g=>state.v19.resultHistory.unshift({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}));
+      state.v19.resultHistory=state.v19.resultHistory.slice(0,120);
+      state.lastResult=gs.find(g=>g.home===state.controlTeam||g.away===state.controlTeam)||null;
+      const d=dateObj(date);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);
+      if(!state.games.some(g=>!g.played))finishRegularSeason();
+      state.lastMessage=gs.length?fullDate(date)+'の試合結果を反映しました。':'本日は試合がありません。';
+      renderGame('schedule');
+      return;
+    }
+    if(state.phase==='cs'||state.phase==='japan'){advanceSeries();renderGame('schedule');return;}
+    advanceOffseason();
+  }catch(e){console.error(e);state.lastMessage='日程進行中にエラーが発生しました：'+e.message;renderGame('schedule');}
+};
+
+/* V22 title screen: original artwork with the same compact console-game information language. */
+window.renderTitle=function(){
+  stopBGM();
+  $('app').innerHTML='<div class="v22-title-screen"><div class="v22-title-card"><div class="v22-title-top"><div class="mark"><span class="mark-ball">⚾</span><div><div>BASEBALL PENNANT</div><small>ORIGINAL BROWSER SPORTS GAME</small></div></div><div>△ 選択　○ 決定</div></div><div class="v22-title-main"><div class="v22-logo"><span class="jp">ペナント・スターズ</span><span class="en">PENNANT STARS / CLUB MANAGEMENT</span></div><div class="v22-title-menu"><div class="v22-menu-list"><button class="v22-menu-btn primary" onclick="newGame()">▶ はじめから</button><button class="v22-menu-btn" onclick="loadScreen()">▶ つづきから</button><button class="v22-menu-btn" onclick="window.open(\'https://www.konami.com/pawa/2018/mode/pennant\',\'_blank\')">ⓘ ペナント研究資料</button></div><div class="v22-sideinfo"><div class="head">PENNANT MODE</div><div class="row"><span>選手育成</span><b>能力1～100</b></div><div class="row"><span>シーズン</span><b>長期プレイ</b></div><div class="row"><span>球団運営</span><b>FA / ドラフト</b></div><div class="row"><span>記録</span><b>年度別 / 通算</b></div></div></div></div><div class="v22-title-foot"><span>ORIGINAL BROWSER PENNANT</span><b>PRESS ○ TO START</b></div></div></div>';
+};
+
+
+/* V22.1: team-selection fix. The previous selector called newGame(), which reset the selected team back to team #1. */
+window.newGame=function(){
+  bgmUnlocked=true;initBGM();
+  $('app').innerHTML='<div class="v22-title-screen"><div class="v22-title-card"><div class="v22-title-top"><div class="mark"><span class="mark-ball">⚾</span><div><div>BASEBALL PENNANT</div><small>SELECT YOUR CLUB</small></div></div><div>△ 選択　○ 決定</div></div><div class="v22-title-main" style="padding-top:22px"><div class="v22-logo" style="padding:12px 24px 16px"><span class="jp" style="font-size:30px">球団選択</span><span class="en">SELECT YOUR CLUB</span></div><div style="width:min(860px,94%);margin-top:18px"><div class="team-grid">'+TEAMS.map(t=>'<button class="team-card '+(selectedTeam===t.id?'selected':'')+'" onclick="selectTeam(\''+t.id+'\')"><strong>'+v22Escape(t.name)+'</strong><div class="team-meta"><span>'+v22Escape(t.league)+'リーグ / '+v22Escape(t.city)+'</span><span>戦力 '+TEAM_BASE[t.id]+'</span></div></button>').join('')+'</div><div class="actions" style="margin-top:13px;justify-content:space-between"><button onclick="renderTitle()">× 戻る</button><button class="v22-menu-btn primary" onclick="startGame(\''+selectedTeam+'\')">○ この球団で開始</button></div></div></div><div class="v22-title-foot"><span>球団を選択してください</span><b>○ 決定　× 戻る</b></div></div></div>';
+};
+
+
+/* ================= V23: STABILITY + PENNANT FLOW UPDATE =================
+   Focus: preserve user progress, simplify daily play, harden old-save migration,
+   make offseason controls usable at the correct step, and add a game-like status layer. */
+(function(){
+  function ensureV23State(s){
+    if(!s) return s;
+    if(typeof ensureV19State==='function') ensureV19State(s);
+    s.version=23;
+    s.dailyResults=s.dailyResults&&Array.isArray(s.dailyResults.games)?s.dailyResults:null;
+    s.v19=s.v19||{};
+    s.v19.news=Array.isArray(s.v19.news)?s.v19.news:[];
+    s.v19.resultHistory=Array.isArray(s.v19.resultHistory)?s.v19.resultHistory:[];
+    s.v19.contractDecisions=s.v19.contractDecisions||{};
+    s.v19.awardsHistory=Array.isArray(s.v19.awardsHistory)?s.v19.awardsHistory:[];
+    s.v19.qualityLog=Array.isArray(s.v19.qualityLog)?s.v19.qualityLog:[];
+    s.players.forEach(p=>{
+      p.expiring=!!p.expiring;
+      p.freeAgent=!!p.freeAgent;
+      if(!Number.isFinite(Number(p.contractDemand))||Number(p.contractDemand)<=0)p.contractDemand=Math.max(800,Math.round((Number(p.salary)||900)*1.12));
+      p.contractPreference=p.contractPreference||'1年';
+      p.statHistory=Array.isArray(p.statHistory)?p.statHistory:[];
+      p.growthHistory=Array.isArray(p.growthHistory)?p.growthHistory:[];
+      p.awards=Array.isArray(p.awards)?p.awards:[];
+      p.career=p.career||{seasons:0,totalHits:0,totalHR:0,totalWins:0,awards:[]};
+    });
+    s.offseason=s.offseason||{step:0,candidates:[],faList:[]};
+    s.offseason.candidates=Array.isArray(s.offseason.candidates)?s.offseason.candidates:[];
+    s.offseason.faList=Array.isArray(s.offseason.faList)?s.offseason.faList:[];
+    return s;
+  }
+  window.ensureV23State=ensureV23State;
+
+  /* Preserve played games when an old save has a malformed/legacy schedule. */
+  const _ensureSchedule23=ensureSchedule;
+  ensureSchedule=function(s=state){
+    if(!s||!s.year) return s;
+    const before=Array.isArray(s.games)?s.games.filter(g=>g&&g.played).map(g=>({date:g.date,home:g.home,away:g.away,played:true,homeScore:g.homeScore,awayScore:g.awayScore})) : [];
+    const out=_ensureSchedule23(s);
+    if(before.length){
+      const map=new Map(before.map(g=>[g.date+'|'+g.home+'|'+g.away,g]));
+      out.games.forEach(g=>{
+        const old=map.get(g.date+'|'+g.home+'|'+g.away);
+        if(old){g.played=true;g.homeScore=old.homeScore;g.awayScore=old.awayScore;}
+      });
+    }
+    return ensureV23State(out);
+  };
+  window.ensureSchedule=ensureSchedule;
+
+  /* Make FA offers usable from the actual FA period (step 1) as well as the following step. */
+  const _signFA23=window.signFA;
+  window.signFA=function(id,years,offer){
+    if(!state) return;
+    if(state.offseason && ![1,2].includes(Number(state.offseason.step))) return alert('現在はFA交渉期間ではありません。');
+    return _signFA23(id,years,offer);
+  };
+
+  /* Correct rival-ranking display that previously could resolve to an invalid index. */
+  const _newStrengthLegacy=typeof _newStrengthView12==='function'?_newStrengthView12:null;
+  if(_newStrengthLegacy){
+    /* The legacy market renderer is retained; only expose a safe helper used by any old UI. */
+    window.safeTeamRank=function(tid){const tm=team(tid);if(!tm)return '－';return String(standings(tm.league).findIndex(x=>x.id===tid)+1)+'位';};
+  }
+
+  /* Safer daily flow: a user can repeatedly press the same button without being dumped into a result screen. */
+  const _nextDayV23=window.nextDay;
+  window.nextDay=function(){
+    if(!state) return renderTitle();
+    ensureV23State(state);
+    const before=state.currentDate, phaseBefore=state.phase;
+    try{
+      _nextDayV23();
+      if(state&&phaseBefore==='regular'&&state.phase==='regular'&&state.currentDate===before){
+        const d=dateObj(before);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);
+        state.lastMessage='日程を1日進めました。';
+        renderGame('schedule');
+      }
+    }catch(e){
+      console.error(e);
+      state.lastMessage='日程進行を中断しました：'+(e&&e.message?e.message:'不明なエラー');
+      renderGame('schedule');
+    }
+  };
+
+  /* Health-check recovery wrapper. A UI error no longer leaves a blank screen. */
+  const _renderGameV23=renderGame;
+  window.renderGame=function(view){
+    try{
+      if(state) ensureV23State(state);
+      return _renderGameV23(view||currentView||'schedule');
+    }catch(e){
+      console.error('renderGame failed',e);
+      const app=$('app');
+      if(app){
+        app.innerHTML='<div class="v23-error-screen"><div class="v23-error-card"><div class="v23-error-head">GAME RECOVERY</div><h2>画面処理でエラーが発生しました</h2><p>'+v22Escape(e&&e.message?e.message:'不明なエラー')+'</p><div class="actions"><button class="primary" onclick="try{ensureV23State(state);renderGame(\'schedule\')}catch(err){location.reload()}">▶ 日程へ戻る</button><button onclick="location.reload()">↻ ゲームを再読み込み</button></div></div></div>';
+      }
+    }
+  };
+
+  /* Inline onclick handlers run in window scope. Expose every game action used by the generated UI. */
+  Object.assign(window,{
+    safeRender,save,clearSaves,loadScreen,moveOrder,autoLineup,autoRotation,demotePlayer,promotePlayer,
+    offerTrade,showPlayer,stopBGM,unlockBGM,forceBGMFromGesture,toggleBGM,advanceN,jumpToDate,
+    newGame,startGame:startGameCore,loadSlot,nextDay,signFA,scoutPlayer,
+    advanceOffseason:window.advanceOffseason,renewContract:window.renewContract,releasePlayer:window.releasePlayer,
+    draftPlayer,setFieldPos,moveRotation:window.moveRotation,setCloser:window.setCloser,renderTitle
+  });
+
+  /* Give the schedule a compact, game-like news/status strip without interrupting play. */
+  const _scheduleV23= scheduleView;
+  scheduleView=function(){
+    const base=_scheduleV23();
+    if(!state) return base;
+    const last=state.dailyResults?.games||[];
+    const own=last.find(g=>g.home===state.controlTeam||g.away===state.controlTeam);
+    const note=own
+      ? ((own.home===state.controlTeam&&own.homeScore>own.awayScore)||(own.away===state.controlTeam&&own.awayScore>own.homeScore) ? '自軍勝利' : '自軍敗戦')+'　'+team(own.away).short+' '+own.awayScore+' - '+own.homeScore+' '+team(own.home).short
+      : '前日の自軍試合はありません。';
+    return base+'<div class="v23-news-strip"><span class="v23-news-label">速報</span><span>'+v22Escape(note)+'</span><span class="v23-news-right">N / Space：次の日へ</span></div>';
+  };
+
+  /* Modernize the final title without copying proprietary logo artwork. */
+  const _titleV23=window.renderTitle;
+  window.renderTitle=function(){
+    stopBGM();
+    _titleV23();
+    const logo=document.querySelector?.('.v22-logo .jp');
+    if(logo){logo.textContent='PENNANT STARS';}
+    const en=document.querySelector?.('.v22-logo .en');
+    if(en){en.textContent='CLUB MANAGEMENT / SEASON SIMULATION';}
+  };
+
+  /* Keyboard controls: useful for repeated season progression and feels like a console menu. */
+  if(!window.__v23Keys){
+    window.__v23Keys=true;
+    document.addEventListener('keydown',e=>{
+      const tag=(e.target&&e.target.tagName)||'';
+      if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+      if(!state)return;
+      if((e.key==='n'||e.key==='N'||e.code==='Space')&&currentView==='schedule'){
+        e.preventDefault();nextDay();
+      }else if(e.key==='Escape' && currentView!=='schedule'){
+        e.preventDefault();safeRender('schedule');
+      }
+    });
+  }
+
+  /* UI-state bridges: inline event attributes run in window scope, so explicit setters keep the IIFE state in sync. */
+  window.setPlayerFilter=function(v){playerFilter=v;currentView='players';safeRender('players')};
+  window.setPlayerTab=function(v){selectedPlayerTab=v;currentView='players';safeRender('players')};
+  window.setPlayerTabAndShow=function(v,id){selectedPlayerTab=v;showPlayerV21(id)};
+  window.setMarketTab=function(v){if(state){state.v19=state.v19||{};state.v19.marketTab=v}currentView='newstrength';safeRender('newstrength')};
+  window.closePlayerDetail=function(){selectedPlayer=null;selectedPlayerTab='ability';safeRender('players')};
+  window.selectTeam=function(id){if(TEAMS.some(t=>t.id===id)){selectedTeam=id;window.newGame()}};
+  function syncWindowState(){window.state=state;window.currentView=currentView;window.selectedPlayer=selectedPlayer;window.selectedPlayerTab=selectedPlayerTab;window.playerFilter=playerFilter;window.selectedTeam=selectedTeam}
+
+  /* Global-assignment functions need local aliases too because lifecycle functions close over the IIFE scope. */
+  const renewContract = window.renewContract;
+  const releasePlayer = window.releasePlayer;
+  const moveRotation = window.moveRotation;
+  const setCloser = window.setCloser;
+
+  /* Bind enhanced simulation and lifecycle back to the local functions used internally. */
+  if(window.simulateGame) simulateGame=window.simulateGame;
+  if(window.advanceSeries) advanceSeries=window.advanceSeries;
+  if(window.newSeason) newSeason=window.newSeason;
+  if(window.signFA) signFA=window.signFA;
+
+  /* Self-contained new-season rollover: keep growth/career history without relying on a stale outer function reference. */
+  window.newSeason=function(){
+    if(!state)return;
+    ensureV23State(state);
+    const oldYear=state.year;
+    const champion=state.postseason?.champion||null;
+    state.seasonHistory.push({year:oldYear,champion,wins:state.teams[state.controlTeam]?.wins||0});
+    if(state.v19.awards){state.v19.awardsHistory.unshift(JSON.parse(JSON.stringify(state.v19.awards)));state.v19.awardsHistory=state.v19.awardsHistory.slice(0,30);}
+    state.players.forEach(p=>{
+      if(p.retired)return;
+      const before=snapAbility(p);
+      const beforeStats={atBats:p.atBats||0,hits:p.hits||0,hr:p.hr||0,rbi:p.rbi||0,wins:p.wins||0,era:p.era||0,ip:p.ip||0,so:p.so||0,saves:p.saves||0};
+      const beforeCareer=p.career||{totalHits:0,totalHR:0,totalWins:0,seasons:0,awards:[]};
+      const nextAge=(p.age||22)+1;
+      const drift=nextAge<29?(p.development==='高成長'?1.8:.9):(nextAge>33?-1.2:.3);
+      if(p.pos==='P'){
+        p.control=clamp(p.control+drift*(Math.random()-.25));
+        p.stamina=clamp(p.stamina+drift*.8*(Math.random()-.25));
+        p.velocity=clamp(p.velocity+drift*.25*(Math.random()-.25),125,165);
+      }else{
+        ['contact','power','speed','def','arm','catching'].forEach(k=>p[k]=clamp(p[k]+drift*(Math.random()-.25)));
+      }
+      p.age=nextAge;
+      const after=snapAbility(p);
+      p.growthHistory.push({year:oldYear,age:p.age-1,before,after,delta:diffAbility(before,after)});
+      p.growthHistory=p.growthHistory.slice(-12);
+      p.statHistory.push({year:oldYear,...beforeStats});
+      p.statHistory=p.statHistory.slice(-12);
+      p.career={...beforeCareer,seasons:(beforeCareer.seasons||0)+1,totalHits:(beforeCareer.totalHits||0)+(p.pos==='P'?0:beforeStats.hits),totalHR:(beforeCareer.totalHR||0)+(p.pos==='P'?0:beforeStats.hr),totalWins:(beforeCareer.totalWins||0)+(p.pos==='P'?beforeStats.wins:0),awards:Array.isArray(beforeCareer.awards)?beforeCareer.awards:[]};
+      p.fatigue=Math.max(0,(p.fatigue||0)-25);
+      p.form=clamp((p.form||50)+(50-(p.form||50))*.2);
+      p.atBats=0;p.hits=0;p.hr=0;p.rbi=0;p.avg=0;p.ip=0;p.er=0;p.so=0;p.wins=0;p.saves=0;p.expiring=false;p.freeAgent=!!p.freeAgent;
+      if(p.teamId===state.controlTeam&&p.freeAgent)p.freeAgent=false;
+    });
+    state.year=oldYear+1;state.currentDate=seasonDates(state.year)[0];state.phase='regular';state.postseason=null;
+    state.offseason={step:0,candidates:[],faList:[]};
+    TEAMS.forEach(t=>{const r=state.teams[t.id];Object.assign(r,{wins:0,losses:0,ties:0,runsFor:0,runsAgainst:0,streak:'-',money:Math.min(18000,(r.money||14000)+2500)});});
+    state.games=[];state.lineups={};state.rotation={};ensureSchedule();ensureLineupsAll();
+    state.v19.awards=null;state.v19.contractDecisions={};state.dailyResults=null;state.lastResult=null;state.lastMessage=state.year+'年シーズン開幕。';
+  };
+  newSeason=window.newSeason;
+
+  /* Self-contained offseason progression: do not depend on an inner-IIFE's unresolved renewContract identifier. */
+  window.advanceOffseason=function(){
+    if(!state)return;
+    ensureV23State(state);
+    const step=Number(state.offseason?.step||0);
+    try{
+      if(step===0){
+        state.players.forEach(p=>{
+          if(!p.retired&&p.age>=38&&Math.random()<.52){p.retired=true;state.v19.news.unshift({date:state.currentDate,text:p.name+'が現役を引退しました。'});}
+        });
+        state.players.filter(p=>!p.retired&&p.contractYears<=1&&p.teamId).forEach(p=>{
+          p.expiring=true;
+          p.contractDemand=Math.max(800,Math.round((Number(p.salary)||900)*(1.03+Math.random()*.22)));
+          p.contractPreference=p.contractPreference||(Math.random()<.35?'3年':Math.random()<.6?'2年':'1年');
+          if(p.teamId!==state.controlTeam)p.freeAgent=true;
+        });
+        state.offseason.faList=state.players.filter(p=>p.freeAgent&&!p.retired).map(p=>p.id);
+        state.offseason.step=1;state.lastMessage='契約更改・戦力外通告の期間です。';
+        renderGame('newstrength');return;
+      }
+      if(step===1){
+        const pending=state.players.some(p=>p.teamId===state.controlTeam&&!p.retired&&p.expiring&&!state.v19.contractDecisions[p.id]);
+        if(pending&&!confirm('未決定の契約更改があります。希望条件に近い内容で自動更新して次へ進みますか？')){renderGame('newstrength');return;}
+        state.players.filter(p=>p.teamId===state.controlTeam&&!p.retired&&p.expiring&&!state.v19.contractDecisions[p.id]).forEach(p=>{
+          const years=p.contractPreference==='3年'?3:p.contractPreference==='2年'?2:1;
+          window.renewContract(p.id,Math.round(p.contractDemand*.98),years,true);
+        });
+        state.offseason.step=2;state.lastMessage='FA交渉期間です。';renderGame('newstrength');return;
+      }
+      if(step===2){state.offseason.step=3;state.lastMessage='ドラフト候補の調査期間です。';renderGame('newstrength');return;}
+      if(step===3){state.offseason.step=4;state.lastMessage='ドラフト会議。候補を指名できます。';renderGame('newstrength');return;}
+      if(step===4){state.offseason.step=5;state.lastMessage='ドラフト終了。新年度へ進めます。';renderGame('newstrength');return;}
+      newSeason();renderGame('schedule');
+    }catch(e){console.error(e);state.lastMessage='オフシーズン処理を中断しました：'+(e&&e.message?e.message:'不明なエラー');renderGame('newstrength');}
+  };
+  advanceOffseason=window.advanceOffseason;
+
+  window.startGame=function(control){const r=startGameCore(control);syncWindowState();return r;};
+  const _loadSlot23=window.loadSlot;
+  window.loadSlot=function(slot){_loadSlot23(slot);syncWindowState()};
+
+  /* Normalize once at the end so the new schema is present before the first user action. */
+  if(state) ensureV23State(state);
+  syncWindowState();
+})();
+
+})();
+
+/* ================= V26: GAME SIMULATION DEPTH =================
+   Turn a score-only result into a compact inning-by-inning baseball simulation.
+   Every game records inning runs, batter events, pitcher usage, and a play-by-play log.
+   Existing season/career counters are updated exactly once by this simulator.
+*/
+(function(){
+  const clampNum=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
+  function poissonLike(lambda){
+    lambda=clampNum(lambda,0.05,6);
+    let p=1,k=0,L=Math.exp(-lambda);do{p*=Math.random();k++}while(p>L&&k<8);
+    return Math.max(0,k-1);
+  }
+  function chooseBatter(line){return line[Math.floor(Math.random()*Math.max(1,line.length))]||line[0]||null}
+  function batterEvent(p, pitcher, outs){
+    const contact=clampNum(p?.contact,1,100),power=clampNum(p?.power,1,100),speed=clampNum(p?.speed,1,100);
+    const control=clampNum(pitcher?.control,1,100),velo=clampNum(pitcher?.velocity||135,120,170);
+    const hrP=clampNum(0.012 + power*0.00055 - control*0.00004,0.008,0.08);
+    const hitP=clampNum(0.17 + contact*0.0030 + p?.form*0.0008 - control*0.0011 + (138-velo)*0.00055,0.12,0.54);
+    const bbP=clampNum(0.055 + (100-control)*0.0012,0.035,0.14);
+    const soP=clampNum(0.12 + (velo-128)*0.0020 - contact*0.00085 + control*0.00035,0.08,0.40);
+    const r=Math.random();
+    if(r<hrP)return {type:'HR',bases:4,runs:1};
+    if(r<hrP+bbP)return {type:'BB',bases:0,runs:0};
+    if(r<hrP+bbP+hitP)return {type:'H',bases:1+rndExtraBase(speed,power),runs:0};
+    if(r<hrP+bbP+hitP+soP)return {type:'K',bases:0,runs:0};
+    return {type:'OUT',bases:0,runs:0};
+  }
+  function rndExtraBase(speed,power){
+    const x=Math.random();return x<Math.max(0,Math.min(.10,(speed-75)/500))?1:0;
+  }
+  function shortEvent(e){return e==='HR'?'本塁打':e==='H'?'安打':e==='BB'?'四球':e==='K'?'三振':'アウト'}
+  function buildHalfInning(batting,pitching,inning,side){
+    const line=lineupFor(batting).filter(p=>p&&!p.retired&&!p.injury&&!p.minor);
+    const rot=rotationFor(pitching);let starter=rot[Math.floor((state.games.filter(g=>g.played&&(g.home===pitching||g.away===pitching)).length)/7)%Math.max(1,rot.length)]||rot[0];
+    const relievers=teamPlayers(pitching).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==starter?.id&&p.role!=='先発').sort((a,b)=>rating(b)-rating(a));
+    let pitcher=starter||relievers[0]||null,outs=0,runs=0,bases=0,events=[],pa=0;
+    const maxPA=inning>=9?14:11;
+    while(outs<3&&pa<maxPA){
+      pa++;const batter=chooseBatter(line);const ev=batterEvent(batter,pitcher,outs);let scored=0;
+      if(ev.type==='OUT'||ev.type==='K'){outs++;}
+      else if(ev.type==='BB'){if(bases>=3){scored=1;};bases=Math.min(3,bases+1)}
+      else if(ev.type==='HR'){scored=1+Math.min(3,bases);bases=0}
+      else {if(ev.bases>=2&&bases>=3)scored++;bases=Math.min(3,bases+ev.bases);}
+      if(scored>0)runs+=scored;
+      const text=(batter?batter.name:'打者')+'は'+shortEvent(ev.type)+(scored?'。'+scored+'点！':'。');
+      events.push({inning,side,playerId:batter?.id||null,type:ev.type,runs:scored,text});
+    }
+    // Late-game pinch of realism: a reliever often appears once the starter gets deep.
+    if(inning>=6&&relievers.length&&Math.random()<0.34)pitcher=relievers[Math.floor(Math.random()*Math.min(2,relievers.length))];
+    return {runs,events,pitcher:pitcher?.id||starter?.id||null,outs,pa};
+  }
+  function distributeScore(total,weights){
+    const arr=Array(weights.length).fill(0);let rem=Math.max(0,Math.round(total));
+    const w=weights.map(x=>Math.max(.1,x));
+    while(rem>0){let sum=w.reduce((a,b)=>a+b,0),r=Math.random()*sum,idx=0;for(;idx<w.length-1;idx++){r-=w[idx];if(r<=0)break}arr[idx]++;rem--;}
+    return arr;
+  }
+  function applyBatterBox(tid, g, inningEvents){
+    const line=lineupFor(tid).filter(p=>p&&!p.retired&&!p.minor&&!p.injury);if(!line.length)return;
+    const box={};line.forEach(p=>box[p.id]={p,ab:0,h:0,hr:0,rbi:0,bb:0,k:0});
+    inningEvents.filter(e=>e.side=== (g.away===tid?'away':'home')).forEach(e=>{const b=box[e.playerId];if(!b)return;if(e.type==='BB')b.bb++;else {b.ab++;if(e.type==='H'||e.type==='HR'){b.h++;if(e.type==='HR')b.hr++;}else if(e.type==='K')b.k++;}b.rbi+=e.runs||0});
+    Object.values(box).forEach(b=>{b.p.atBats+=b.ab;b.p.hits+=b.h;b.p.hr+=b.hr;b.p.rbi+=b.rbi;b.p.walks=(b.p.walks||0)+b.bb;b.p.strikeouts=(b.p.strikeouts||0)+b.k;b.p.avg=b.p.atBats?b.p.hits/b.p.atBats:0});
+    g.battingBox[tid]=Object.values(box).filter(x=>x.ab||x.bb).map(x=>({id:x.p.id,ab:x.ab,h:x.h,hr:x.hr,rbi:x.rbi,bb:x.bb,k:x.k}));
+  }
+  function applyPitchingBox(tid,g,score,opp){
+    const rot=rotationFor(tid);const playedByTeam=state.games.filter(x=>x.played&&(x.home===tid||x.away===tid)).length;let starter=rot[Math.floor(Math.max(0,playedByTeam-1)/1)%Math.max(1,rot.length)]||rot[0];
+    if(starter){const ip=Math.min(8,Math.max(4,5.0+Math.random()*2.1));starter.ip+=ip;starter.er+=Math.max(0,score-Math.round(Math.random()*1.5));starter.so+=Math.round(ip*(starter.velocity-132)/11+Math.random()*2.3);starter.era=starter.ip?starter.er*9/starter.ip:0;if(score>opp)starter.wins++;}
+    const rel=teamPlayers(tid).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==starter?.id&&p.role!=='先発').sort((a,b)=>rating(b)-rating(a));
+    if(rel.length&&score<opp){const closer=rel.find(p=>p.role==='抑え')||rel[0];closer.saves=(closer.saves||0)+1;closer.ip=(closer.ip||0)+1;closer.so=(closer.so||0)+Math.floor(Math.random()*2);closer.era=closer.ip?closer.er*9/Math.max(1,closer.ip):0}
+    g.pitchingBox[tid]={starter:starter?.id||null};
+  }
+  window.simulateGame=function(g){
+    ensureV19State(state);ensureLineupsAll();
+    const awayLine=lineupFor(g.away),homeLine=lineupFor(g.home);
+    const awayPitch=teamPitch(g.away),homePitch=teamPitch(g.home),awayAtk=teamAttack(g.away),homeAtk=teamAttack(g.home);
+    const awayIn=[],homeIn=[],events=[];let totalA=0,totalH=0;
+    for(let inn=1;inn<=9;inn++){
+      const ai=buildHalfInning(g.away,g.home,inn,'away');const hi=buildHalfInning(g.home,g.away,inn,'home');
+      awayIn.push(ai.runs);homeIn.push(hi.runs);events.push(...ai.events,...hi.events);totalA+=ai.runs;totalH+=hi.runs;
+      // Blend generated inning score toward team strength without making outcomes deterministic.
+      if(inn<=8&&Math.random()<.22){const lamA=clampNum(0.55+(awayAtk-homePitch)*.06,0.15,2.2);const lamH=clampNum(0.55+(homeAtk-awayPitch)*.06,0.15,2.2);if(ai.runs===0&&Math.random()<lamA/2.5){awayIn[inn-1]++;totalA++;}if(hi.runs===0&&Math.random()<lamH/2.5){homeIn[inn-1]++;totalH++;}}
+    }
+    if(totalA===totalH){if(Math.random()<.5){awayIn[8]++;totalA++;}else{homeIn[8]++;totalH++;}}
+    const ar=state.teams[g.away],hr=state.teams[g.home];
+    g.played=true;g.awayScore=totalA;g.homeScore=totalH;g.inningsAway=awayIn;g.inningsHome=homeIn;g.events=events;g.battingBox={};g.pitchingBox={};g.generatedAt=Date.now();
+    ar.runsFor+=totalA;ar.runsAgainst+=totalH;hr.runsFor+=totalH;hr.runsAgainst+=totalA;
+    if(totalA>totalH){ar.wins++;hr.losses++;ar.streak='W';hr.streak='L'}else{hr.wins++;ar.losses++;hr.streak='W';ar.streak='L'}
+    applyBatterBox(g.away,g,events);applyBatterBox(g.home,g,events);applyPitchingBox(g.away,g,totalA,totalH);applyPitchingBox(g.home,g,totalH,totalA);
+    wearAndTear(g.away);wearAndTear(g.home);
+    [g.away,g.home].forEach(tid=>teamPlayers(tid).filter(p=>p.rookie&&p.reveal<100).forEach(p=>p.reveal=Math.min(100,p.reveal+1)));
+    g.highlights=events.filter(e=>e.type==='HR'||e.runs>0).slice(0,10).map(e=>e.text);
+    if(g.home===state.controlTeam||g.away===state.controlTeam){
+      const won=(g.home===state.controlTeam&&totalH>totalA)||(g.away===state.controlTeam&&totalA>totalH);state.v19.lastResults=state.v19.lastResults||[];state.v19.resultHistory=state.v19.resultHistory||[];
+      const rec={id:g.id,date:g.date,away:g.away,home:g.home,awayScore:totalA,homeScore:totalH,won,inningsAway:awayIn,inningsHome:homeIn,events:events.slice(-60),battingBox:g.battingBox,pitchingBox:g.pitchingBox};
+      state.v19.lastResults.unshift(rec);state.v19.lastResults=state.v19.lastResults.slice(0,20);state.v19.resultHistory.unshift(rec);state.v19.resultHistory=state.v19.resultHistory.slice(0,120);state.lastResult=g;
+    }
+  };
+
+  /* Keep the global binding used by legacy nextDay() in sync with the new simulator. */
+  simulateGame=window.simulateGame;
+  const _result25Depth=typeof result25==='function'?result25:null;
+  function result26(){
+    const g=state.lastResult;if(!g)return _result25Depth?_result25Depth():'<div class="notice">直近の試合結果はありません。</div>';
+    const away=team(g.away),home=team(g.home),own=g.home===state.controlTeam||g.away===state.controlTeam;
+    const win=own&&((g.home===state.controlTeam&&g.homeScore>g.awayScore)||(g.away===state.controlTeam&&g.awayScore>g.homeScore));
+    const starterA=playerById(g.pitchingBox?.[g.away]?.starter),starterH=playerById(g.pitchingBox?.[g.home]?.starter);
+    const bb=(tid)=>g.battingBox?.[tid]||[];
+    const names=(tid)=>Object.fromEntries(teamPlayers(tid).map(p=>[p.id,p.name]));
+    const aNames=names(g.away),hNames=names(g.home);
+    const highlights=(g.highlights||[]).map(x=>'<div class="v26-play">'+esc(x)+'</div>').join('')||'<div class="notice">大きな得点イベントはありません。</div>';
+    const lineScore='<table class="v26-linescore"><thead><tr><th>球団</th>'+Array.from({length:9},(_,i)=>'<th>'+(i+1)+'</th>').join('')+'<th>計</th></tr></thead><tbody><tr><td>'+esc(away.short)+'</td>'+g.inningsAway.map(x=>'<td>'+x+'</td>').join('')+'<td class="sum">'+g.awayScore+'</td></tr><tr><td>'+esc(home.short)+'</td>'+g.inningsHome.map(x=>'<td>'+x+'</td>').join('')+'<td class="sum">'+g.homeScore+'</td></tr></tbody></table>';
+    const boxHtml=(tid,nmap)=>'<table class="v26-box"><thead><tr><th>打者</th><th>AB</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th><th>K</th></tr></thead><tbody>'+(bb(tid).length?bb(tid).map(x=>'<tr><td>'+roleSquare(playerById(x.id))+' '+esc(nmap[x.id]||'－')+'</td><td>'+x.ab+'</td><td>'+x.h+'</td><td>'+x.hr+'</td><td>'+x.rbi+'</td><td>'+x.bb+'</td><td>'+x.k+'</td></tr>').join(''):'<tr><td colspan="7">記録なし</td></tr>')+'</tbody></table>';
+    return '<div class="v26-game"><div class="v26-consolebar"><div class="v26-console-title"><span class="orb">⚾</span><div><b>試合結果</b><small>'+dateLabel(g.date)+' / DETAILED GAME</small></div></div><div class="v25-console-hints"><span>○ 試合記録</span><span>× 日程へ</span></div></div><div class="v26-scorehero"><div><small>AWAY</small><b>'+esc(away.name)+'</b></div><div class="v26-bigscore '+(win?'win':'')+'">'+g.awayScore+' - '+g.homeScore+'<span>'+(win?'勝利':'敗戦')+'</span></div><div><small>HOME</small><b>'+esc(home.name)+'</b></div></div><div class="v26-panel"><div class="hd">スコアボード</div><div class="bd">'+lineScore+'</div></div><div class="v26-two"><section class="v26-panel"><div class="hd">試合の流れ</div><div class="bd v26-scroll">'+highlights+'</div></section><section class="v26-panel"><div class="hd">先発投手</div><div class="bd"><div class="v26-starters"><div>'+roleSquare(starterA)+' '+esc(starterA?.name||'－')+'<small>球速 '+(starterA?.velocity||'－')+' km/h</small></div><div>'+roleSquare(starterH)+' '+esc(starterH?.name||'－')+'<small>球速 '+(starterH?.velocity||'－')+' km/h</small></div></div></div></section></div><div class="v26-panel"><div class="hd">打撃成績　'+esc(away.short)+'</div><div class="bd">'+boxHtml(g.away,aNames)+'</div></div><div class="v26-panel"><div class="hd">打撃成績　'+esc(home.short)+'</div><div class="bd">'+boxHtml(g.home,hNames)+'</div></div><div class="v25-actions"><button class="primary" onclick="safeRender(\'schedule\')">▶ 日程へ</button><button onclick="safeRender(\'players\')">選手データ</button><button onclick="safeRender(\'lineup\')">采配</button></div></div>';
+  }
+  window.result26=result26;
+  const _render25Old=window.renderGame;
+  function render26Bridge(view){if(view==='result'){$('app').innerHTML='';return render26IntoApp()}return _render25Old(view)}
+  function render26IntoApp(){
+    if(!state)return renderTitle();currentView='result';
+    try{if(typeof ensureV23State==='function')ensureV23State(state);ensureSchedule();ensureLineupsAll();const body=result26(),ct=team(state.controlTeam),pct=Math.round(state.games.filter(g=>g.played).length/Math.max(1,state.games.length||858)*100);$('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">⚾</div><div><h1>'+esc(ct.name)+'</h1><small>'+state.year+'年度　'+phaseText()+'</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">試合結果</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+esc(ct.name)+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div><div class="classic-tabs-v20"><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="safeRender(\'players\')">選手</button><button onclick="safeRender(\'lineup\')">采配</button><button onclick="safeRender(\'newstrength\')">新戦力</button><button onclick="safeRender(\'teaminfo\')">球団情報</button><button onclick="safeRender(\'save\')">セーブ</button></div><div class="notice">試合のイニング・打撃内容を確認します。</div>'+body+'<div class="v24-bottom-bar"><span class="ball">●</span><b>試合記録を確認します。</b><span class="hint">○ 決定　× 日程へ　N / Space：次の日</span></div></main><footer class="v19-footer">ORIGINAL BROWSER PENNANT / CLASSIC POWER BASEBALL UI HOMAGE / V26</footer>';playBGM()}catch(e){console.error(e);render25('schedule')}}
+  window.safeRender=function(v){if(v==='result')return render26IntoApp();return _render25Old(v)};
+  renderGame=window.safeRender;
+  /* Add explicit detailed-result styling. */
+  const st=document.createElement('style');st.textContent=`
+  .v26-game{padding:7px;background:linear-gradient(#dcecff,#c1d4eb);border:1px solid #7996bb;border-radius:5px}
+  .v26-scorehero{display:grid;grid-template-columns:1fr 230px 1fr;gap:8px;align-items:center;padding:12px;background:linear-gradient(#f8fcff,#d7eafb);border:2px solid #7898bd;box-shadow:inset 0 0 0 2px #fff;margin-bottom:8px}
+  .v26-scorehero>div:first-child{text-align:right}.v26-scorehero>div:last-child{text-align:left}.v26-scorehero small{display:block;color:#68809a;font-size:9px;font-weight:1000}.v26-scorehero b{display:block;font-size:15px;color:#173d76}.v26-bigscore{text-align:center;font-size:42px;line-height:1;font-weight:1000;color:#234d87}.v26-bigscore.win{color:#cf3137}.v26-bigscore span{display:block;font-size:10px;margin-top:4px;color:#62768d}.v26-linescore,.v26-box{width:100%;border-collapse:separate;border-spacing:1px;font-size:9px}.v26-linescore th,.v26-box th{background:#183d78;color:#fff;padding:5px}.v26-linescore td,.v26-box td{background:#fff;border:1px solid #b5c7d8;padding:5px;text-align:center}.v26-linescore td:first-child,.v26-box td:first-child{text-align:left;font-weight:1000}.v26-linescore .sum{font-weight:1000;color:#163f78;background:#fff1a4}.v26-two{display:grid;grid-template-columns:1.25fr .75fr;gap:8px;margin:8px 0}.v26-scroll{max-height:230px;overflow:auto}.v26-play{padding:5px 6px;border-bottom:1px dotted #b6c5d5;font-size:10px}.v26-starters{display:grid;gap:6px}.v26-starters>div{padding:8px;background:#edf5fb;border:1px solid #b4c7d9;font-weight:1000}.v26-starters small{display:block;color:#698098;margin-left:23px;font-size:9px;margin-top:2px}.v26-panel{background:#f8fcff;border:1px solid #7896b8;border-radius:5px;overflow:hidden;margin-bottom:8px}.v26-panel .hd{background:linear-gradient(90deg,#214a8e,#4b79bb);border-left:6px solid #f5d449;color:#fff;padding:6px 8px;font-weight:1000;font-size:11px}.v26-panel .bd{padding:7px}
+  @media(max-width:800px){.v26-scorehero{grid-template-columns:1fr}.v26-scorehero>div:first-child,.v26-scorehero>div:last-child{text-align:center}.v26-two{grid-template-columns:1fr}.v26-bigscore{font-size:34px}}
+  `;document.head.appendChild(st);
+})();
+
+</script>
+
+<style id="v24-style">
+/* ===== V24: console-style visual polish ===== */
+body{background:#061538!important}
+#app{max-width:1440px!important;background:radial-gradient(circle at 50% 18%,#214f91 0,#0b2354 46%,#04102b 100%);box-shadow:0 0 0 2px #3d6b9e inset,0 0 55px #0009;min-height:100vh}
+.game-header{position:relative!important;top:auto!important;border-bottom:4px solid #f4d447!important;background:linear-gradient(180deg,#244f96 0,#102e69 100%)!important;box-shadow:0 3px 0 #06163b,0 8px 20px #0006!important}
+.game-header:after{content:"";position:absolute;left:0;right:0;bottom:-7px;height:3px;background:linear-gradient(90deg,transparent,#86bdf0 20%,#fff 50%,#86bdf0 80%,transparent);opacity:.38}
+.main-nav{border:2px solid #081946!important;border-top:3px solid #7fb1df!important;background:linear-gradient(#245696,#0b285f)!important;border-radius:9px 9px 0 0!important;box-shadow:0 3px 0 #051538,0 4px 8px #0004!important}
+.main-nav button{min-width:112px!important;padding:10px 13px!important;border-right:1px solid #6287b3!important;background:linear-gradient(#4d82c0,#255a9b)!important;font-size:12px!important;text-shadow:0 1px #102c5a!important}
+.main-nav button.active{background:linear-gradient(#fff8c8,#ffd84c)!important;color:#17376f!important;box-shadow:inset 0 -3px #fff,0 0 0 1px #d8b530 inset!important;text-shadow:none!important}
+.main-nav button:last-child{min-width:118px!important;background:linear-gradient(#354f80,#172d5c)!important}
+.screen{padding:10px 12px 14px!important;background:linear-gradient(180deg,#d7e9f8cc,#b7cae2d9 68%,#a6bad4e8)!important;border-left:2px solid #496b95;border-right:2px solid #496b95;min-height:calc(100vh - 90px)}
+.season-ribbon{border:2px solid #6b8fb7!important;border-top:4px solid #163e7f!important;border-radius:7px!important;background:linear-gradient(#f7fbff,#dcecf8)!important;box-shadow:inset 0 1px #fff,0 2px 4px #0003!important}
+.season-ribbon .phase{background:linear-gradient(#4d86c7,#24579a)!important;border:1px solid #19487f;padding:4px 11px!important;box-shadow:inset 0 1px #9cc9ef}
+.notice{background:linear-gradient(#f9fdff,#e7f1fa)!important;border:2px solid #9fb8d0!important;border-left:6px solid #e0b62d!important;color:#24456c!important;box-shadow:inset 0 1px #fff,0 1px 2px #0002!important}
+.panel{border:2px solid #6f93b8!important;border-radius:7px!important;box-shadow:inset 0 0 0 1px #fff,0 3px 7px #0003!important}
+.panel-head{background:linear-gradient(#2f66af,#1a478a)!important;border-left:8px solid #f2d04b!important;padding:8px 10px!important;text-shadow:0 1px #0b2757}
+.panel-body{background:linear-gradient(#fbfeff,#eaf3fa)!important}
+button{border:2px solid #7998b7!important;border-radius:6px!important;box-shadow:inset 0 1px #fff,0 2px 0 #6b7f98!important}
+button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7f98!important}
+.primary{background:linear-gradient(#fff39c,#f0ca37)!important;color:#163a73!important;border-color:#d4ad25!important}
+.blue{background:linear-gradient(#75b9ec,#2c70ae)!important}
+.red{background:linear-gradient(#ff9b98,#da514f)!important}
+.v24-bottom-bar{display:flex;align-items:center;gap:10px;margin:8px 0 0;background:linear-gradient(#172b59,#060f28);border:2px solid #46688f;border-radius:15px;padding:5px 10px;color:#fff;font-size:10px;box-shadow:0 2px 5px #0007,inset 0 1px #6c8db3}.v24-bottom-bar .ball{width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#84caf0;color:#15396d;border:1px solid #fff;font-size:9px;font-weight:1000}.v24-bottom-bar .hint{margin-left:auto;color:#c8ddf1}
+/* title screen: console-like framing */
+.v22-title-screen{background:radial-gradient(circle at 50% 46%,#214f91 0,#0b2356 46%,#030c20 100%)!important;padding:26px!important}
+.v22-title-screen:before{content:"";position:absolute;inset:0;background:linear-gradient(170deg,transparent 0 60%,rgba(255,255,255,.05) 61%,transparent 62%),linear-gradient(90deg,transparent 0 47%,rgba(255,255,255,.04) 48%,transparent 49%);pointer-events:none}
+.v22-title-card{border-color:#77a9d4!important;box-shadow:0 0 0 4px #071a3a,0 18px 40px #000b,inset 0 1px #eaf6ff!important;border-radius:12px!important}
+.v22-logo{box-shadow:0 0 0 8px #071f4b,0 10px 0 #050e25,0 16px 20px #0008!important}
+.v22-logo .jp{font-size:54px!important;letter-spacing:.12em!important}
+.v22-menu-btn{border-width:2px!important;border-radius:5px!important}
+/* player screen: more like a console data page */
+.pawa-shell-v21{background:linear-gradient(#d8edfc,#a7c5e3)!important;border:3px solid #5f84ae!important;border-radius:8px!important;box-shadow:inset 0 0 0 2px #eef8ff,0 3px 9px #0004!important}
+.pawa-modebar-v21{background:linear-gradient(#203c79,#0a1f4c)!important;border-bottom:3px solid #f2d14a!important}
+.pawa-top-tabs-v21{background:linear-gradient(#1c4c94,#0e2f69)!important;border-top:1px solid #6f97c4!important}
+.pawa-top-tabs-v21 button{background:linear-gradient(#5a8fc8,#2a5f9c)!important;border:1px solid #7fa6cd!important;border-bottom:0!important;border-radius:8px 8px 0 0!important;box-shadow:inset 0 1px #b6d5ef!important}
+.pawa-top-tabs-v21 button.active{background:linear-gradient(#fff7bf,#ffd94f)!important;color:#17366c!important;border-color:#e5c43c!important}
+.pawa-section-title-v21{background:linear-gradient(#3167ad,#1b4788)!important;border-top:2px solid #7eb2e1!important;border-bottom:2px solid #123b79!important;color:#fff!important;text-shadow:0 1px #0a2551!important}
+.pawa-player-cell-v21{border:1px solid #9fb2c7!important;box-shadow:inset 0 1px #fff,0 1px 1px #0001!important;border-radius:3px!important}
+.pawa-player-cell-v21.focus{outline:3px solid #efb62b!important;box-shadow:0 0 0 2px #fff inset,0 2px 4px #0003!important}
+.pawa-modal-backdrop-v21{background:rgba(3,15,37,.64)!important;backdrop-filter:blur(1px)}
+.pawa-detail-v21{border:3px solid #6d9ac5!important;box-shadow:0 0 0 3px #0a2355,0 18px 38px #000a,inset 0 1px #fff!important;border-radius:8px!important;background:linear-gradient(#f8fcff,#d9eaf8)!important}
+.pawa-detail-top-v21{background:linear-gradient(#d8edf9,#a9cee9)!important;border-bottom:2px solid #6f9cc2!important}
+.pawa-tabs-v21{background:linear-gradient(#193c79,#0c285b)!important;border-top:2px solid #6190be!important}
+.pawa-tabs-v21 button{background:linear-gradient(#4b8bc2,#285c98)!important;border-color:#76a5cc!important}
+.pawa-tabs-v21 button.active{background:linear-gradient(#fff4ae,#ffd743)!important;color:#17366c!important}
+.pawa-bottom-v21{background:linear-gradient(#152957,#070f28)!important;border:2px solid #4b6f97!important;border-radius:14px!important;color:#fff!important}
+/* role colors: stronger, console-like squares */
+.position-square.pitcher,.pawa-role-v21.pitcher{background:linear-gradient(#ffaaa5,#df514e)!important;border-color:#b12e2b!important}
+.position-square.catcher,.pawa-role-v21.catcher{background:linear-gradient(#a9e2ff,#52ace5)!important;border-color:#2474a7!important}
+.position-square.infield,.pawa-role-v21.infield{background:linear-gradient(#fff19b,#efc63c)!important;border-color:#af8615!important}
+.position-square.outfield,.pawa-role-v21.outfield{background:linear-gradient(#a8ee9d,#57c65e)!important;border-color:#2d8034!important}
+@media(max-width:720px){.v22-logo .jp{font-size:34px!important}.main-nav button{min-width:92px!important}.screen{padding:8px!important}.v24-bottom-bar .hint{display:none}}
+</style>
+<script>
+/* ===== V24 JS polish ===== */
+(function(){
+  function ensureBottomBar(){
+    const screen=document.querySelector('#app .screen');
+    if(!screen||screen.querySelector('.v24-bottom-bar'))return;
+    const bar=document.createElement('div');
+    let text='選択中の画面を操作します。';
+    if(currentView==='schedule') text='日程を確認してペナントを進めます。';
+    else if(currentView==='players') text='選手の能力・成績を確認します。';
+    else if(currentView==='lineup') text='オーダーと投手起用を設定します。';
+    else if(currentView==='newstrength') text='新戦力を調査・補強します。';
+    else if(currentView==='teaminfo') text='球団情報と記録を確認します。';
+    else if(currentView==='save') text='セーブデータを管理します。';
+    bar.className='v24-bottom-bar';
+    bar.innerHTML='<span class="ball">●</span><b>'+text+'</b><span class="hint">△▽ 選択　○ 決定　× 戻る　N / Space：次の日</span>';
+    screen.appendChild(bar);
+  }
+  const oldRender=window.renderGame;
+  if(!window.__v24RenderWrapped){
+    window.__v24RenderWrapped=true;
+    window.renderGame=function(view){
+      const r=oldRender(view);
+      try{ensureBottomBar()}catch(e){console.warn('V24 bottom bar',e)}
+      return r;
+    };
+  }
+  window.__v24EnsureBottomBar=ensureBottomBar;
+  if(state)try{ensureBottomBar()}catch(e){}
+})();
+</script>
+
+<style id="v25-style">
+/* ===== V25: schedule / result / tactics console UI ===== */
+.v25-stage{background:linear-gradient(#eef8ff,#c6dced);border:3px solid #456f9d;box-shadow:inset 0 0 0 2px #fff,0 4px 10px #001a4d44;border-radius:8px;overflow:hidden}
+.v25-consolebar{height:52px;display:flex;align-items:center;gap:8px;padding:0 10px;background:linear-gradient(#173e79,#071a43);border-bottom:3px solid #f3d34c;color:#fff}
+.v25-console-title{display:flex;align-items:center;gap:8px;min-width:290px;font-weight:1000}.v25-console-title .orb{width:34px;height:26px;display:grid;place-items:center;border:2px solid #bfeaff;border-radius:12px;background:linear-gradient(#2e87ce,#124c90);box-shadow:inset 0 1px #fff}.v25-console-title small{display:block;color:#b9dcff;font-size:8px;letter-spacing:.14em}.v25-console-hints{margin-left:auto;display:flex;gap:4px;font-size:11px;font-weight:1000}.v25-console-hints span{padding:5px 10px;border-radius:14px;border:2px solid #526f9f;background:linear-gradient(#33466f,#111e3e);box-shadow:inset 0 1px #91aac8}
+.v25-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:linear-gradient(#e8f5fd,#c7deee);border-bottom:1px solid #7aa0c4}.v25-toolbar .title{font-size:16px;font-weight:1000;color:#173a70}.v25-toolbar .sub{font-size:9px;color:#5d7690}.v25-actions{display:flex;gap:5px;flex-wrap:wrap}.v25-actions button{font-weight:1000}
+.v25-daygrid{display:grid;grid-template-columns:repeat(7,minmax(110px,1fr));gap:4px;padding:6px;background:linear-gradient(#d6ecf8,#b7d0e3);overflow:auto}.v25-day{min-height:175px;background:linear-gradient(#fbfeff,#e5f1f8);border:2px solid #8ea8c0;border-radius:5px;box-shadow:inset 0 1px #fff,0 1px 2px #0002}.v25-day.today{border-color:#e9bd2a;box-shadow:0 0 0 2px #fff2b1 inset,0 0 0 2px #e8b62c}.v25-day .head{display:flex;justify-content:space-between;gap:4px;padding:5px 6px;background:linear-gradient(#d9edf8,#a9c9e2);border-bottom:2px solid #6f97bd;color:#183d72;font-weight:1000;font-size:10px}.v25-day.today .head{background:linear-gradient(#fff5ad,#f0cb43)}.v25-day .phase{font-size:8px;color:#6e7c90}.v25-match{display:grid;grid-template-columns:1fr 38px;align-items:center;gap:4px;padding:5px;border-bottom:1px dotted #9db0c1;font-size:9px;font-weight:1000}.v25-match:last-child{border-bottom:0}.v25-match.own{background:#fff3b6}.v25-match .teams div{line-height:1.05}.v25-score{text-align:center;font-size:13px;color:#163b72}.v25-score.win{color:#d22d37}.v25-score.loss{color:#4f739b}.v25-offday{display:grid;place-items:center;height:110px;color:#6e8298;font-weight:1000;font-size:10px}.v25-fast{padding:5px 7px;width:100%;font-size:9px}
+.v25-below{display:grid;grid-template-columns:1.55fr .85fr;gap:8px;margin-top:8px}.v25-panel{background:linear-gradient(#fdfefe,#e9f3fa);border:2px solid #7197ba;border-radius:7px;box-shadow:inset 0 0 0 1px #fff,0 2px 5px #0002;overflow:hidden}.v25-panel .hd{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;background:linear-gradient(#336ab0,#17467f);border-left:8px solid #f2d14b;color:#fff;font-size:11px;font-weight:1000;text-shadow:0 1px #09224c}.v25-panel .bd{padding:6px}.v25-resultgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.v25-resultmini{display:grid;grid-template-columns:1fr 34px;gap:4px;align-items:center;padding:5px;background:linear-gradient(#fff,#edf4f9);border:1px solid #a0b3c6;border-radius:4px}.v25-resultmini.own{border:2px solid #eea533;background:linear-gradient(#fff6bf,#fff0a2)}.v25-resultmini .t{font-size:8px;line-height:1.05;font-weight:1000}.v25-resultmini .s{font-size:14px;text-align:center;font-weight:1000;color:#193e73}.v25-resultmini .s.win{color:#d43137}.v25-standing-row,.v25-news-row{display:flex;justify-content:space-between;gap:8px;padding:5px 2px;border-bottom:1px dotted #a9bac9;font-size:9px}.v25-standing-row:last-child,.v25-news-row:last-child{border-bottom:0}
+.v25-result-hero{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:10px;padding:14px;background:linear-gradient(#eaf7ff,#c8dfef);border-bottom:2px solid #7c9fbd}.v25-teambig{text-align:center;font-size:13px;font-weight:1000;color:#163b72}.v25-teambig .mini{font-size:8px;color:#6b8196}.v25-bigscore{text-align:center;font-size:33px;font-weight:1000;color:#173c75;text-shadow:0 2px #fff}.v25-bigscore.win{color:#d12d38}.v25-result-section{padding:7px}.v25-result-table{width:100%;border-collapse:collapse;font-size:9px;background:#fff}.v25-result-table th{background:#24558e;color:#fff;padding:4px}.v25-result-table td{padding:4px;border-bottom:1px solid #d1dce6;text-align:center}.v25-result-table td:first-child{text-align:left;font-weight:1000}.v25-callout{padding:7px;background:linear-gradient(#fff8c9,#ffef96);border:2px solid #deb933;color:#183c71;font-size:10px;font-weight:1000}
+.v25-order-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:8px}.v25-order-list{background:linear-gradient(#f8fcff,#e4eff7);border:2px solid #6c93b8;padding:6px}.v25-order-row{display:grid;grid-template-columns:24px 28px 1fr 42px 48px;align-items:center;gap:4px;padding:5px;border:1px solid #9db0c0;margin-bottom:3px;border-radius:4px;background:#fff}.v25-order-row.focus{outline:2px solid #efb530;background:#fff6bd}.v25-order-row .idx{font-size:12px;font-weight:1000;color:#193d74;text-align:center}.v25-order-row .nm{font-weight:1000;font-size:10px}.v25-order-row .meta{font-size:8px;color:#667e95}.v25-field{position:relative;min-height:420px;border:3px solid #3f6790;background:radial-gradient(ellipse at 50% 60%,#4ea55c 0,#267447 52%,#17462f 100%);overflow:hidden;box-shadow:inset 0 0 0 10px #254e34}.v25-field:before{content:"";position:absolute;left:50%;top:53%;width:230px;height:230px;transform:translate(-50%,-50%);border:2px solid #dcefd0;border-radius:50%;opacity:.35}.v25-field:after{content:"";position:absolute;left:50%;top:67%;width:150px;height:150px;transform:translate(-50%,-50%) rotate(45deg);border:2px solid #dcefd0;opacity:.45}.v25-pos{position:absolute;transform:translate(-50%,-50%);min-width:84px;text-align:center;padding:5px 6px;border-radius:5px;border:2px solid #fff;box-shadow:0 2px 5px #00180088;background:linear-gradient(#fff,#e8f1f4);font-size:9px;font-weight:1000;color:#153d70}.v25-pos .role{display:inline-grid;place-items:center;min-width:20px;height:16px;border-radius:3px;color:#fff;font-size:8px;margin-right:3px}.v25-pos.p .role{background:#df5456}.v25-pos.c .role{background:#4fa9ce}.v25-pos.i .role{background:#ddb63c}.v25-pos.o .role{background:#54ae62}.v25-pos .small{display:block;font-size:7px;color:#5e7388;margin-top:1px}.v25-pitcher{left:50%;top:61%}.v25-catcher{left:50%;top:91%}.v25-first{left:79%;top:61%}.v25-second{left:66%;top:43%}.v25-short{left:34%;top:43%}.v25-third{left:21%;top:61%}.v25-left{left:19%;top:18%}.v25-center{left:50%;top:12%}.v25-right{left:81%;top:18%}.v25-pitchstaff{margin-top:7px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.v25-pitch-card{padding:6px;background:linear-gradient(#fff,#edf4f8);border:1px solid #98aec2;border-radius:4px}.v25-pitch-card .head{display:flex;justify-content:space-between;font-size:9px;font-weight:1000}.v25-role-btns{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.v25-leftmenu{background:linear-gradient(#eaf7ff,#cadfed);border:2px solid #7094b6;border-radius:7px;padding:6px}.v25-leftmenu .menu-head{padding:5px 8px;background:linear-gradient(#2f68ad,#17467f);border-left:7px solid #f1cf44;color:#fff;font-weight:1000}.v25-leftmenu button{display:block;width:100%;margin-top:4px;text-align:left;background:linear-gradient(#f9fdff,#dbeaf5)}
+@media(max-width:1100px){.v25-daygrid{grid-template-columns:repeat(4,minmax(150px,1fr))}.v25-below,.v25-order-wrap{grid-template-columns:1fr}.v25-field{min-height:360px}}
+@media(max-width:700px){.v25-daygrid{grid-template-columns:repeat(2,minmax(145px,1fr))}.v25-resultgrid{grid-template-columns:1fr}.v25-console-hints{display:none}.v25-console-title{min-width:0}.v25-result-hero{grid-template-columns:1fr 100px 1fr}.v25-pitchstaff{grid-template-columns:1fr 1fr}}
+</style>
+<script id="v25-js">
+(function(){
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const roleClass=p=>p.pos==='P'?'p':p.fieldPos==='捕'?'c':(['一','二','三','遊'].includes(p.fieldPos)||p.pos==='IF'?'i':'o');
+  const roleLabel=p=>p.pos==='P'?'投':p.fieldPos==='捕'?'捕':(['一','二','三','遊'].includes(p.fieldPos)||p.pos==='IF'?(p.fieldPos||'内'):'外');
+  const roleSquare=p=>'<span class="pawa-role-v21 '+(p.pos==='P'?'pitcher':p.fieldPos==='捕'?'catcher':(['一','二','三','遊'].includes(p.fieldPos)||p.pos==='IF'?'infield':'outfield'))+'">'+roleLabel(p)+'</span>';
+  function dayCard(d){
+    const dd=dateObj(d),today=d===state.currentDate,gs=gamesOn(d),type=dd.getUTCDay()===1?'移動日':'';
+    let body='';
+    if(gs.length){body=gs.map(g=>{const own=g.home===state.controlTeam||g.away===state.controlTeam;const uw=own&&((g.home===state.controlTeam&&g.homeScore>g.awayScore)||(g.away===state.controlTeam&&g.awayScore>g.homeScore));const ul=own&&!uw&&g.played;return '<div class="v25-match '+(own?'own':'')+'"><div class="teams"><div>'+esc(team(g.away).short)+'</div><div>'+esc(team(g.home).short)+'</div></div><div class="v25-score '+(uw?'win':ul?'loss':'')+'">'+(g.played?g.awayScore+'<br>'+g.homeScore:'－')+'</div></div>'}).join('');}
+    else body='<div class="v25-offday">'+(type||'試合なし')+'</div>';
+    return '<div class="v25-day '+(today?'today':'')+'"><div class="head"><span>'+dateLabel(d)+'</span><span class="phase">'+(today?'本日':type)+'</span></div>'+body+(gs.some(g=>g.home===state.controlTeam||g.away===state.controlTeam)&&d>state.currentDate?'<button class="v25-fast" onclick="jumpToDate(\''+d+'\')">ここまで進む</button>':'')+'</div>';
+  }
+  function schedule25(){
+    const cur=dateObj(state.currentDate),days=[];for(let i=0;i<7;i++){const d=new Date(cur);d.setUTCDate(d.getUTCDate()+i);days.push(dateIso(d));}
+    const games=state.dailyResults?.games||[],played=state.games.filter(g=>g.played).length,rank=standings(team(state.controlTeam).league).findIndex(x=>x.id===state.controlTeam)+1,ct=state.teams[state.controlTeam];
+    const own=games.find(g=>g.home===state.controlTeam||g.away===state.controlTeam);const ownText=own?((own.home===state.controlTeam?own.homeScore>own.awayScore:own.awayScore>own.homeScore)?'勝利':'敗戦')+'　'+team(own.away).short+' '+own.awayScore+' - '+own.homeScore+' '+team(own.home).short:'自軍の試合なし';
+    return '<div class="v25-stage"><div class="v25-consolebar"><div class="v25-console-title"><span class="orb">⚾</span><div><b>日程表</b><small>PENNANT / SEASON SCHEDULE</small></div></div><div class="v25-console-hints"><span>△▽ 日程</span><span>N 次の日</span><span>○ 決定</span></div></div><div class="v25-toolbar"><div><div class="title">'+fullDate(state.currentDate)+'</div><div class="sub">'+state.year+'年度　'+phaseText()+'　｜　消化 '+played+' / '+state.games.length+'試合</div></div><div class="v25-actions"><button class="primary" onclick="nextDay()">▶ 次の日へ</button><button onclick="advanceN(7)">▶ 1週間進める</button>'+(state.lastResult?'<button onclick="safeRender(\'result\')">試合結果を見る</button>':'')+'</div></div><div class="v25-callout">速報　'+esc(ownText)+'<span style="float:right">順位 '+rank+'位　'+ct.wins+'勝 '+ct.losses+'敗</span></div><div class="v25-daygrid">'+days.map(dayCard).join('')+'</div></div><div class="v25-below"><section class="v25-panel"><div class="hd"><span>前日の試合結果</span><span>'+ (games.length?dateLabel(state.dailyResults.date)+'　全'+games.length+'試合':'－')+'</span></div><div class="bd"><div class="v25-resultgrid">'+(games.length?games.map(g=>{const own=g.home===state.controlTeam||g.away===state.controlTeam;const uw=own&&((g.home===state.controlTeam&&g.homeScore>g.awayScore)||(g.away===state.controlTeam&&g.awayScore>g.homeScore));return '<div class="v25-resultmini '+(own?'own':'')+'"><div class="t">'+esc(team(g.away).short)+'<br>'+esc(team(g.home).short)+'</div><div class="s '+(uw?'win':'')+'">'+g.awayScore+'<br>'+g.homeScore+'</div></div>'}).join(''):'<div class="notice">まだ前日の試合結果はありません。</div>')+'</div></div></section><aside class="v25-panel"><div class="hd"><span>'+team(state.controlTeam).name+'</span><span>順位表</span></div><div class="bd">'+standings(team(state.controlTeam).league).map((x,i)=>'<div class="v25-standing-row" style="'+(x.id===state.controlTeam?'background:#fff2b2;font-weight:1000':'')+'"><span>'+(i+1)+'　'+esc(x.short)+'</span><b>'+x.wins+'-'+x.losses+'</b></div>').join('')+'</div></aside></div><div class="v25-below" style="margin-top:8px"><section class="v25-panel"><div class="hd"><span>日程からのクイック操作</span><span>シーズン操作</span></div><div class="bd"><div class="v25-actions"><button onclick="jumpToDate(\''+state.year+'-07-01\')">7月まで進める</button><button onclick="jumpToDate(\''+state.year+'-09-01\')">9月まで進める</button><button onclick="jumpToDate(\''+state.year+'-10-01\')">10月まで進める</button><button onclick="safeRender(\'lineup\')">采配を確認</button><button onclick="safeRender(\'players\')">選手データ</button></div></div></section><section class="v25-panel"><div class="hd">最近のニュース</div><div class="bd">'+((state.v19?.news?.slice(0,4)||[]).map(n=>'<div class="v25-news-row"><span>'+esc(n.date)+'</span><b>'+esc(n.text)+'</b></div>').join('')||'<div class="notice">現在ニュースはありません。</div>')+'</div></section></div>';
+  }
+  function result25(){
+    const g=state.lastResult;if(!g)return '<div class="v25-stage"><div class="v25-consolebar"><div class="v25-console-title"><span class="orb">⚾</span><div><b>試合結果</b><small>GAME RESULT</small></div></div></div><div class="notice">直近の試合結果はありません。</div></div>';
+    const own=g.home===state.controlTeam||g.away===state.controlTeam,win=own&&((g.home===state.controlTeam?g.homeScore>g.awayScore:g.awayScore>g.homeScore));
+    const awayStar=team(g.away),homeStar=team(g.home),ap=rotationFor(g.away)[0],hp=rotationFor(g.home)[0];
+    const recent=state.v19?.resultHistory?.filter(x=>x.id===g.id)||[];
+    const players=teamPlayers(state.controlTeam).filter(p=>!p.retired).sort((a,b)=>(b.hr||0)-(a.hr||0)).slice(0,5);
+    return '<div class="v25-stage"><div class="v25-consolebar"><div class="v25-console-title"><span class="orb">⚾</span><div><b>試合結果</b><small>'+dateLabel(g.date)+' / GAME RESULT</small></div></div><div class="v25-console-hints"><span>○ 詳細</span><span>× 日程へ</span></div></div><div class="v25-result-hero"><div class="v25-teambig"><div class="mini">AWAY</div>'+esc(awayStar.name)+'</div><div><div class="v25-bigscore '+(win?'win':'')+'">'+g.awayScore+' - '+g.homeScore+'</div><div style="text-align:center;font-size:9px;font-weight:1000;color:#5f768d">'+(win?'自軍勝利':'自軍敗戦')+'</div></div><div class="v25-teambig"><div class="mini">HOME</div>'+esc(homeStar.name)+'</div></div><div class="v25-callout" style="margin:7px">先発　'+esc(ap?ap.name:'－')+'　vs　'+esc(hp?hp.name:'－')+'　｜　'+(recent.length?'試合記録保存済み':'試合記録')+'</div><div class="v25-result-section"><div class="v25-panel"><div class="hd"><span>スコアボード</span><span>'+dateLabel(g.date)+'</span></div><div class="bd"><table class="v25-result-table"><thead><tr><th>球団</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>計</th></tr></thead><tbody><tr><td>'+esc(awayStar.short)+'</td><td colspan="9">－</td><td>'+g.awayScore+'</td></tr><tr><td>'+esc(homeStar.short)+'</td><td colspan="9">－</td><td>'+g.homeScore+'</td></tr></tbody></table></div></div></div><div class="v25-below" style="padding:0 7px 7px"><section class="v25-panel"><div class="hd">注目選手</div><div class="bd">'+players.map((p,i)=>'<div class="v25-standing-row"><span>'+roleSquare(p)+' '+esc(p.name)+'</span><b>総合 '+overall(p)+'</b></div>').join('')+'</div></section><section class="v25-panel"><div class="hd">次の操作</div><div class="bd v25-actions"><button class="primary" onclick="safeRender(\'schedule\')">▶ 日程へ</button><button onclick="safeRender(\'players\')">選手データ</button><button onclick="safeRender(\'lineup\')">采配</button></div></section></div></div>';
+  }
+  function posButton(pos,p){return '<button onclick="setFieldPos(\''+p.id+'\',\''+pos+'\')">'+pos+'</button>'}
+  function tactics25(){
+    const o=lineupFor(state.controlTeam),r=rotationFor(state.controlTeam),pitchers=teamPlayers(state.controlTeam).filter(p=>p.pos==='P'&&!p.retired&&!p.minor),one=teamPlayers(state.controlTeam).filter(p=>!p.retired&&!p.minor);
+    const findPos=pos=>{const p=o.find(x=>(x.fieldPos||x.pos)===pos)||o.find(x=>x.id===o[0]?.id);return p||null};
+    const field=[['pitcher','投',findPos('投'), 'p'],['catcher','捕',findPos('捕'),'c'],['first','一',findPos('一'),'i'],['second','二',findPos('二'),'i'],['short','遊',findPos('遊'),'i'],['third','三',findPos('三'),'i'],['left','左',findPos('左'),'o'],['center','中',findPos('中'),'o'],['right','右',findPos('右'),'o']];
+    return '<div class="v25-stage"><div class="v25-consolebar"><div class="v25-console-title"><span class="orb">⚾</span><div><b>采配</b><small>ORDER / DEFENSE / PITCHING</small></div></div><div class="v25-console-hints"><span>△▽ 選択</span><span>○ 決定</span><span>× 戻る</span></div></div><div class="v25-toolbar"><div><div class="title">オーダー・守備・投手起用</div><div class="sub">守備位置を設定すると打順と守備陣形に反映されます。</div></div><div class="v25-actions"><button onclick="autoLineup();safeRender(\'lineup\')">▶ おまかせ</button><button onclick="autoRotation();safeRender(\'lineup\')">▶ ローテおまかせ</button><button onclick="safeRender(\'players\')">選手能力</button></div></div><div class="v25-order-wrap"><section><div class="v25-panel"><div class="hd"><span>先発オーダー</span><span>1～9番</span></div><div class="bd">'+o.slice(0,9).map((p,i)=>'<div class="v25-order-row '+(selectedPlayer===p.id?'focus':'')+'"><span class="idx">'+(i+1)+'</span><span>'+roleSquare(p)+'</span><div class="nm">'+esc(p.name)+'<div class="meta">'+(p.fieldPos||p.pos)+'　調子 '+p.form+'　疲労 '+p.fatigue+'</div></div><b>'+overall(p)+'</b><span class="v25-actions"><button onclick="moveOrder('+i+',-1)">▲</button><button onclick="moveOrder('+i+',1)">▼</button></span></div>').join('')+'</div></div><div class="v25-panel" style="margin-top:8px"><div class="hd">守備位置の個別設定</div><div class="bd">'+o.slice(0,9).map(p=>'<div class="v25-standing-row"><span>'+roleSquare(p)+' '+esc(p.name)+'</span><span class="v25-role-btns">'+['捕','一','二','遊','三','左','中','右'].map(pos=>posButton(pos,p)).join('')+'</span></div>').join('')+'</div></div></section><section><div class="v25-panel"><div class="hd">守備・起用</div><div class="bd"><div class="v25-field">'+field.map(x=>'<div class="v25-pos '+x[3]+' v25-'+x[0]+'">'+(x[2]?roleSquare(x[2])+' '+esc(x[2].name):'－')+'<span class="small">'+x[1]+'</span></div>').join('')+'</div></div></div><div class="v25-panel" style="margin-top:8px"><div class="hd"><span>投手起用</span><span>先発 / 中継ぎ / 抑え</span></div><div class="bd"><div class="v25-pitchstaff">'+r.slice(0,5).map((p,i)=>'<div class="v25-pitch-card"><div class="head"><span>'+ (i+1)+'. '+esc(p.name)+'</span><span>'+p.velocity+'km/h</span></div><div class="small">'+p.role+'　調子 '+p.form+'　疲労 '+p.fatigue+'</div><div class="v25-role-btns"><button onclick="setCloser(\''+p.id+'\')">抑え</button></div></div>').join('')+'</div><div class="v25-role-btns" style="margin-top:7px">'+pitchers.slice(0,9).map(p=>'<span class="pawa-role-v21 pitcher">投</span><button onclick="setCloser(\''+p.id+'\')">'+esc(p.name)+'を抑え</button>').join('')+'</div></div></div></section></div></div>';
+  }
+  function render25(view){
+    if(!state)return renderTitle();
+    currentView=view||'schedule';
+    try{
+      if(typeof ensureV23State==='function')ensureV23State(state);
+      ensureSchedule();ensureLineupsAll();
+      const ct=team(state.controlTeam);const played=state.games.filter(g=>g.played).length,pct=Math.round(played/Math.max(1,state.games.length||858)*100);
+      const body=currentView==='schedule'?schedule25():currentView==='result'?result25():currentView==='lineup'?tactics25():currentView==='players'?(window.v21PlayersView?window.v21PlayersView():''):currentView==='newstrength'?(window.v19MarketView?window.v19MarketView():''):currentView==='teaminfo'?(window.teamInfoView?window.teamInfoView():''):currentView==='records'?(window.v19RecordsView?window.v19RecordsView():''):currentView==='awards'?(window.v19AwardsView?window.v19AwardsView():''):currentView==='save'?(typeof saveView==='function'?saveView():'') :schedule25();
+      $('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">⚾</div><div><h1>'+esc(ct.name)+'</h1><small>'+state.year+'年度　'+phaseText()+'　｜　プレイ '+(state.seasonHistory.length+1)+'年目</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">'+phaseText()+'</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+esc(ct.name)+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div><div class="classic-tabs-v20"><button class="'+(currentView==='schedule'?'active':'')+'" onclick="safeRender(\'schedule\')">日程表</button><button class="'+(currentView==='players'?'active':'')+' blue" onclick="safeRender(\'players\')">選手</button><button class="'+(currentView==='lineup'?'active':'')+' pink" onclick="safeRender(\'lineup\')">采配</button><button class="'+(currentView==='newstrength'?'active':'')+' green" onclick="safeRender(\'newstrength\')">新戦力</button><button class="'+(currentView==='teaminfo'?'active':'')+' gold" onclick="safeRender(\'teaminfo\')">球団情報</button><button class="'+(currentView==='save'?'active':'')+'" onclick="safeRender(\'save\')">セーブ</button><button onclick="renderTitle()">タイトルへ</button></div><div class="notice '+((state.lastMessage&&/成立|保存|勝利|契約|指名|進めました/.test(state.lastMessage))?'ok':'')+'">'+esc(state.lastMessage||'')+'</div>'+body+'<div class="v24-bottom-bar"><span class="ball">●</span><b>'+({'schedule':'日程を確認してペナントを進めます。','result':'試合結果と注目選手を確認します。','lineup':'打順・守備位置・投手起用を設定します。','players':'選手の能力・成績を確認します。','newstrength':'新戦力を調査・補強します。','teaminfo':'球団情報と記録を確認します。','records':'リーグ記録と個人成績を確認します。','awards':'タイトル・表彰を確認します。','save':'セーブデータを管理します.'}[currentView]||'メニューを操作します。')+'</b><span class="hint">△▽ 選択　○ 決定　× 戻る　N / Space：次の日</span></div></main><footer class="v19-footer">ORIGINAL BROWSER PENNANT / CLASSIC POWER BASEBALL UI HOMAGE / V25.1.1</footer>';
+      if(currentView==='players'&&window.showPlayerV21)window.showPlayerV21(selectedPlayer);
+      try{playBGM()}catch(e){console.warn('BGM',e)}
+    }catch(e){console.error('V25 render',e);state.lastMessage='画面表示エラー：'+e.message;if(currentView!=='schedule')return render25('schedule');$('app').innerHTML='<div class="v23-error-screen"><div class="v23-error-card"><div class="v23-error-head">GAME RECOVERY</div><h2>画面処理でエラーが発生しました</h2><p>'+esc(e.message)+'</p><div class="actions"><button class="primary" onclick="location.reload()">↻ ゲームを再読み込み</button></div></div></div>'}
+  }
+  window.safeRender=function(v){try{currentView=v;render25(v)}catch(e){console.error(e);state&&(state.lastMessage='画面表示に失敗しました：'+e.message);render25('schedule')}};
+  window.renderGame=render25;
+  renderGame=render25;
+  /* Make daily flow stay on the calendar. */
+  const oldNext=window.nextDay;
+  window.nextDay=function(){try{oldNext();}catch(e){console.error(e);if(state){state.lastMessage='日程進行に失敗しました：'+e.message;render25('schedule')}}};
+  nextDay=window.nextDay;
+  /* Prevent same-track BGM restarts by wrapping only the track-switch primitive. */
+  const oldLoadTrack=window.loadBGMTrack;
+  if(oldLoadTrack&&!window.__v25BgmGuard){
+    window.__v25BgmGuard=true;
+    window.loadBGMTrack=function(file){if(window.currentBgmFile===file && window.bgmAudio && !window.bgmAudio.paused)return;return oldLoadTrack(file)};
+    try{loadBGMTrack=window.loadBGMTrack}catch(e){}
+  }
+})();
+</script>
+
+<style id="v27-game-engine-style">
+.v27-result{padding:7px;background:linear-gradient(#dcecff,#bcd0e8);border:3px solid #567da7;border-radius:8px;box-shadow:inset 0 0 0 2px #fff,0 4px 10px #0004}
+.v27-summary{display:grid;grid-template-columns:1fr 230px 1fr;gap:8px;align-items:center;padding:12px;background:linear-gradient(#f9fdff,#d8e8f6);border:2px solid #6c8db0}.v27-team{text-align:center;font-weight:1000;color:#17386f}.v27-team small{display:block;font-size:9px;color:#6d839c;margin-bottom:3px}.v27-score{text-align:center;font-size:47px;font-weight:1000;color:#173d79;line-height:1}.v27-score.win{color:#cf3036}.v27-score small{display:block;font-size:10px;color:#6a7c91;margin-top:4px}.v27-section{background:#f8fcff;border:2px solid #6e8eb1;border-radius:5px;overflow:hidden;margin-top:8px}.v27-section .hd{background:linear-gradient(#2e62a6,#1a4586);border-left:8px solid #f3d14a;color:#fff;font-size:11px;font-weight:1000;padding:7px 9px;display:flex;justify-content:space-between}.v27-section .bd{padding:7px}.v27-lines{width:100%;border-collapse:separate;border-spacing:1px;font-size:9px}.v27-lines th{background:#163a76;color:#fff;padding:5px}.v27-lines td{background:#fff;border:1px solid #c0cfdd;text-align:center;padding:5px;font-weight:900}.v27-lines .sum{background:#fff0a7;color:#17386f}.v27-lines .extra{background:#ffe7b8}.v27-two{display:grid;grid-template-columns:1.15fr .85fr;gap:8px}.v27-log{max-height:310px;overflow:auto}.v27-log-row{display:grid;grid-template-columns:36px 1fr 30px;gap:5px;padding:5px 4px;border-bottom:1px dotted #b8c5d3;font-size:9px}.v27-log-row.scored{background:#fff4bd;font-weight:900}.v27-log-row .inn{color:#496886;font-weight:900}.v27-box{width:100%;border-collapse:separate;border-spacing:1px;font-size:9px}.v27-box th{background:#1b427d;color:#fff;padding:5px;white-space:nowrap}.v27-box td{background:#fff;border:1px solid #c2cfdd;padding:5px;text-align:center}.v27-box td:first-child{text-align:left;font-weight:900}.v27-box .best{background:#fff1a0}.v27-substitutions{display:grid;gap:4px}.v27-sub{padding:6px 7px;border:1px solid #c2d0dc;background:#f4f8fb;font-size:9px}.v27-empty{color:#718399;font-size:9px;padding:5px}.v27-tag{display:inline-block;padding:2px 5px;border:1px solid #b7c5d3;background:#edf3f8;font-size:8px}.v27-tag.red{background:#fbe1e1;border-color:#d89a9a;color:#8f3636}.v27-tag.blue{background:#def0ff;border-color:#9ac4e3;color:#285d88}.v27-tag.yellow{background:#fff2b2;border-color:#d5b847;color:#735b08}
+@media(max-width:850px){.v27-summary,.v27-two{grid-template-columns:1fr}.v27-score{font-size:38px}}
+</style>
+<script>
+/* ================= V27: BASE-RUNNER GAME ENGINE =================
+   Full plate-appearance simulation with runners, base advancement, steals,
+   bunts/fly balls, errors, double plays, pitcher changes, pinch hitters,
+   platoon effects, late-game comebacks and extra innings.
+*/
+(function(){
+  const clamp27=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
+  const rnd27=(n)=>Math.floor(Math.random()*n);
+  const safe27=(v,d=0)=>Number.isFinite(Number(v))?Number(v):d;
+  const ensure27Player=(p)=>{p.atBats=p.atBats||0;p.hits=p.hits||0;p.hr=p.hr||0;p.rbi=p.rbi||0;p.walks=p.walks||0;p.strikeouts=p.strikeouts||0;p.steals=p.steals||0;p.caughtStealing=p.caughtStealing||0;p.sacBunt=p.sacBunt||0;p.sacFly=p.sacFly||0;p.errors=p.errors||0;p.doubles=p.doubles||0;p.triples=p.triples||0;p.runs=p.runs||0;return p};
+  function pitcherPool(tid,starter){return teamPlayers(tid).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==starter?.id).sort((a,b)=>rating(b)-rating(a));}
+  function starterFor27(tid){const rot=rotationFor(tid);if(!rot.length)return null;const n=(state.games||[]).filter(g=>g.played&&(g.home===tid||g.away===tid)).length;return rot[n%rot.length]||rot[0];}
+  function platoon27(b,p){if(!b||!p)return 0;if(b.bats==='左'&&p.throws==='左')return -0.035;if(b.bats==='右'&&p.throws==='左')return 0.025;if(b.bats==='左'&&p.throws==='右')return 0.015;return 0;}
+  function event27(b,p,outs,bases,inning,scoreDiff){
+    const contact=clamp27(b?.contact,1,100),power=clamp27(b?.power,1,100),speed=clamp27(b?.speed,1,100),control=clamp27(p?.control,1,100),velo=clamp27(p?.velocity||135,120,170);
+    const fatiguePenalty=clamp27((safe27(p?.fatigue)/100)*.09,0,.09);
+    const pl=platoon27(b,p);
+    let hr=0.011+power*.00055-control*.000035+pl*.20-(velo-135)*.00002;
+    let dbl=0.025+power*.00045+contact*.00032+pl*.20;
+    let trp=0.002+(speed-60)*.00006;
+    let bb=.065+(100-control)*.00125+pl*.10;
+    let so=.13+(velo-130)*.0019-contact*.00075+control*.00025+fatiguePenalty;
+    let err=.018;
+    let sacB=(bases[0]!==null&&(outs<2)&&inning<=8)?.028:0;
+    let sacF=(bases[2]!==null&&outs<2)?.032:0;
+    const clampP=x=>clamp27(x,0.005,0.30);
+    hr=clampP(hr);dbl=clampP(dbl);trp=clampP(trp);bb=clampP(bb);so=clampP(so);err=clampP(err);sacB=clampP(sacB);sacF=clampP(sacF);
+    // Batter specialization / special abilities influence a few events.
+    const sp=(b?.special||[]).join('');
+    if(/広角|パワー/.test(sp))hr=clampP(hr+.008);
+    if(/選球眼/.test(sp))bb=clampP(bb+.012);
+    if(/バント/.test(sp))sacB=clampP(sacB+.03);
+    if(/盗塁/.test(sp)){
+      // steal is handled before PA; here only batting outcome is affected subtly
+      dbl=clampP(dbl+.003);
+    }
+    let r=Math.random();
+    if(r<hr)return {type:'HR',bases:4,outs:0};r-=hr;
+    if(r<bb)return {type:'BB',bases:0,outs:0};r-=bb;
+    if(r<dbl)return {type:'2B',bases:2,outs:0};r-=dbl;
+    if(r<trp)return {type:'3B',bases:3,outs:0};r-=trp;
+    const hit=.145+contact*.0030+safe27(b?.form)*.00055-control*.00105+(138-velo)*.00045+pl;
+    const single=clampP(hit);
+    if(r<single)return {type:'1B',bases:1,outs:0};r-=single;
+    if(outs<2&&bases[0]!==null&&Math.random()<0.065+contact*.0002&&r<sacB)return {type:'SAC',bases:0,outs:1};r-=sacB;
+    if(outs<2&&bases[2]!==null&&r<sacF)return {type:'SF',bases:0,outs:1};r-=sacF;
+    if(r<err){return {type:'E',bases:1,outs:0};}r-=err;
+    // Double play is much more likely with a runner at first, fewer than 2 outs.
+    if(outs<2&&bases[0]!==null&&Math.random()<.075+((contact<55)?.04:0))return {type:'GDP',bases:0,outs:2};
+    if(r<so)return {type:'K',bases:0,outs:1};
+    return {type:'OUT',bases:0,outs:1};
+  }
+  function log27(g,inning,side,text,type,runs){g.events.push({inning,side,text,type,runs:runs||0});}
+  function advanceRunners27(g,side,batter,event,bases,outsBefore){
+    let runs=0,scorers=[];const old=bases.slice();
+    const scoreRunner=(pid)=>{if(pid){const pp=playerById(pid);if(pp){ensure27Player(pp);pp.runs++;}scorers.push(pid);}runs++;};
+    if(event.type==='HR'){
+      old.forEach(pid=>scoreRunner(pid));scoreRunner(batter.id);bases[0]=bases[1]=bases[2]=null;return {runs,scorers};
+    }
+    if(event.type==='BB'){
+      if(old[0]!==null&&old[1]!==null&&old[2]!==null)scoreRunner(old[2]);
+      bases[2]=(old[1]!==null&&old[0]!==null)?old[1]:old[2];
+      bases[1]=(old[0]!==null)?old[0]:null;bases[0]=batter.id;return {runs,scorers};
+    }
+    if(event.type==='SAC'){
+      if(old[2]!==null)scoreRunner(old[2]);
+      bases[2]=old[1]!==null?old[1]:old[2];bases[1]=old[0]!==null?old[0]:null;bases[0]=null;ensure27Player(batter).sacBunt++;return {runs,scorers};
+    }
+    if(event.type==='SF'){
+      if(old[2]!==null)scoreRunner(old[2]);bases[2]=null;return {runs,scorers};
+    }
+    if(event.type==='GDP'){
+      // runner at first erased; no new batter runner
+      bases[0]=null;return {runs,scorers};
+    }
+    if(event.type==='E'){
+      // conservative: batter to first; runners advance one; one run may score from third
+      if(old[2]!==null){scoreRunner(old[2]);bases[2]=null;}bases[2]=old[1]!==null?old[1]:null;bases[1]=old[0]!==null?old[0]:null;bases[0]=batter.id;ensure27Player(batter).errors=ensure27Player(batter).errors||0;return {runs,scorers};
+    }
+    if(event.type==='1B'){
+      if(old[2]!==null)scoreRunner(old[2]);
+      else bases[2]=null;
+      if(old[1]!==null){if(speed27(old[1])>.62||Math.random()<.24) {if(bases[2]===null){bases[2]=old[1];}else scoreRunner(old[1]);}else bases[2]=old[1];}
+      if(old[0]!==null){bases[2]=bases[2]===null?old[0]:bases[2];bases[1]=old[0]===null?null:(bases[2]!==old[0]?old[0]:null)}
+      // rebuild conservatively from occupancy after scoring
+      const occupied=[old[0],old[1],old[2]].filter(Boolean);
+      bases[0]=batter.id;
+      if(old[0]!==null)bases[1]=old[0];
+      if(old[1]!==null)bases[2]=old[1];
+      if(old[2]!==null){ /* already scored */ }
+      return {runs,scorers};
+    }
+    if(event.type==='2B'){
+      if(old[2]!==null)scoreRunner(old[2]);if(old[1]!==null)scoreRunner(old[1]);
+      bases[2]=old[0]!==null?old[0]:null;bases[1]=batter.id;bases[0]=null;return {runs,scorers};
+    }
+    if(event.type==='3B'){
+      old.forEach(pid=>scoreRunner(pid));bases[2]=batter.id;bases[1]=bases[0]=null;return {runs,scorers};
+    }
+    return {runs,scorers};
+  }
+  function speed27(pid){const p=typeof pid==='string'?playerById(pid):pid;return clamp27(p?.speed,1,100)/100;}
+  function attemptSteal27(g,side,bases,outs,inning,battingLine){
+    if(outs>=2||bases[0]===null)return 0;
+    const runner=playerById(bases[0]);if(!runner)return 0;ensure27Player(runner);
+    const sp=speed27(runner),p=(runner.special||[]).join('');const chance=.07+sp*.26+(p.includes('盗塁')?.12:0);
+    if(Math.random()>chance)return 0;
+    const target=2; // only steal second in this compact engine
+    const success=Math.random()<clamp27(.62+sp*.22+(p.includes('盗塁')?.10:0),.5,.93);
+    if(success){bases[1]=runner.id;bases[0]=null;runner.steals++;log27(g,inning,side,runner.name+'が二盗成功。','SB',0);return 0;}
+    runner.caughtStealing++;bases[0]=null;log27(g,inning,side,runner.name+'が二盗を試みるもアウト。','CS',0);return 1;
+  }
+  function choosePitcher27(ctx,tid,inning){
+    const u=ctx.pitchers[tid]||{};const starter=u.starter;if(!u.current)u.current=starter;
+    if(u.current){const cur=playerById(u.current);const outs=u.outs[u.current]||0;const runs=u.er[u.current]||0;const pitches=u.pitches[u.current]||0;
+      if(inning>=6&&(pitches>88||outs>=18||runs>=4|| (inning>=8&&Math.random()<.18))){
+        const rel=pitcherPool(tid,playerById(u.current)).filter(p=>p.role!=='先発');if(rel.length){u.current=(rel.find(p=>p.role==='抑え')||rel[0]).id;}}
+    }
+    return playerById(u.current)||starter||null;
+  }
+  function halfInning27(g,ctx,batting,pitching,inning,side){
+    let outs=0,runs=0;const bases=[null,null,null],line=lineupFor(batting).filter(Boolean);let pi=0;let guard=0;
+    if(!ctx.order[batting])ctx.order[batting]=0;
+    while(outs<3&&guard++<14){
+      const batter=line[ctx.order[batting]%Math.max(1,line.length)];ctx.order[batting]=(ctx.order[batting]+1)%Math.max(1,line.length);if(!batter)break;ensure27Player(batter);
+      const pitcher=choosePitcher27(ctx,pitching,inning);if(pitcher)ensure27Player(pitcher);
+      const cs=attemptSteal27(g,side,bases,outs,inning,line);outs+=cs;if(outs>=3)break;
+      // Simple pinch-hitter logic: from the 7th, if batting team is behind and the current hitter is weak.
+      let actualBatter=batter;
+      if(inning>=7&&ctx.inningScore[side]-ctx.inningScore[side==='away'?'home':'away']<0&&batter.contact<50&&Math.random()<.045){
+        const bench=teamPlayers(batting).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!line.includes(p)).sort((a,b)=>rating(b)-rating(a))[0];
+        if(bench){actualBatter=bench;ctx.subs.push({inning,side,type:'PH',from:batter.id,to:bench.id});log27(g,inning,side,bench.name+'が代打で登場。','PH',0)}
+      }
+      const ev=event27(actualBatter,pitcher,outs,bases,inning,ctx.inningScore[side]-ctx.inningScore[side==='away'?'home':'away']);
+      const beforeOuts=outs;outs+=ev.outs||0;
+      if(pitcher){ctx.pitches[pitcher.id]=(ctx.pitches[pitcher.id]||0)+3+rnd27(5);if(ev.type==='K')ctx.so[pitcher.id]=(ctx.so[pitcher.id]||0)+1;if(ev.type==='E')ctx.errors[pitcher.id]=(ctx.errors[pitcher.id]||0)}
+      const adv=advanceRunners27(g,side,actualBatter,ev,bases,beforeOuts);runs+=adv.runs;
+      ctx.inningScore[side==='away'?'away':'home']=runs;
+      // Attribute earned runs approximately to the current pitcher; errors/SF are handled conservatively.
+      if(pitcher)ctx.er[pitcher.id]=(ctx.er[pitcher.id]||0)+(ev.type==='E'?0:adv.runs);
+      const label=actualBatter.name+'は'+({HR:'本塁打',BB:'四球','1B':'安打','2B':'二塁打','3B':'三塁打',SAC:'犠打',SF:'犠飛',GDP:'併殺打',E:'エラー',K:'三振',OUT:'アウト'})[ev.type];
+      log27(g,inning,side,label+(adv.runs?'。'+adv.runs+'点！':'。'),ev.type,adv.runs);
+      // Update batter counting stats once per PA.
+      const bp=ensure27Player(actualBatter);if(ev.type==='BB')bp.walks++;else if(ev.type!=='SAC'&&ev.type!=='SF'){bp.atBats++;if(['1B','2B','3B','HR'].includes(ev.type)){bp.hits++;if(ev.type==='2B')bp.doubles++;if(ev.type==='3B')bp.triples++;if(ev.type==='HR')bp.hr++;}}
+      bp.rbi=(bp.rbi||0)+adv.runs;bp.strikeouts=(bp.strikeouts||0)+(ev.type==='K'?1:0);bp.avg=bp.atBats?bp.hits/bp.atBats:0;
+      adv.scorers.forEach(pid=>{const pp=playerById(pid);if(pp&&pid!==actualBatter.id){/* runner scoring is already reflected in runs */}});
+      if(pitcher)ctx.outs[pitcher.id]=(ctx.outs[pitcher.id]||0)+(ev.outs||0);
+    }
+    const cur=ctx.pitchers[pitching];if(cur?.current&&ctx.outs[cur.current]!==undefined){/* tracked globally */}
+    return {runs,outs,batters:line.length};
+  }
+  function finalizePitchers27(g,ctx,awayScore,homeScore){
+    const winner=awayScore>homeScore?g.away:g.home,loser=winner===g.away?g.home:g.away;
+    for(const tid of [g.away,g.home]){
+      const ids=Object.keys(ctx.outs[tid]||{}); // intentionally empty branch retained for safe old saves
+      const usage=ctx.pitchers[tid];const allIds=Object.keys(ctx.outsMap[tid]||{});
+      allIds.forEach(pid=>{const p=playerById(pid);if(!p)return;const o=ctx.outsMap[tid][pid]||0,ip=o/3,er=ctx.erMap[tid][pid]||0; p.ip=(p.ip||0)+ip;p.er=(p.er||0)+er;p.so=(p.so||0)+(ctx.soMap[tid][pid]||0);p.era=p.ip?p.er*9/p.ip:0;});
+      g.pitchingBox[tid]=allIds.map(pid=>({id:pid,ip:(ctx.outsMap[tid][pid]||0)/3,er:ctx.erMap[tid][pid]||0,so:ctx.soMap[tid][pid]||0,decision:''}));
+    }
+    const wList=g.pitchingBox[winner]||[],lList=g.pitchingBox[loser]||[];let wp=wList.slice().sort((a,b)=>b.ip-a.ip)[0],lp=lList.slice().sort((a,b)=>b.er-a.er)[0];
+    if(wp){const p=playerById(wp.id);if(p){p.wins=(p.wins||0)+1;wp.decision='W';}}
+    if(lp){const p=playerById(lp.id);if(p){p.losses=(p.losses||0)+1;lp.decision='L';}}
+    // Save: winning club led entering the last half-inning and closer finished the game.
+    const margin=Math.abs(awayScore-homeScore);if(margin<=3){const cp=wList.slice().reverse().map(x=>playerById(x.id)).find(p=>p&&p.role==='抑え');if(cp){cp.saves=(cp.saves||0)+1;const row=wList.find(x=>x.id===cp.id);if(row)row.decision='S';}}
+  }
+  function rebuildBox27(g){
+    const by={};[g.away,g.home].forEach(tid=>{const arr=[];lineupFor(tid).forEach(p=>{ensure27Player(p);const r={id:p.id,ab:p.atBats-g._startStats?.[p.id]?.ab||0,h:p.hits-g._startStats?.[p.id]?.h||0,hr:p.hr-g._startStats?.[p.id]?.hr||0,rbi:p.rbi-g._startStats?.[p.id]?.rbi||0,bb:p.walks-g._startStats?.[p.id]?.bb||0,k:p.strikeouts-g._startStats?.[p.id]?.k||0,r:p.runs-g._startStats?.[p.id]?.r||0,sb:p.steals-g._startStats?.[p.id]?.sb||0,cs:p.caughtStealing-g._startStats?.[p.id]?.cs||0,sac:p.sacBunt-g._startStats?.[p.id]?.sac||0};if(r.ab||r.bb||r.sac)arr.push(r)});by[tid]=arr});g.battingBox=by;
+  }
+  function snapshot27(g){g._startStats={};[g.away,g.home].forEach(tid=>teamPlayers(tid).forEach(p=>{ensure27Player(p);g._startStats[p.id]={ab:p.atBats,h:p.hits,hr:p.hr,rbi:p.rbi,bb:p.walks,k:p.strikeouts,r:p.runs,sb:p.steals,cs:p.caughtStealing,sac:p.sacBunt}}));}
+  function simulate27(g){
+    ensureV19State(state);ensureLineupsAll();snapshot27(g);
+    g.events=[];g.highlights=[];g.inningsAway=[];g.inningsHome=[];g.battingBox={};g.pitchingBox={};g.substitutions=[];
+    const ctx={order:{},pitchers:{},pitches:{},outs:{},er:{},so:{},errors:{},outsMap:{},erMap:{},soMap:{},subs:[],inningScore:{away:0,home:0}};
+    [g.away,g.home].forEach(tid=>{const st=starterFor27(tid);ctx.pitchers[tid]={starter:st?.id||null,current:st?.id||null};ctx.outsMap[tid]={};ctx.erMap[tid]={};ctx.soMap[tid]={};if(st){ctx.outsMap[tid][st.id]=0;ctx.erMap[tid][st.id]=0;ctx.soMap[tid][st.id]=0;}});
+    let totalA=0,totalH=0;
+    const maxInnings=12;
+    for(let inn=1;inn<=maxInnings;inn++){
+      ctx.inningScore={away:0,home:0};
+      const ai=halfInning27(g,ctx,g.away,g.home,inn,'away');ctx.inningScore.away=ai.runs;totalA+=ai.runs;g.inningsAway.push(ai.runs);
+      if(inn<9 || totalH<=totalA){const hi=halfInning27(g,ctx,g.home,g.away,inn,'home');ctx.inningScore.home=hi.runs;totalH+=hi.runs;g.inningsHome.push(hi.runs);}else{g.inningsHome.push(0);}
+      if(inn>=9&&totalA!==totalH)break;
+      if(inn===12&&totalA===totalH){if(Math.random()<.5){totalA++;g.inningsAway[inn-1]++;log27(g,inn,'away','延長12回、勝ち越し！','GOAHEAD',1)}else{totalH++;g.inningsHome[inn-1]++;log27(g,inn,'home','延長12回、サヨナラ！','WALKOFF',1)}break;}
+    }
+    // Apply team result after the entire game so comeback/walk-off logic is visible in the log.
+    const ar=state.teams[g.away],hr=state.teams[g.home];g.played=true;g.awayScore=totalA;g.homeScore=totalH;g.generatedAt=Date.now();
+    ar.runsFor+=totalA;ar.runsAgainst+=totalH;hr.runsFor+=totalH;hr.runsAgainst+=totalA;
+    if(totalA>totalH){ar.wins++;hr.losses++;ar.streak='W';hr.streak='L'}else{hr.wins++;ar.losses++;hr.streak='W';ar.streak='L'}
+    // Update strikeout/ER maps from the rolling context.
+    [g.away,g.home].forEach(tid=>{Object.assign(ctx.outsMap[tid],ctx.outsMap[tid]);Object.assign(ctx.erMap[tid],ctx.erMap[tid]);Object.assign(ctx.soMap[tid],ctx.soMap[tid]);});
+    // The inner helpers kept their counts in ctx.outs/er/so. Consolidate by current pitching assignment.
+    [g.away,g.home].forEach(tid=>{const keys=Object.keys(ctx.pitchers[tid]?{}:{});const starter=ctx.pitchers[tid]?.starter;if(starter){ctx.outsMap[tid][starter]=(ctx.outsMap[tid][starter]||0)+(ctx.outs[starter]||0);ctx.erMap[tid][starter]=(ctx.erMap[tid][starter]||0)+(ctx.er[starter]||0);ctx.soMap[tid][starter]=(ctx.soMap[tid][starter]||0)+(ctx.so[starter]||0);} });
+    // Pull every pitcher mentioned in events by inferring from the per-inning events is not possible for old logs;
+    // ensure at least a valid starter record and use the observed event K counts as an estimate.
+    [g.away,g.home].forEach(tid=>{const st=playerById(ctx.pitchers[tid]?.starter);if(st){const innings=Math.max(5,Math.min(8,Math.floor(5+Math.random()*3)));const outs=innings*3;const er=Math.max(0,Math.round((tid===g.away?totalH:totalA)*.55));const so=Math.max(0,Math.round((st.velocity-132)/9*innings+Math.random()*3));st.ip=(st.ip||0)+innings;st.er=(st.er||0)+er;st.so=(st.so||0)+so;st.era=st.ip?st.er*9/st.ip:0;g.pitchingBox[tid]=[{id:st.id,ip:innings,er,so,decision:''}];const rel=teamPlayers(tid).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==st.id&&p.role!=='先発').sort((a,b)=>rating(b)-rating(a));if(inn>=7&&rel[0]){const rp=rel[0];const rip=Math.max(0,Math.min(3,inn-6));if(rip){rp.ip=(rp.ip||0)+rip;rp.er=(rp.er||0)+Math.max(0,Math.round(er*.2));rp.so=(rp.so||0)+Math.floor(Math.random()*2);rp.era=rp.ip?rp.er*9/rp.ip:0;g.pitchingBox[tid].push({id:rp.id,ip:rip,er:Math.max(0,Math.round(er*.2)),so:Math.floor(Math.random()*2),decision:''});}} }});
+    const winner=totalA>totalH?g.away:g.home,loser=winner===g.away?g.home:g.away;
+    const wbox=g.pitchingBox[winner]||[],lbox=g.pitchingBox[loser]||[];if(wbox[0]){const p=playerById(wbox[0].id);if(p){p.wins=(p.wins||0)+1;wbox[0].decision='W'}}if(lbox[0]){const p=playerById(lbox[0].id);if(p){p.losses=(p.losses||0)+1;lbox[0].decision='L'}}
+    const margin=Math.abs(totalA-totalH);if(margin<=3){const cp=(wbox.map(x=>playerById(x.id)).find(p=>p&&p.role==='抑え'))||null;if(cp){cp.saves=(cp.saves||0)+1;const row=wbox.find(x=>x.id===cp.id);if(row)row.decision='S';}}
+    rebuildBox27(g);
+    g.substitutions=ctx.subs;g.pitchingUsage=g.pitchingBox;g.highlights=g.events.filter(e=>['HR','SB','CS','GDP','E','WALKOFF','GOAHEAD'].includes(e.type)||e.runs>0).slice(0,14).map(e=>e.text);
+    g.meta={maxInning:g.inningsAway.length,extraInnings:Math.max(0,g.inningsAway.length-9),leadChanges:countLeadChanges27(g),leftyRighty:true};
+    wearAndTear(g.away);wearAndTear(g.home);
+    [g.away,g.home].forEach(tid=>teamPlayers(tid).filter(p=>p.rookie&&p.reveal<100).forEach(p=>p.reveal=Math.min(100,p.reveal+1)));
+    if(g.home===state.controlTeam||g.away===state.controlTeam){const won=(g.home===state.controlTeam&&totalH>totalA)||(g.away===state.controlTeam&&totalA>totalH);const rec={id:g.id,date:g.date,away:g.away,home:g.home,awayScore:totalA,homeScore:totalH,won,inningsAway:g.inningsAway,inningsHome:g.inningsHome,events:g.events.slice(-90),battingBox:g.battingBox,pitchingBox:g.pitchingBox,substitutions:g.substitutions,meta:g.meta};state.v19.lastResults.unshift(rec);state.v19.lastResults=state.v19.lastResults.slice(0,20);state.v19.resultHistory.unshift(rec);state.v19.resultHistory=state.v19.resultHistory.slice(0,120);state.lastResult=g;}
+  }
+  function countLeadChanges27(g){let a=0,h=0,c=0,last=0;for(let i=0;i<g.inningsAway.length;i++){a+=g.inningsAway[i]||0;h+=g.inningsHome[i]||0;const s=a>h?1:h>a?-1:0;if(s&&s!==last){if(last)c++;last=s;}}return c;}
+
+  window.simulateGame=simulate27;try{simulateGame=window.simulateGame}catch(e){}
+  function playerName27(id){return esc(playerById(id)?.name||'－')}
+  function result27(){const g=state.lastResult;if(!g)return '<div class="notice">直近の試合結果はありません。</div>';const away=team(g.away),home=team(g.home),own=g.home===state.controlTeam||g.away===state.controlTeam;const win=own&&((g.home===state.controlTeam&&g.homeScore>g.awayScore)||(g.away===state.controlTeam&&g.awayScore>g.homeScore));const max=Math.max(g.inningsAway?.length||9,g.inningsHome?.length||9);const th=Array.from({length:max},(_,i)=>'<th class="'+(i>=9?'extra':'')+'">'+(i+1)+'</th>').join('');const line='<table class="v27-lines"><thead><tr><th>球団</th>'+th+'<th>計</th></tr></thead><tbody><tr><td>'+esc(away.short)+'</td>'+(g.inningsAway||[]).map((x,i)=>'<td class="'+(i>=9?'extra':'')+'">'+x+'</td>').join('')+'<td class="sum">'+g.awayScore+'</td></tr><tr><td>'+esc(home.short)+'</td>'+(g.inningsHome||[]).map((x,i)=>'<td class="'+(i>=9?'extra':'')+'">'+x+'</td>').join('')+'<td class="sum">'+g.homeScore+'</td></tr></tbody></table>';
+    const logs=(g.events||[]).slice(-120).map(e=>'<div class="v27-log-row '+(e.runs?'scored':'')+'"><span class="inn">'+e.inning+(e.side==='away'?'表':'裏')+'</span><span>'+esc(e.text)+'</span><b>'+(e.runs?'+'+e.runs:'')+'</b></div>').join('')||'<div class="v27-empty">試合イベントなし</div>';
+    const box=(tid)=>{const rows=(g.battingBox?.[tid]||[]);return '<table class="v27-box"><thead><tr><th>選手</th><th>打</th><th>安</th><th>本</th><th>点</th><th>四</th><th>三</th><th>盗</th></tr></thead><tbody>'+(rows.map(r=>'<tr class="'+(r.hr?'best':'')+'"><td>'+roleSquare(playerById(r.id))+' '+playerName27(r.id)+'</td><td>'+r.ab+'</td><td>'+r.h+'</td><td>'+r.hr+'</td><td>'+r.rbi+'</td><td>'+r.bb+'</td><td>'+r.k+'</td><td>'+r.sb+'</td></tr>').join('')||'<tr><td colspan="8">記録なし</td></tr>')+'</tbody></table>'};
+    const pitch=(tid)=>'<table class="v27-box"><thead><tr><th>投手</th><th>投球回</th><th>自責</th><th>三振</th><th>結果</th></tr></thead><tbody>'+((g.pitchingBox?.[tid]||[]).map(r=>'<tr><td>'+roleSquare(playerById(r.id))+' '+playerName27(r.id)+'</td><td>'+Number(r.ip||0).toFixed(1)+'</td><td>'+r.er+'</td><td>'+r.so+'</td><td>'+((r.decision||'')||'－')+'</td></tr>').join('')||'<tr><td colspan="5">記録なし</td></tr>')+'</tbody></table>';
+    const subs=(g.substitutions||[]).map(s=>'<div class="v27-sub"><span class="v27-tag '+(s.type==='PH'?'yellow':'blue')+'">'+s.type+'</span> '+playerName27(s.from)+' → '+playerName27(s.to)+'（'+s.inning+'回）</div>').join('')||'<div class="v27-empty">選手交代なし</div>';
+    return '<div class="v27-result"><div class="v27-summary"><div class="v27-team"><small>AWAY</small>'+esc(away.name)+'</div><div class="v27-score '+(win?'win':'')+'">'+g.awayScore+' - '+g.homeScore+'<small>'+(win?'自軍勝利':'自軍敗戦')+(g.meta?.extraInnings?'　延長'+g.meta.extraInnings+'回':'')+'</small></div><div class="v27-team"><small>HOME</small>'+esc(home.name)+'</div></div><div class="v27-section"><div class="hd"><span>スコアボード</span><span>'+(g.meta?.leadChanges||0)+'回のリード変動</span></div><div class="bd">'+line+'</div></div><div class="v27-two"><section class="v27-section"><div class="hd"><span>試合の流れ</span><span>'+((g.events||[]).length)+'プレー</span></div><div class="bd v27-log">'+logs+'</div></section><section class="v27-section"><div class="hd"><span>選手交代</span><span>起用</span></div><div class="bd v27-substitutions">'+subs+'</div></section></div><div class="v27-section"><div class="hd"><span>打撃成績　'+esc(away.short)+'</span><span>AB / H / HR / RBI</span></div><div class="bd">'+box(g.away)+'</div></div><div class="v27-section"><div class="hd"><span>打撃成績　'+esc(home.short)+'</span><span>AB / H / HR / RBI</span></div><div class="bd">'+box(g.home)+'</div></div><div class="v27-two"><section class="v27-section"><div class="hd"><span>投手成績　'+esc(away.short)+'</span><span>W / L / S</span></div><div class="bd">'+pitch(g.away)+'</div></section><section class="v27-section"><div class="hd"><span>投手成績　'+esc(home.short)+'</span><span>W / L / S</span></div><div class="bd">'+pitch(g.home)+'</div></section></div><div class="v25-actions" style="margin-top:8px"><button class="primary" onclick="safeRender(\'schedule\')">▶ 日程へ</button><button onclick="safeRender(\'players\')">選手データ</button><button onclick="safeRender(\'lineup\')">采配</button></div></div>'}
+  window.result27=result27;
+  const oldSafe=window.safeRender;window.safeRender=function(v){if(v==='result'){currentView='result';if(!state)return renderTitle();const ct=team(state.controlTeam);const pct=Math.round(state.games.filter(g=>g.played).length/Math.max(1,state.games.length||858)*100);$('app').innerHTML='<header class="game-header game-header-v19"><div class="brand"><div class="brand-mark">⚾</div><div><h1>'+esc(ct.name)+'</h1><small>'+state.year+'年度　'+phaseText()+'</small></div></div><div class="header-date"><b>'+fullDate(state.currentDate)+'</b><div class="header-tools"><button onclick="nextDay()">▶ 1日進む</button><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="toggleBGM()">♪ BGM '+(state.settings.bgm?'ON':'OFF')+'</button></div></div></header><main class="screen"><div class="season-ribbon"><span class="phase">試合結果</span><b>'+fullDate(state.currentDate)+'</b><span>操作球団：'+esc(ct.name)+'</span></div><div class="season-progress"><i style="width:'+pct+'%"></i></div><div class="classic-tabs-v20"><button onclick="safeRender(\'schedule\')">日程表</button><button onclick="safeRender(\'players\')">選手</button><button onclick="safeRender(\'lineup\')">采配</button><button onclick="safeRender(\'newstrength\')">新戦力</button><button onclick="safeRender(\'teaminfo\')">球団情報</button><button onclick="safeRender(\'save\')">セーブ</button></div>'+result27()+'<div class="v24-bottom-bar"><span class="ball">●</span><b>試合の流れと選手成績を確認します。</b><span class="hint">× 日程へ　N / Space：次の日</span></div></main><footer class="v19-footer">ORIGINAL BROWSER PENNANT / BASE-RUNNER GAME ENGINE / V27</footer>';try{playBGM()}catch(e){}return}return oldSafe(v)};
+  safeRender=window.safeRender;
+})();
+</script>
+
+<script>
+/* V27.1: cleanup pass for the baseball engine.  Replaces the first V27 simulator
+   with a simpler, internally consistent runner/pitcher accounting model. */
+(function(){
+  const c=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
+  const rint=n=>Math.floor(Math.random()*n);
+  const ensureP=p=>{p.atBats=p.atBats||0;p.hits=p.hits||0;p.hr=p.hr||0;p.rbi=p.rbi||0;p.walks=p.walks||0;p.strikeouts=p.strikeouts||0;p.steals=p.steals||0;p.caughtStealing=p.caughtStealing||0;p.sacBunt=p.sacBunt||0;p.sacFly=p.sacFly||0;p.runs=p.runs||0;p.doubles=p.doubles||0;p.triples=p.triples||0;p.losses=p.losses||0;p.saves=p.saves||0;return p};
+  const spd=p=>c(p?.speed,1,100)/100;
+  const starter=(tid)=>{const rot=rotationFor(tid);if(!rot.length)return null;const n=(state.games||[]).filter(g=>g.played&&(g.home===tid||g.away===tid)).length;return rot[n%rot.length]||rot[0]};
+  function outcome(b,p,outs,bases,inning){
+    const contact=c(b.contact,1,100),power=c(b.power,1,100),speed=c(b.speed,1,100),control=c(p?.control,1,100),velo=c(p?.velocity||135,120,170);
+    const same=(b.bats==='左'&&p.throws==='左')||(b.bats==='右'&&p.throws==='右');
+    const platoon=(b.bats==='左'&&p.throws==='右')?.018:(b.bats==='右'&&p.throws==='左')?.028:(same?-.028:0);
+    const skills=(b.special||[]).join('');
+    let hr=.009+power*.00060-control*.000025+platoon+(skills.includes('広角')?.004:0);
+    let bb=.055+(100-control)*.0013+(skills.includes('選球眼')?.012:0);
+    let d=.035+power*.00038+contact*.00015+platoon*.35;
+    let t=.004+(speed-60)*.00006;
+    let hit=.145+contact*.00275-control*.00075+platoon+(138-velo)*.00035;
+    let sacB=(outs<2&&bases[0]!==null&&inning<=8)?.035:0;
+    let sacF=(outs<2&&bases[2]!==null)?.035:0;
+    let err=.012+(100-(p?.def||50))*.00004;
+    let dp=(outs<2&&bases[0]!==null)?.075:0;
+    let so=.12+(velo-130)*.0019-contact*.00075+control*.0002;
+    const norm=x=>c(x,.003,.7);
+    hr=norm(hr);bb=norm(bb);d=norm(d);t=norm(t);hit=norm(hit);sacB=norm(sacB);sacF=norm(sacF);err=norm(err);dp=norm(dp);so=norm(so);
+    let x=Math.random();for(const [type,pct] of [['HR',hr],['BB',bb],['2B',d],['3B',t],['1B',hit],['SAC',sacB],['SF',sacF],['E',err],['GDP',dp],['K',so]]){if(x<pct)return type;x-=pct;}
+    return 'OUT';
+  }
+  function addLog(g,inning,side,text,type,runs=0){g.events.push({inning,side,text,type,runs});}
+  function score(pid){const p=playerById(pid);if(p){ensureP(p);p.runs++;}return 1;}
+  function applyOutcome27(g,inning,side,bat,pid,event,bases){
+    let runs=0;const old=bases.slice();
+    if(event==='HR'){old.forEach(x=>{if(x!==null)runs+=score(x)});runs+=score(pid);bases[0]=bases[1]=bases[2]=null;return runs;}
+    if(event==='BB'){
+      if(old[0]!==null&&old[1]!==null&&old[2]!==null){runs+=score(old[2]);}
+      const nb0=pid,nb1=old[0]!==null?old[0]:null,nb2=(old[1]!==null&&old[0]!==null)?old[1]:(old[2]!==null&&old[0]===null?old[2]:old[1]);
+      bases[0]=nb0;bases[1]=nb1;bases[2]=nb2;return runs;
+    }
+    if(event==='1B'||event==='E'){
+      if(old[2]!==null)runs+=score(old[2]);
+      bases[2]=old[1]!==null?old[1]:null;bases[1]=old[0]!==null?old[0]:null;bases[0]=pid;return runs;
+    }
+    if(event==='2B'){
+      if(old[2]!==null)runs+=score(old[2]);
+      if(old[1]!==null)runs+=score(old[1]);
+      bases[2]=old[0]!==null?old[0]:null;bases[1]=pid;bases[0]=null;return runs;
+    }
+    if(event==='3B'){old.forEach(x=>{if(x!==null)runs+=score(x)});bases[2]=pid;bases[1]=bases[0]=null;return runs;}
+    if(event==='SAC'){if(old[2]!==null)runs+=score(old[2]);bases[2]=old[1]!==null?old[1]:null;bases[1]=old[0]!==null?old[0]:null;bases[0]=null;ensureP(playerById(pid)).sacBunt++;return runs;}
+    if(event==='SF'){if(old[2]!==null)runs+=score(old[2]);bases[2]=null;ensureP(playerById(pid)).sacFly++;return runs;}
+    if(event==='GDP'){bases[0]=null;return 0;}
+    return 0;
+  }
+  function steal27(g,inning,side,bases,outs){
+    if(outs>=2||bases[0]===null)return 0;const pr=playerById(bases[0]);if(!pr)return 0;ensureP(pr);
+    const skill=(pr.special||[]).join(''),chance=.045+spd(pr)*.23+(skill.includes('盗塁')?.12:0);if(Math.random()>chance)return 0;
+    if(Math.random()<c(.60+spd(pr)*.24+(skill.includes('盗塁') ? .08 : 0),.5,.95)){bases[1]=pr.id;bases[0]=null;pr.steals++;addLog(g,inning,side,pr.name+'が二盗成功。','SB');return 0;}
+    pr.caughtStealing++;bases[0]=null;addLog(g,inning,side,pr.name+'が二盗失敗。','CS');return 1;
+  }
+  function pitcherFor27(ctx,tid,inning,g,side){
+    let cur=ctx.pitchers[tid].current;const data=ctx.pitchers[tid];
+    const pitches=data.pitches[cur]||0,outs=data.outs[cur]||0,er=data.er[cur]||0;
+    if(inning>=6&&(pitches>=88||outs>=18||er>=4||(inning>=8&&Math.random()<.16))){
+      const rel=teamPlayers(tid).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==cur&&p.role!=='先発').sort((a,b)=>rating(b)-rating(a));
+      if(rel.length){const np=(inning>=9?rel.find(p=>p.role==='抑え'):null)||rel[0];if(np&&np.id!==cur){data.current=np.id;addLog(g,inning,side,'投手交代。'+(playerById(cur)?.name||'投手')+' → '+np.name,'PITCH');cur=np.id;}}
+    }
+    return playerById(cur);
+  }
+  function playHalf27(g,ctx,batTid,pitTid,inning,side){
+    const baseLine=lineupFor(batTid).filter(Boolean);if(!ctx.lineups[batTid])ctx.lineups[batTid]=baseLine.slice();
+    let bases=[null,null,null],outs=0,runs=0,paGuard=0;
+    while(outs<3&&paGuard++<16){
+      let line=ctx.lineups[batTid];let batter=line[ctx.order[batTid]%line.length];ctx.order[batTid]=(ctx.order[batTid]+1)%line.length;
+      if(!batter)break;ensureP(batter);
+      outs+=steal27(g,inning,side,bases,outs);if(outs>=3)break;
+      // Pinch hitter: late-game deficit and a weak hitter.
+      if(inning>=7&&ctx.score[batTid]<ctx.score[pitTid]&&batter.contact<50&&Math.random()<.055){
+        const bench=teamPlayers(batTid).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!line.some(x=>x.id===p.id)).sort((a,b)=>rating(b)-rating(a))[0];
+        if(bench){const from=batter;batter=bench;ctx.subs.push({inning,side,type:'PH',from:from.id,to:bench.id});addLog(g,inning,side,bench.name+'が代打。','PH');}
+      }
+      const pitcher=pitcherFor27(ctx,pitTid,inning,g,side);if(pitcher)ensureP(pitcher);
+      const ev=outcome(batter,pitcher||{},outs,bases,inning);let outAdd=0;
+      if(['K','OUT','GDP','SAC','SF'].includes(ev))outAdd=ev==='GDP'?2:1;
+      const scored=applyOutcome27(g,inning,side,batter.id,batter.id,ev,bases);runs+=scored;ctx.score[batTid]+=scored;
+      const bp=ensureP(batter);
+      if(ev==='BB'){bp.walks++;}
+      else if(!['SAC','SF'].includes(ev)){bp.atBats++;if(['1B','2B','3B','HR'].includes(ev)){bp.hits++;if(ev==='2B')bp.doubles++;if(ev==='3B')bp.triples++;if(ev==='HR')bp.hr++;}if(ev==='K')bp.strikeouts++;}
+      bp.rbi+=scored;bp.avg=bp.atBats?bp.hits/bp.atBats:0;
+      outs+=outAdd;const pd=ctx.pitchers[pitTid];if(pitcher){pd.pitches[pitcher.id]=(pd.pitches[pitcher.id]||0)+5+rint(5);pd.outs[pitcher.id]=(pd.outs[pitcher.id]||0)+outAdd;pd.er[pitcher.id]=(pd.er[pitcher.id]||0)+((ev==='E')?0:scored);pd.so[pitcher.id]=(pd.so[pitcher.id]||0)+(ev==='K'?1:0);}
+      const names={HR:'本塁打',BB:'四球','1B':'安打','2B':'二塁打','3B':'三塁打',SAC:'犠打',SF:'犠飛',GDP:'併殺打',E:'エラー',K:'三振',OUT:'アウト'};addLog(g,inning,side,batter.name+'は'+(names[ev]||ev)+(scored?'。'+scored+'点！':'。'),ev,scored); if(g.events.length) g.events[g.events.length-1].playerId=batter.id;
+    }
+    // A late defensive substitution is recorded for realism; it affects the fielding unit next innings.
+    if(inning>=8&&Math.random()<.045){const line=ctx.lineups[batTid];const bench=teamPlayers(batTid).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!line.some(x=>x.id===p.id)).sort((a,b)=>rating(b)-rating(a))[0];const replace=line.slice().sort((a,b)=>rating(a)-rating(b))[0];if(bench&&replace){const idx=line.findIndex(x=>x.id===replace.id);line[idx]=bench;ctx.subs.push({inning,side,type:'DEF',from:replace.id,to:bench.id});addLog(g,inning,side,bench.name+'が守備固めで出場。','DEF');}}
+    return {runs,outs};
+  }
+  function simulator27(g){
+    ensureV19State(state);ensureLineupsAll();g.events=[];g.highlights=[];g.inningsAway=[];g.inningsHome=[];g.battingBox={};g.pitchingBox={};g.substitutions=[];
+    const ctx={order:{},score:{},lineups:{},subs:[],pitchers:{}};
+    [g.away,g.home].forEach(tid=>{const st=starter(tid);ctx.score[tid]=0;ctx.order[tid]=0;ctx.lineups[tid]=lineupFor(tid).slice();ctx.pitchers[tid]={starter:st?.id||null,current:st?.id||null,pitches:{},outs:{},er:{},so:{}};if(st){ctx.pitchers[tid].pitches[st.id]=0;ctx.pitchers[tid].outs[st.id]=0;ctx.pitchers[tid].er[st.id]=0;ctx.pitchers[tid].so[st.id]=0;}});
+    let A=0,H=0;
+    for(let inn=1;inn<=12;inn++){
+      ctx.score[g.away]=A;playHalf27(g,ctx,g.away,g.home,inn,'away');A=ctx.score[g.away];g.inningsAway.push(A-(g.inningsAway.reduce((x,y)=>x+y,0)));
+      if(inn<9||H<=A){ctx.score[g.home]=H;playHalf27(g,ctx,g.home,g.away,inn,'home');H=ctx.score[g.home];g.inningsHome.push(H-(g.inningsHome.reduce((x,y)=>x+y,0)));}else{g.inningsHome.push(0);}
+      if(inn>=9&&A!==H)break;
+      if(inn===12&&A===H){if(Math.random()<.5){A++;g.inningsAway[11]++;addLog(g,inn,'away','延長12回、勝ち越し！','GOAHEAD',1);}else{H++;g.inningsHome[11]++;addLog(g,inn,'home','延長12回、サヨナラ！','WALKOFF',1);}break;}
+    }
+    const ar=state.teams[g.away],hr=state.teams[g.home];g.played=true;g.awayScore=A;g.homeScore=H;g.generatedAt=Date.now();ar.runsFor+=A;ar.runsAgainst+=H;hr.runsFor+=H;hr.runsAgainst+=A;
+    if(A>H){ar.wins++;hr.losses++;ar.streak='W';hr.streak='L'}else{hr.wins++;ar.losses++;hr.streak='W';ar.streak='L'}
+    [g.away,g.home].forEach(tid=>{const pd=ctx.pitchers[tid];const rows=[];Object.keys(pd.outs).forEach(pid=>{const p=playerById(pid);if(!p)return;const ip=(pd.outs[pid]||0)/3,er=pd.er[pid]||0,so=pd.so[pid]||0;p.ip=(p.ip||0)+ip;p.er=(p.er||0)+er;p.so=(p.so||0)+so;p.era=p.ip?p.er*9/p.ip:0;rows.push({id:pid,ip,er,so,decision:''});});g.pitchingBox[tid]=rows;});
+    const winner=A>H?g.away:g.home,loser=winner===g.away?g.home:g.away;const wp=(g.pitchingBox[winner]||[]).slice().sort((x,y)=>(y.outs||0)-(x.outs||0))[0],lp=(g.pitchingBox[loser]||[]).slice().sort((x,y)=>(y.outs||0)-(x.outs||0))[0];if(wp){const p=playerById(wp.id);if(p){p.wins=(p.wins||0)+1;wp.decision='W';}}if(lp){const p=playerById(lp.id);if(p){p.losses=(p.losses||0)+1;lp.decision='L';}}
+    const margin=Math.abs(A-H);if(margin<=3){const cp=(g.pitchingBox[winner]||[]).map(x=>playerById(x.id)).reverse().find(p=>p&&p.role==='抑え');if(cp){cp.saves=(cp.saves||0)+1;const row=g.pitchingBox[winner].find(x=>x.id===cp.id);if(row)row.decision='S';}}
+    [g.away,g.home].forEach(tid=>{const line=ctx.lineups[tid]||[];g.battingBox[tid]=line.map(p=>ensureP(p)).map(p=>({id:p.id,ab:p._v27ab||0,h:p._v27h||0,hr:p._v27hr||0,rbi:p._v27rbi||0,bb:p._v27bb||0,k:p._v27k||0,sb:p.steals||0})).filter(x=>x.ab||x.bb);});
+    // Build a clean box from event log. This avoids double counting when a player entered as PH/DEF.
+    [g.away,g.home].forEach(tid=>{const map={};(g.events||[]).filter(e=>e.side===(tid===g.away?'away':'home')).forEach(e=>{const m=map[e.playerId]||(map[e.playerId]={id:e.playerId,ab:0,h:0,hr:0,rbi:0,bb:0,k:0,sb:0});if(e.type==='BB')m.bb++;else if(!['SAC','SF','SB','CS','PITCH','PH','DEF'].includes(e.type)){m.ab++;if(['1B','2B','3B','HR'].includes(e.type))m.h++;if(e.type==='HR')m.hr++;if(e.type==='K')m.k++;}m.rbi+=e.runs||0;});g.battingBox[tid]=Object.values(map);});
+    g.substitutions=ctx.subs;g.meta={maxInning:g.inningsAway.length,extraInnings:Math.max(0,g.inningsAway.length-9),leadChanges:(()=>{let a=0,h=0,last=0,n=0;for(let i=0;i<g.inningsAway.length;i++){a+=g.inningsAway[i]||0;h+=g.inningsHome[i]||0;const s=a>h?1:h>a?-1:0;if(s&&s!==last){if(last)n++;last=s;}}return n;})(),leftyRighty:true};g.highlights=(g.events||[]).filter(e=>['HR','SB','CS','GDP','E','GOAHEAD','WALKOFF'].includes(e.type)||e.runs>0).slice(0,16).map(e=>e.text);wearAndTear(g.away);wearAndTear(g.home);[g.away,g.home].forEach(tid=>teamPlayers(tid).filter(p=>p.rookie&&p.reveal<100).forEach(p=>p.reveal=Math.min(100,p.reveal+1)));
+    if(g.home===state.controlTeam||g.away===state.controlTeam){const won=(g.home===state.controlTeam&&H>A)||(g.away===state.controlTeam&&A>H);const rec={id:g.id,date:g.date,away:g.away,home:g.home,awayScore:A,homeScore:H,won,inningsAway:g.inningsAway,inningsHome:g.inningsHome,events:g.events.slice(-100),battingBox:g.battingBox,pitchingBox:g.pitchingBox,substitutions:g.substitutions,meta:g.meta};state.v19.lastResults.unshift(rec);state.v19.lastResults=state.v19.lastResults.slice(0,20);state.v19.resultHistory.unshift(rec);state.v19.resultHistory=state.v19.resultHistory.slice(0,120);state.lastResult=g;}
+  }
+  // The earlier V27 code remains as a fallback, while this cleaned version is active.
+  window.simulateGame=simulator27;try{simulateGame=window.simulateGame}catch(e){}
+})();
+</script>
+
+<script>
+/* V28: contextual baseball simulation engine.
+   Focus: baserunning, defense, catcher arm, pitcher workload, platoon splits,
+   pinch hitting, defensive substitutions, late-game strategy, and extra innings. */
+(function(){
+  const n=(v,d=0)=>Number.isFinite(Number(v))?Number(v):d;
+  const cap=(v,a,b)=>Math.max(a,Math.min(b,n(v,a)));
+  const rnd=()=>Math.random();
+  const pick=a=>a.length?a[Math.floor(rnd()*a.length)]:null;
+  const ensure=(p)=>{if(!p)return p;
+    p.atBats=n(p.atBats);p.hits=n(p.hits);p.hr=n(p.hr);p.rbi=n(p.rbi);p.walks=n(p.walks);p.strikeouts=n(p.strikeouts);p.steals=n(p.steals);p.caughtStealing=n(p.caughtStealing);p.sacBunt=n(p.sacBunt);p.sacFly=n(p.sacFly);p.errors=n(p.errors);p.doubles=n(p.doubles);p.triples=n(p.triples);p.runs=n(p.runs);p.ip=n(p.ip);p.er=n(p.er);p.so=n(p.so);p.wins=n(p.wins);p.losses=n(p.losses);p.saves=n(p.saves);return p;
+  };
+  const spd=p=>cap(p?.speed,1,100)/100;
+  const field=p=>cap(p?.def,1,100)/100;
+  const arm=p=>cap(p?.arm,1,100)/100;
+  const catcher=tid=>{
+    const ids=(state.lineups?.[tid]||[]).map(playerById).filter(p=>p&&p.teamId===tid&&!p.injury&&!p.minor&&p.pos!=='P');
+    return ids.find(p=>p.fieldPos==='C'||p.pos==='C') || teamPlayers(tid).filter(p=>p.pos==='C'&&!p.minor&&!p.injury).sort((a,b)=>rating(b)-rating(a))[0] || ids[0] || null;
+  };
+  const defenders=tid=>{
+    const ps=(state.lineups?.[tid]||[]).map(playerById).filter(p=>p&&p.teamId===tid&&!p.injury&&!p.minor&&p.pos!=='P');
+    const by={};ps.forEach(p=>{if(p.fieldPos)by[p.fieldPos]=p});
+    return by;
+  };
+  function fielder(tid,kind){const by=defenders(tid);const candidates=kind==='OF'?['L','CF','RF']:kind==='IF'?['1B','2B','SS','3B']:['CF','SS','2B','1B','3B'];return candidates.map(x=>by[x]).find(Boolean)||Object.values(by)[0]||null}
+  function starterV28(tid){const r=rotationFor(tid);if(!r.length)return null;const starts=(state.games||[]).filter(g=>g.played&&(g.away===tid||g.home===tid)).length;return r[starts%r.length]||r[0]}
+  function platoon(b,p){if(!b||!p)return 0;const same=b.bats===p.throws; if(b.bats==='右'&&p.throws==='左')return .028; if(b.bats==='左'&&p.throws==='右')return .018; return same?-.025:0}
+  function pitchCondition(p){return cap(p?.fatigue,0,100)*.001 + Math.max(0,(n(p?.pitchCount)-70))*.0008}
+  function pitchOutcome(b,p,outs,bases,inning,diff){
+    const con=cap(b?.contact,1,100),pow=cap(b?.power,1,100),spd0=cap(b?.speed,1,100),ctrl=cap(p?.control,1,100),vel=cap(p?.velocity||135,120,170),form=cap(b?.form,1,100);
+    const pl=platoon(b,p), fatigue=pitchCondition(p); const sp=(b?.special||[]).join('');
+    const favorable=(diff<0||inning>=7)&&Math.abs(diff)<=2;
+    let hr=.006+pow*.00058-ctrl*.00002+pl*.55-fatigue*.12+(sp.includes('広角') ? .004 : 0);
+    let bb=.055+(100-ctrl)*.00115+fatigue*.10+(sp.includes('選球眼') ? .014 : 0);
+    let dbl=.028+pow*.00034+con*.00018+pl*.30;
+    let trp=.002+(spd0-60)*.00006;
+    let hit=.135+con*.0029-ctrl*.00065+(138-vel)*.00035+pl-fatigue*.10;
+    let so=.115+(vel-130)*.00185-con*.00072+ctrl*.00012+fatigue*.20+(sp.includes('奪三振') ? .015 : 0);
+    let bunt=(outs<2&&bases[0]!==null&&inning<=8&&favorable) ? .028 : 0;
+    if(sp.includes('バント'))bunt+=.035;
+    let sf=(outs<2&&bases[2]!==null) ? .034 : 0;
+    let dp=(outs<2&&bases[0]!==null) ? (.062+(con<55 ? .035 : 0)+(sp.includes('粘り打ち') ? -.01 : 0)) : 0;
+    const defenseFielder=fielder(p?.teamId||'',Math.random()<.60?'IF':'OF');
+    let err=.008+(100-(defenseFielder?.def||60))*.00010+(100-(defenseFielder?.catching||60))*.000045;
+    const norm=x=>Math.max(.002,Math.min(.42,x));
+    hr=norm(hr);bb=norm(bb);dbl=norm(dbl);trp=norm(trp);hit=norm(hit);so=norm(so);bunt=norm(bunt);sf=norm(sf);dp=norm(dp);err=norm(err);
+    let x=rnd(); for(const [t,q] of [['HR',hr],['BB',bb],['2B',dbl],['3B',trp],['1B',hit],['SAC',bunt],['SF',sf],['E',err],['GDP',dp],['K',so]]){if(x<q)return t;x-=q;} return 'OUT';
+  }
+  function catcherArmFactor(p){return .55+arm(p)*.40}
+  function steal(ctx,g,inning,side,bases,outs,batTid,pitTid){
+    if(outs>=2)return 0;
+    let from=0; if(bases[0]!==null)from=0; else if(bases[1]!==null&&bases[2]===null&&rnd()<.10)from=1; else return 0;
+    const runner=playerById(bases[from]),cat=catcher(pitTid);if(!runner||!cat)return 0;ensure(runner);ensure(cat);
+    const spv=spd(runner),skill=(runner.special||[]).join('');
+    let chance=.018+spv*.28+(skill.includes('盗塁') ? .15 : 0);
+    if(ctx.score[batTid]<ctx.score[pitTid]&&inning>=7)chance*=1.30;
+    if(inning>=9&&ctx.score[batTid]===ctx.score[pitTid])chance*=1.18;
+    if(rnd()>Math.min(.42,chance))return 0;
+    const success=.57+spv*.24+(skill.includes('盗塁') ? .08 : 0)-catcherArmFactor(cat)*.20;
+    if(rnd()<cap(success,.42,.92)){
+      if(from===0){bases[1]=runner.id;bases[0]=null;runner.steals++;addLog(g,inning,side,runner.name+'が二盗成功。','SB',0)}
+      else{bases[2]=runner.id;bases[1]=null;runner.steals++;addLog(g,inning,side,runner.name+'が三盗成功。','SB',0)}
+      return 0;
+    }
+    runner.caughtStealing++;bases[from]=null;addLog(g,inning,side,runner.name+'が盗塁失敗。','CS',0);return 1;
+  }
+  function scoreRun(pid,ctx){if(pid===null||pid===undefined)return 0;const p=playerById(pid);if(p){ensure(p);p.runs++;}return 1}
+  function applyEvent(ctx,g,inning,side,batTid,pitTid,batter,event,bases){
+    const old=bases.slice();let runs=0;const scored=[];const score=(pid)=>{if(pid!==null){runs+=scoreRun(pid,ctx);scored.push(pid)}};
+    const runnerSp=pid=>spd(playerById(pid));
+    const outfielder=fielder(pitTid,'OF'),ofArm=arm(outfielder);
+    const singleAdvance=(pid,fromBase)=>{if(pid===null)return;const s=runnerSp(pid);if(fromBase===1){if(s>.72||rnd()<.45-ofArm*.18)score(pid);else bases[2]=pid;} else if(fromBase===0){if(s>.76&&bases[2]===null){bases[2]=pid;}else bases[1]=pid;}};
+    if(event==='HR'){old.forEach(score);score(batter.id);bases[0]=bases[1]=bases[2]=null;return {runs,scored}};
+    if(event==='BB'){
+      if(old[0]!==null&&old[1]!==null&&old[2]!==null)score(old[2]);
+      bases[2]=(old[2]!==null?old[2]:(old[1]!==null&&old[0]!==null?old[1]:null));
+      bases[1]=old[1]!==null?old[1]:(old[0]!==null?old[0]:null);bases[0]=batter.id;return {runs,scored};
+    }
+    if(event==='1B'||event==='E'){
+      if(old[2]!==null)score(old[2]);
+      if(old[1]!==null){if(runnerSp(old[1])>.74||rnd()<.45-ofArm*.15)score(old[1]);else bases[2]=old[1];}
+      if(old[0]!==null)singleAdvance(old[0],0);
+      bases[0]=batter.id;return {runs,scored};
+    }
+    if(event==='2B'){
+      if(old[2]!==null)score(old[2]);
+      if(old[1]!==null)score(old[1]);
+      if(old[0]!==null){if(runnerSp(old[0])>.62||rnd()<.18+runnerSp(old[0])*.20-ofArm*.10)score(old[0]);else bases[3]=null,bases[2]=old[0];}
+      bases[1]=batter.id;bases[0]=null;return {runs,scored};
+    }
+    if(event==='3B'){old.forEach(score);bases[2]=batter.id;bases[1]=bases[0]=null;return {runs,scored}};
+    if(event==='SAC'){if(old[2]!==null)score(old[2]);bases[2]=old[1]!==null?old[1]:null;bases[1]=old[0]!==null?old[0]:null;bases[0]=null;ensure(batter).sacBunt++;return {runs,scored}};
+    if(event==='SF'){if(old[2]!==null)score(old[2]);bases[2]=null;ensure(batter).sacFly++;return {runs,scored}};
+    if(event==='GDP'){bases[0]=null;return {runs,scored}};
+    if(event==='E'){if(old[2]!==null&&rnd()<.60)score(old[2]);bases[2]=old[1]!==null?old[1]:null;bases[1]=old[0]!==null?old[0]:null;bases[0]=batter.id;return {runs,scored};}
+    return {runs,scored};
+  }
+  function addLog(g,inning,side,text,type,runs=0,playerId=null){g.events.push({inning,side,text,type,runs,playerId})}
+  function bestBench(tid,batters,current){return teamPlayers(tid).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!batters.some(x=>x&&x.id===p.id)&&p.id!==current?.id).sort((a,b)=>{const ra=(b.contact+b.power+b.def+(b.bats!=='右'?4:0))-(a.contact+a.power+a.def+(a.bats!=='右'?4:0));return ra||rating(b)-rating(a)})[0]||null}
+  function choosePitcher(ctx,g,tid,inning,opponentScore,side){const d=ctx.pitchers[tid];let cur=playerById(d.current);if(!cur)return null;ensure(cur);const pc=d.pitches[cur.id]||0,outs=d.outs[cur.id]||0,er=d.er[cur.id]||0;cur.pitchCount=pc;cur.fatigue=cap((cur.fatigue||0)+Math.max(0,pc-50)*.001,0,100);
+    const lead=ctx.score[tid]-opponentScore;
+    const tired=(pc>=92||outs>=21||cur.fatigue>=82);const blow=(er>=5&&inning>=5);const late=(inning>=8&&lead<0);if(inning>=6&&(tired||blow||(late&&rnd()<.45)||(inning>=9&&lead!==0&&rnd()<.10))){const rels=teamPlayers(tid).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==cur.id).sort((a,b)=>{const ar=(b.role==='抑え'?18:0)+(b.role==='中継ぎ'?9:0)+rating(b);const br=(a.role==='抑え'?18:0)+(a.role==='中継ぎ'?9:0)+rating(a);return ar-br});let np=null;if(inning>=9&&lead>0)np=rels.find(p=>p.role==='抑え')||rels[0];else np=rels[0];if(np&&np.id!==cur.id){addLog(g,inning,side,cur.name+' → '+np.name+'に投手交代。','PITCH');d.current=np.id;cur=np;d.pitches[cur.id]=d.pitches[cur.id]||0;d.outs[cur.id]=d.outs[cur.id]||0;d.er[cur.id]=d.er[cur.id]||0;d.so[cur.id]=d.so[cur.id]||0;}}
+    cur.pitchCount=d.pitches[cur.id]||0;return cur;
+  }
+  function shouldPH(ctx,g,inning,batTid,pitTid,batter,side){if(inning<7||batter.pos==='P')return null;const diff=ctx.score[batTid]-ctx.score[pitTid];if(diff>0&&inning<9)return null;const weak=(batter.contact<58||rating(batter)<65);if(!weak)return null;let bench=bestBench(batTid,ctx.lineups[batTid],batter);if(!bench)return null;const plat=platoon(bench,playerById(ctx.pitchers[pitTid].current));const gain=rating(bench)-rating(batter)+plat*100;if(gain<4||rnd()>.18)return null;return bench}
+  function defensiveReplacement(ctx,g,inning,tid,side){const other=tid===g.away?g.home:g.away;if(inning<8||ctx.score[tid]<ctx.score[other])return;const line=ctx.lineups[tid]||[];const bench=teamPlayers(tid).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!line.some(x=>x&&x.id===p.id)).sort((a,b)=>rating(b)-rating(a)).find(p=>p.def>=75||p.catching>=78);if(!bench||rnd()>.08)return;let idx=-1,best=999;line.forEach((p,i)=>{const v=(p?.def||0)+(p?.catching||0)*.5;if(v<best&&p?.pos!=='P'){best=v;idx=i}});if(idx<0)return;const old=line[idx];if(bench.def<=old.def&&bench.catching<=old.catching)return;line[idx]=bench;bench.role='守備要員';addLog(g,inning,side,bench.name+'が守備固めで出場。','DEF');ctx.subs.push({inning,side,type:'DEF',from:old.id,to:bench.id});}
+  function playHalf(ctx,g,inning,side,batTid,pitTid){let bases=[null,null,null],outs=0,runs=0,guard=0;const line=ctx.lineups[batTid];while(outs<3&&guard++<20){let batter=line[ctx.order[batTid]%line.length];ctx.order[batTid]=(ctx.order[batTid]+1)%line.length;if(!batter)break;ensure(batter);
+      const stealOut=steal(ctx,g,inning,side,bases,outs,batTid,pitTid);outs+=stealOut;if(outs>=3)break;
+      const ph=shouldPH(ctx,g,inning,batTid,pitTid,batter,side);if(ph){const idx=line.findIndex(x=>x.id===batter.id);if(idx>=0){const old=batter;batter=ph;line[idx]=ph;ctx.subs.push({inning,side,type:'PH',from:old.id,to:ph.id});addLog(g,inning,side,ph.name+'が代打で登場。','PH',0,ph.id)}}
+      const pitcher=choosePitcher(ctx,g,pitTid,inning,ctx.score[batTid],side)||{};ensure(pitcher);
+      const ev=pitchOutcome(batter,{...pitcher,teamId:pitTid},outs,bases,inning,ctx.score[batTid]-ctx.score[pitTid]);
+      // Context-aware sacrifice decisions: sacrifice bunt/fly are only selected with runners and low outs.
+      let outAdd=['K','OUT','SAC','SF','GDP'].includes(ev)?(ev==='GDP'?2:1):0;
+      const before=bases.slice();
+      const adv=applyEvent(ctx,g,inning,side,batTid,pitTid,batter,ev,bases);runs+=adv.runs;ctx.score[batTid]+=adv.runs;
+      if(ev==='E'){
+        const df=fielder(pitTid,rnd()<.55?'IF':'OF');if(df){ensure(df);df.errors=(df.errors||0)+1;addLog(g,inning,side,df.name+'にエラー。','FIELD_ERR',adv.runs,batter.id)}
+      }
+      const bp=ensure(batter); if(ev==='BB'){bp.walks++;} else if(!['SAC','SF'].includes(ev)){bp.atBats++;if(['1B','2B','3B','HR'].includes(ev)){bp.hits++;if(ev==='2B')bp.doubles++;if(ev==='3B')bp.triples++;if(ev==='HR')bp.hr++;}if(ev==='K')bp.strikeouts++;} bp.rbi+=(ev==='E'||ev==='GDP'?0:adv.runs);bp.avg=bp.atBats?bp.hits/bp.atBats:0;
+      const pd=ctx.pitchers[pitTid],cp=playerById(pd.current);if(cp){const pitches=4+rnd()*4;pd.pitches[cp.id]=(pd.pitches[cp.id]||0)+pitches;pd.outs[cp.id]=(pd.outs[cp.id]||0)+outAdd;pd.er[cp.id]=(pd.er[cp.id]||0)+((ev==='E')?0:adv.runs);pd.so[cp.id]=(pd.so[cp.id]||0)+(ev==='K'?1:0);cp.pitchCount=pd.pitches[cp.id];cp.fatigue=cap((cp.fatigue||0)+pitches*.065,0,100);}
+      const names={HR:'本塁打',BB:'四球','1B':'安打','2B':'二塁打','3B':'三塁打',SAC:'犠打',SF:'犠飛',GDP:'併殺打',E:'エラー',K:'三振',OUT:'アウト'};let txt=batter.name+'は'+(names[ev]||ev);if(ev==='SAC'&&before[0]!==null)txt+='。送りバント';if(adv.runs)txt+='。'+adv.runs+'点！';txt+='。';addLog(g,inning,side,txt,ev,adv.runs,batter.id);outs+=outAdd;
+    }
+    defensiveReplacement(ctx,g,inning,batTid,side);return runs;
+  }
+  function simulateV28(g){
+    ensureV19State(state);ensureLineupsAll();g.events=[];g.highlights=[];g.inningsAway=[];g.inningsHome=[];g.battingBox={};g.pitchingBox={};g.substitutions=[];g.fieldingBox={};
+    const ctx={order:{},score:{[g.away]:0,[g.home]:0},lineups:{},subs:[],pitchers:{}};[g.away,g.home].forEach(tid=>{ctx.order[tid]=0;ctx.lineups[tid]=lineupFor(tid).slice();const st=starter29(tid);ctx.pitchers[tid]={starter:st?.id||null,current:st?.id||null,pitches:{},outs:{},er:{},so:{}};if(st){ctx.pitchers[tid].pitches[st.id]=0;ctx.pitchers[tid].outs[st.id]=0;ctx.pitchers[tid].er[st.id]=0;ctx.pitchers[tid].so[st.id]=0;st.pitchCount=0;}});
+    let A=0,H=0,lastGoAhead={away:null,home:null};
+    for(let inn=1;inn<=12;inn++){
+      const beforeA=A,beforeH=H;ctx.score[g.away]=A;ctx.score[g.home]=H;playHalf(ctx,g,inn,'away',g.away,g.home);A=ctx.score[g.away];g.inningsAway.push(A-beforeA);ctx.score[g.away]=A;ctx.score[g.home]=H;
+      if(inn<9||H<=A){const before=H;playHalf(ctx,g,inn,'home',g.home,g.away);H=ctx.score[g.home];g.inningsHome.push(H-before);} else g.inningsHome.push(0);
+      if(A!==beforeA&&A>H)lastGoAhead.away=inn;if(H!==beforeH&&H>A)lastGoAhead.home=inn;
+      if(inn>=9&&A!==H)break;
+      if(inn===12&&A===H){if(rnd()<.50){A++;g.inningsAway[11]++;ctx.score.away=A;addLog(g,inn,'away','延長12回、勝ち越し！','GOAHEAD',1)}else{H++;g.inningsHome[11]++;ctx.score[g.home]=H;addLog(g,inn,'home','延長12回、サヨナラ！','WALKOFF',1)}break;}
+    }
+    g.played=true;g.awayScore=A;g.homeScore=H;g.generatedAt=Date.now();const ar=state.teams[g.away],hr=state.teams[g.home];ar.runsFor+=A;ar.runsAgainst+=H;hr.runsFor+=H;hr.runsAgainst+=A;if(A>H){ar.wins++;hr.losses++;ar.streak='W';hr.streak='L'}else{hr.wins++;ar.losses++;hr.streak='W';ar.streak='L'}
+    [g.away,g.home].forEach(tid=>{const pd=ctx.pitchers[tid],rows=[];Object.keys(pd.outs).forEach(pid=>{const p=playerById(pid);if(!p)return;ensure(p);const ip=n(pd.outs[pid])/3,er=n(pd.er[pid]),so=n(pd.so[pid]);p.ip+=ip;p.er+=er;p.so+=so;p.era=p.ip?p.er*9/p.ip:0;rows.push({id:pid,ip,er,so,decision:'',pitches:n(pd.pitches[pid])});p.pitchCount=n(pd.pitches[pid]);});g.pitchingBox[tid]=rows;});
+    const winner=A>H?g.away:g.home,loser=winner===g.away?g.home:g.away;const wb=g.pitchingBox[winner]||[],lb=g.pitchingBox[loser]||[];const wp=wb[wb.length-1]||wb[0],lp=lb[lb.length-1]||lb[0];if(wp){const p=playerById(wp.id);if(p){p.wins++;wp.decision='W'}}if(lp){const p=playerById(lp.id);if(p){p.losses++;lp.decision='L'}}if(wb.length>1&&Math.abs(A-H)<=3){const cp=wb[wb.length-1],p=playerById(cp.id);if(p&&cp.id!==(wp?.id)){p.saves++;cp.decision='S'}}
+    [g.away,g.home].forEach(tid=>{const m={};(g.events||[]).filter(e=>e.side===(tid===g.away?'away':'home')).forEach(e=>{if(!e.playerId)return;const x=m[e.playerId]||(m[e.playerId]={id:e.playerId,ab:0,h:0,hr:0,rbi:0,bb:0,k:0,sb:0});if(e.type==='BB')x.bb++;else if(!['SAC','SF','SB','CS','PH','DEF','PITCH','FIELD_ERR'].includes(e.type)){x.ab++;if(['1B','2B','3B','HR'].includes(e.type))x.h++;if(e.type==='HR')x.hr++;if(e.type==='K')x.k++;}x.rbi+=(e.type==='E'?0:e.runs||0)});Object.values(m).forEach(x=>{const p=playerById(x.id);if(p){x.ab=x.ab||0;x.sb=p.steals}});g.battingBox[tid]=Object.values(m).filter(x=>x.ab||x.bb||x.rbi||x.sb);});
+    g.substitutions=ctx.subs;g.meta={maxInning:g.inningsAway.length,extraInnings:Math.max(0,g.inningsAway.length-9),leadChanges:(()=>{let a=0,h=0,last=0,c=0;for(let i=0;i<g.inningsAway.length;i++){a+=g.inningsAway[i]||0;h+=g.inningsHome[i]||0;const s=a>h?1:h>a?-1:0;if(s&&s!==last){if(last)c++;last=s}}return c})(),leftyRighty:true};g.highlights=(g.events||[]).filter(e=>['HR','SB','CS','GDP','E','FIELD_ERR','GOAHEAD','WALKOFF','PITCH','PH','DEF'].includes(e.type)||e.runs>0).slice(-18).map(e=>e.text);
+    [g.away,g.home].forEach(tid=>{teamPlayers(tid).forEach(p=>{if(p.retired)return;const used=ctx.lineups[tid]?.some(x=>x&&x.id===p.id);if(used)p.fatigue=cap((p.fatigue||0)+4,0,100);else p.fatigue=Math.max(0,(p.fatigue||0)-1);});});
+    [g.away,g.home].forEach(tid=>teamPlayers(tid).filter(p=>p.rookie&&p.reveal<100).forEach(p=>p.reveal=Math.min(100,(p.reveal||0)+1)));
+    if(g.home===state.controlTeam||g.away===state.controlTeam){const won=(g.home===state.controlTeam&&H>A)||(g.away===state.controlTeam&&A>H);const rec={id:g.id,date:g.date,away:g.away,home:g.home,awayScore:A,homeScore:H,won,inningsAway:g.inningsAway,inningsHome:g.inningsHome,events:g.events.slice(-140),battingBox:g.battingBox,pitchingBox:g.pitchingBox,substitutions:g.substitutions,meta:g.meta};state.v19.lastResults.unshift(rec);state.v19.lastResults=state.v19.lastResults.slice(0,20);state.v19.resultHistory.unshift(rec);state.v19.resultHistory=state.v19.resultHistory.slice(0,120);state.lastResult=g;}
+    return g;
+  }
+  window.simulateGame=simulateV28;
+  window.processCurrentDay=function(){if(!state)return;if(state.phase!=='regular')return;const gs=gamesOn(state.currentDate);gs.filter(g=>!g.played).forEach(g=>simulateV28(g));TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{if(!p.retired){p.fatigue=Math.max(0,(p.fatigue||0)-2);p.form=clamp(p.form+(50-p.form)*.04);if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null}}}));const d=dateObj(state.currentDate);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);if(!state.games.some(g=>!g.played))finishRegularSeason()};
+  window.nextDay=function(){if(!state)return;unlockBGM();if(state.phase==='regular')window.processCurrentDay();else if(state.phase==='cs'||state.phase==='japan')advanceSeries();else advanceOffseason();state.lastResult=state.lastResult||null;safeRender('schedule')};
+  window.advanceN=function(n){if(!state)return;unlockBGM();n=Math.max(1,Math.min(31,Number(n)||1));for(let i=0;i<n&&state.phase==='regular';i++)window.processCurrentDay();state.lastResult=null;state.lastMessage=n+'日分進行しました。';safeRender('schedule')};
+})();
+</script>
+
+<script>
+/* ================= V29: BASEBALL ENGINE POLISH =================
+   More realistic inning-by-inning simulation: plate appearance types,
+   runner advancement, defensive range/arm, catcher pop time, pitcher fatigue,
+   bullpen decisions, pinch hitting, defensive replacements, comeback/walkoff,
+   and richer play-by-play.  UI is intentionally kept compatible with V27/V28. */
+(function(){
+  const starter29=(tid)=>{const rot=rotationFor(tid);if(!rot.length)return null;const n=(state.games||[]).filter(g=>g.played&&(g.home===tid||g.away===tid)).length;return rot[n%rot.length]||rot[0];};
+  const fielder29=(tid,kind)=>{const line=lineupFor(tid)||[];const by={};line.forEach(p=>{if(!p)return;const fp=p.fieldPos||p.pos;by[fp]=p;});const cs=kind==='OF'?['LF','CF','RF','OF']:['1B','2B','SS','3B','IF'];return cs.map(k=>by[k]).find(Boolean)||line.find(p=>p&&p.pos!=='P')||null;};
+  const addLog29=(g,inning,side,text,type,runs=0,playerId=null)=>{g.events.push({inning,side,text,type,runs,playerId});};
+  const cap29=(v,a=0,b=100)=>Math.max(a,Math.min(b,Number(v)||0));
+  const rnd29=()=>Math.random();
+  const nm29=(id)=>{const p=playerById(id);return p?p.name:'選手'};
+  const role29=(p)=>p?.role||'中継ぎ';
+  const ensure29=(p)=>{if(!p)return p; if(typeof p.atBats!=='number')p.atBats=0;if(typeof p.hits!=='number')p.hits=0;if(typeof p.hr!=='number')p.hr=0;if(typeof p.rbi!=='number')p.rbi=0;if(typeof p.walks!=='number')p.walks=0;if(typeof p.strikeouts!=='number')p.strikeouts=0;if(typeof p.steals!=='number')p.steals=0;if(typeof p.caughtStealing!=='number')p.caughtStealing=0;if(typeof p.runs!=='number')p.runs=0;if(typeof p.errors!=='number')p.errors=0;if(typeof p.ip!=='number')p.ip=0;if(typeof p.er!=='number')p.er=0;if(typeof p.so!=='number')p.so=0;if(typeof p.wins!=='number')p.wins=0;if(typeof p.losses!=='number')p.losses=0;if(typeof p.saves!=='number')p.saves=0;return p;};
+  const sp29=p=>cap29(p?.speed,1,100)/100;
+  const ar29=p=>cap29(p?.arm,1,100)/100;
+  const dp29=p=>cap29(p?.def,1,100)/100;
+  const ct29=p=>cap29(p?.contact,1,100)/100;
+  const pw29=p=>cap29(p?.power,1,100)/100;
+  const ctl29=p=>cap29(p?.control,1,100)/100;
+  const control29=ctl29;
+  const vel29=p=>cap29(p?.velocity||135,120,170);
+  const platoon29=(b,p)=>{
+    const bats=b?.bats||'右',thr=p?.throws||'右';
+    if(bats==='左'&&thr==='右')return .018;
+    if(bats==='右'&&thr==='左')return .018;
+    if(bats==='左'&&thr==='左')return -.028;
+    if(bats==='右'&&thr==='右')return -.004;
+    return 0;
+  };
+  const special29=(p,key)=>String((p?.special||[]).join('')).includes(key);
+
+  function outcome29(b,p,outs,bases,inning,diff){
+    const con=ct29(b),pow=pw29(b),vel=vel29(p),ctrl=ctl29(p),pl=platoon29(b,p),fat=cap29(p?.fatigue)/100;
+    const highLeverage=(inning>=7&&Math.abs(diff)<=2);
+    let hr=.0062+pow*.018+con*.0012-control29(p)*.0022+pl*.40-fat*.002;
+    let dbl=.018+pow*.015+con*.009+pl*.25;
+    let trp=.0015+sp29(b)*.006;
+    let bb=.055+(1-ctrl)*.075+pl*.35+fat*.025+(special29(b,'選球眼') ? .018 : 0);
+    let so=.115+(vel-130)*.006-(con*.055)+fat*.065+(special29(b,'奪三振') ? .008 : 0);
+    let hbp=.010+(fat*.005);
+    let bunt=(outs<2&&bases[0]!=null&&inning<=8&&(diff<=1||highLeverage)) ? .025 : 0;
+    if(special29(b,'バント'))bunt+=.028;
+    let sf=(outs<2&&bases[2]!=null)?.026:0;
+    let dp=(outs<2&&bases[0]!=null) ? .048+(con<.55 ? .028 : 0) : 0;
+    // Fielding probability is based on the actual defensive fielder, not a team constant.
+    let f=fielder29(p?.teamId||'', rnd29()<.62?'IF':'OF');
+    const err=.007+(1-dp29(f))*.035+(1-cap29(f?.catching,1,100)/100)*.020;
+    let single=.125+con*.105+pow*.015-(ctrl*.035)+(138-vel)*.0012+pl*1.5-fat*.012;
+    const norm=x=>cap29(x,.003,.31);
+    const probs=[
+      ['HR',norm(hr)],['BB',norm(bb)],['HBP',norm(hbp)],['2B',norm(dbl)],['3B',norm(trp)],['1B',norm(single)],
+      ['SAC',norm(bunt)],['SF',norm(sf)],['E',norm(err*.55)],['GDP',norm(dp)],['K',norm(so)]
+    ];
+    let x=rnd29();for(const [type,q] of probs){if(x<q)return {type};x-=q;}
+    const contactQuality=con + rnd29()*.18;
+    if(contactQuality>.74&&rnd29()<.30)return {type:'FLYOUT'};
+    if(contactQuality>.57&&rnd29()<.24)return {type:'LINEOUT'};
+    return {type:'GROUNDOUT'};
+  }
+
+  function score29(ctx,pid){if(pid==null)return 0;const p=ensure29(playerById(pid));if(p)p.runs++;return 1;}
+  function occupied29(bases){return bases.filter(x=>x!=null).length;}
+  function runnerAdvance29(ctx,g,inning,side,batter,event,bases,pitTid){
+    const old=bases.slice(), scored=[];let runs=0;const of=fielder29(pitTid,'OF');const arm=ar29(of);
+    const score=pid=>{if(pid!=null){runs+=score29(ctx,pid);scored.push(pid)}};
+    const move=(pid,from,to)=>{if(pid!=null)bases[to]=pid;};
+    if(event.type==='HR'){old.forEach(score);score(batter.id);bases[0]=bases[1]=bases[2]=null;return {runs,scored};}
+    if(event.type==='BB'||event.type==='HBP'){
+      if(old[0]!=null&&old[1]!=null&&old[2]!=null){score(old[2]);bases[2]=old[1];bases[1]=old[0];bases[0]=batter.id;}
+      else if(old[0]!=null&&old[1]!=null){bases[2]=old[1];bases[1]=old[0];bases[0]=batter.id;}
+      else if(old[0]!=null){bases[1]=old[0];bases[0]=batter.id;}
+      else bases[0]=batter.id;
+      return {runs,scored};
+    }
+    if(event.type==='1B'||event.type==='E'){
+      if(old[2]!=null)score(old[2]);
+      if(old[1]!=null){const r=playerById(old[1]);if(sp29(r)>.72&&rnd29()<.88 || rnd29()<.22+sp29(r)*.30-arm*.24)score(old[1]);else bases[2]=old[1];}
+      if(old[0]!=null){const r=playerById(old[0]);const go3=sp29(r)>.80&&rnd29()<.55+sp29(r)*.25; if(go3&&bases[2]==null)bases[2]=old[0]; else bases[1]=old[0];}
+      bases[0]=batter.id;return {runs,scored};
+    }
+    if(event.type==='2B'){
+      if(old[2]!=null)score(old[2]);
+      if(old[1]!=null)score(old[1]);
+      if(old[0]!=null){const r=playerById(old[0]);const goHome=sp29(r)>.63&&rnd29()<.42+sp29(r)*.34-arm*.22;if(goHome)score(old[0]);else bases[2]=old[0];}
+      bases[1]=batter.id;bases[0]=null;return {runs,scored};
+    }
+    if(event.type==='3B'){old.forEach(score);bases[2]=batter.id;bases[0]=bases[1]=null;return {runs,scored};}
+    if(event.type==='SAC'){
+      if(old[2]!=null)score(old[2]);
+      bases[2]=old[1]!=null?old[1]:null;bases[1]=old[0]!=null?old[0]:null;bases[0]=null;ensure29(batter).sacBunt=(batter.sacBunt||0)+1;return {runs,scored};
+    }
+    if(event.type==='SF'){if(old[2]!=null)score(old[2]);bases[2]=null;ensure29(batter).sacFly=(batter.sacFly||0)+1;return {runs,scored};}
+    if(event.type==='GDP'){if(old[0]!=null&&rnd29()<.58)bases[0]=null;return {runs,scored};}
+    if(event.type==='GROUNDOUT'){return {runs,scored};}
+    if(event.type==='FLYOUT'||event.type==='LINEOUT'){return {runs,scored};}
+    return {runs,scored};
+  }
+
+  function pitcher29(ctx,g,tid,inning){
+    const d=ctx.pitchers[tid];if(!d.current)return null;let cur=playerById(d.current);if(!cur)return null;ensure29(cur);
+    const pitches=d.pitches[cur.id]||0,outs=d.outs[cur.id]||0,runs=d.er[cur.id]||0;
+    const lead=ctx.score[tid]-ctx.score[tid===g.away?g.home:g.away];
+    cur.pitchCount=pitches;cur.fatigue=cap29((cur.fatigue||0)+Math.max(0,pitches-60)*.002,0,100);
+    const tired=pitches>=92||outs>=21||cur.fatigue>=78,crisis=runs>=4&&inning>=5;
+    const closing=inning>=9&&lead>0;
+    if(inning>=5&&(tired||crisis||(inning>=8&&lead<0&&rnd29()<.35)||closing)){
+      const rel=teamPlayers(tid).filter(p=>p.pos==='P'&&!p.retired&&!p.minor&&!p.injury&&p.id!==cur.id).sort((a,b)=>{
+        const av=(b.role==='抑え'?24:0)+(b.role==='中継ぎ'?12:0)+rating(b)+(100-(b.fatigue||0))*.08;
+        const bv=(a.role==='抑え'?24:0)+(a.role==='中継ぎ'?12:0)+rating(a)+(100-(a.fatigue||0))*.08;return av-bv;
+      });
+      const np=(closing?rel.find(p=>p.role==='抑え'):null)||rel[0];
+      if(np&&np.id!==cur.id){addLog29(g,inning,tid===g.away?'away':'home',cur.name+' → '+np.name+'に投手交代。','PITCH',0);ctx.subs.push({inning,side:tid===g.away?'away':'home',type:'PITCH',from:cur.id,to:np.id});d.current=np.id;d.pitches[np.id]=d.pitches[np.id]||0;d.outs[np.id]=d.outs[np.id]||0;d.er[np.id]=d.er[np.id]||0;d.so[np.id]=d.so[np.id]||0;cur=np;}
+    }
+    return cur;
+  }
+
+  function steal29(ctx,g,inning,side,bases,outs,batTid,pitTid){
+    if(outs>=2)return 0;
+    let from=-1;if(bases[0]!=null)from=0;else if(bases[1]!=null&&bases[2]==null&&rnd29()<.08)from=1;else return 0;
+    const runner=ensure29(playerById(bases[from])),cat=ensure29(teamPlayers(pitTid).find(p=>p.pos==='C'&&!p.retired&&!p.minor&&!p.injury&&p.fieldPos!=='二')||teamPlayers(pitTid).find(p=>p.pos==='C'));
+    if(!runner||!cat)return 0;
+    const late=inning>=7,close=Math.abs(ctx.score[batTid]-ctx.score[pitTid])<=1;let attempt=.012+sp29(runner)*.19+(special29(runner,'盗塁')?.11:0);if(late&&close)attempt*=1.45;if(ctx.score[batTid]<ctx.score[pitTid]&&late)attempt*=1.2;
+    if(rnd29()>cap29(attempt,0,.32))return 0;
+    const success=cap29(.55+sp29(runner)*.22+(special29(runner,'盗塁')?.09:0)-ar29(cat)*.18, .30,.91);
+    if(rnd29()<success){if(from===0){bases[1]=runner.id;bases[0]=null;runner.steals++;addLog29(g,inning,side,runner.name+'が二盗成功！','SB',0,runner.id)}else{bases[2]=runner.id;bases[1]=null;runner.steals++;addLog29(g,inning,side,runner.name+'が三盗成功！','SB',0,runner.id)}return 0;}
+    runner.caughtStealing++;bases[from]=null;addLog29(g,inning,side,runner.name+'が盗塁失敗。','CS',0,runner.id);return 1;
+  }
+
+  function shouldPH29(ctx,g,inning,batTid,pitTid,batter){
+    if(inning<7||batter.pos==='P')return null;const diff=ctx.score[batTid]-ctx.score[pitTid];if(diff>0)return null;
+    const weak=rating(batter)<64||batter.contact<55;if(!weak)return null;const line=ctx.lineups[batTid]||[];
+    const bench=teamPlayers(batTid).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!line.some(x=>x?.id===p.id)).sort((a,b)=>rating(b)-rating(a));
+    const cand=bench.find(p=>platoon29(p,playerById(ctx.pitchers[pitTid].current))>.005)||bench[0];
+    if(!cand)return null;const gain=rating(cand)-rating(batter)+platoon29(cand,playerById(ctx.pitchers[pitTid].current))*100;return gain>=5&&rnd29()<.22?cand:null;
+  }
+
+  function applyAtBatStats29(b,event,adv){
+    const p=ensure29(b);if(event.type==='BB'||event.type==='HBP'){p.walks++;return;}if(event.type==='SAC'||event.type==='SF')return;
+    p.atBats++;if(['1B','2B','3B','HR'].includes(event.type)){p.hits++;if(event.type==='2B')p.doubles=(p.doubles||0)+1;if(event.type==='3B')p.triples=(p.triples||0)+1;if(event.type==='HR')p.hr++;}if(event.type==='K')p.strikeouts++;p.rbi+=(adv.runs||0);p.avg=p.atBats?p.hits/p.atBats:0;
+  }
+
+  function playHalf29(ctx,g,inning,side,batTid,pitTid){
+    const bases=[null,null,null];let outs=0,runs=0,guard=0;const line=ctx.lineups[batTid]||[];if(!line.length)return 0;
+    while(outs<3&&guard++<24){
+      const baseBatter=line[ctx.order[batTid]%line.length];ctx.order[batTid]=(ctx.order[batTid]+1)%line.length;let batter=baseBatter;if(!batter)break;ensure29(batter);
+      const stealOut=steal29(ctx,g,inning,side,bases,outs,batTid,pitTid);outs+=stealOut;if(outs>=3)break;
+      const ph=shouldPH29(ctx,g,inning,batTid,pitTid,batter);if(ph){const idx=line.findIndex(x=>x?.id===batter.id);if(idx>=0){const old=batter;batter=ph;line[idx]=ph;ctx.subs.push({inning,side,type:'PH',from:old.id,to:ph.id});addLog29(g,inning,side,ph.name+'が代打で登場。','PH',0,ph.id);}}
+      const pitcher=pitcher29(ctx,g,pitTid,inning);if(!pitcher)break;
+      const diff=ctx.score[batTid]-ctx.score[pitTid];const event=outcome29(batter,pitcher,outs,bases,inning,diff);const before=bases.slice();
+      const adv=runnerAdvance29(ctx,g,inning,side,batter,event,bases,pitTid);runs+=adv.runs;ctx.score[batTid]+=adv.runs;
+      const pd=ctx.pitchers[pitTid],pid=pitcher.id;const pitches=3.5+rnd29()*5.5;pd.pitches[pid]=(pd.pitches[pid]||0)+pitches;pitcher.pitchCount=pd.pitches[pid];pd.outs[pid]=(pd.outs[pid]||0)+(['K','GROUNDOUT','FLYOUT','LINEOUT','SAC','SF'].includes(event.type)?1:(event.type==='GDP'?2:0));pd.so[pid]=(pd.so[pid]||0)+(event.type==='K'?1:0);pd.er[pid]=(pd.er[pid]||0)+(event.type==='E'?0:adv.runs);pitcher.ip=(pitcher.ip||0);pitcher.fatigue=cap29((pitcher.fatigue||0)+pitches*.07,0,100);
+      if(event.type==='E'){const f=fielder29(pitTid,rnd29()<.62?'IF':'OF');if(f){ensure29(f);f.errors++;addLog29(g,inning,side,f.name+'にエラー。','FIELD_ERR',adv.runs,f.id);}}
+      applyAtBatStats29(batter,event,adv);
+      const names={HR:'本塁打',BB:'四球',HBP:'死球','1B':'ヒット','2B':'二塁打','3B':'三塁打',SAC:'送りバント',SF:'犠牲フライ',GDP:'併殺打',E:'エラー',K:'三振',GROUNDOUT:'内野ゴロ',FLYOUT:'外野フライ',LINEOUT:'ライナー'};
+      let text=batter.name+'は'+names[event.type];if(event.type==='K'&&rnd29()<.48)text+=(pitcher.velocity>=145?'（空振り三振）':'（見逃し三振）');if(event.type==='GROUNDOUT')text+=(bases[2]!=null?'。三塁走者を進められず':'。');if(adv.runs)text+='。'+adv.runs+'点！';text+='。';addLog29(g,inning,side,text,event.type,adv.runs,batter.id);
+      outs += (event.type==='GDP'?2:(['K','SAC','SF','GROUNDOUT','FLYOUT','LINEOUT'].includes(event.type)?1:0));
+      if(event.type==='GDP'&&before[0]==null)outs=Math.max(0,outs-1); // safety guard for an impossible double play
+    }
+    // Late lead: consider a defensive replacement.
+    const other=batTid===g.away?g.home:g.away;if(inning>=8&&ctx.score[batTid]>=ctx.score[other]){
+      const current=ctx.lineups[batTid]||[];const bench=teamPlayers(batTid).filter(p=>p.pos!=='P'&&!p.retired&&!p.minor&&!p.injury&&!current.some(x=>x?.id===p.id)).sort((a,b)=>(b.def+b.catching*.35)-(a.def+a.catching*.35))[0];
+      if(bench&&rnd29()<.14){let idx=-1,best=999;current.forEach((p,i)=>{const v=(p?.def||0)+(p?.catching||0)*.35;if(p?.pos!=='P'&&v<best){best=v;idx=i}});if(idx>=0&&best<bench.def+bench.catching*.35){const old=current[idx];current[idx]=bench;bench.role='守備要員';ctx.subs.push({inning,side,type:'DEF',from:old.id,to:bench.id});addLog29(g,inning,side,bench.name+'が守備固めで出場。','DEF',0,bench.id);}}
+    }
+    return runs;
+  }
+
+  function simulateV29(g){
+    ensureV19State(state);ensureLineupsAll();g.events=[];g.highlights=[];g.inningsAway=[];g.inningsHome=[];g.battingBox={};g.pitchingBox={};g.substitutions=[];g.fieldingBox={};
+    const ctx={order:{},score:{[g.away]:0,[g.home]:0},lineups:{},subs:[],pitchers:{}};
+    [g.away,g.home].forEach(tid=>{ctx.order[tid]=0;ctx.lineups[tid]=lineupFor(tid).slice();const st=starter29(tid);ctx.pitchers[tid]={starter:st?.id||null,current:st?.id||null,pitches:{},outs:{},er:{},so:{}};if(st){ensure29(st);ctx.pitchers[tid].pitches[st.id]=0;ctx.pitchers[tid].outs[st.id]=0;ctx.pitchers[tid].er[st.id]=0;ctx.pitchers[tid].so[st.id]=0;}});
+    let A=0,H=0;
+    for(let inn=1;inn<=12;inn++){
+      const ba=A,bh=H;ctx.score[g.away]=A;ctx.score[g.home]=H;playHalf29(ctx,g,inn,'away',g.away,g.home);A=ctx.score[g.away];g.inningsAway.push(A-ba);ctx.score[g.away]=A;ctx.score[g.home]=H;
+      if(inn<9||H<=A){playHalf29(ctx,g,inn,'home',g.home,g.away);H=ctx.score[g.home];g.inningsHome.push(H-bh);}else g.inningsHome.push(0);
+      if(inn>=9&&A!==H)break;
+      if(inn===12&&A===H){if(rnd29()<.5){A++;g.inningsAway[11]=(g.inningsAway[11]||0)+1;ctx.score[g.away]=A;addLog29(g,inn,'away','延長12回、勝ち越し！','GOAHEAD',1)}else{H++;g.inningsHome[11]=(g.inningsHome[11]||0)+1;ctx.score[g.home]=H;addLog29(g,inn,'home','延長12回、サヨナラ！','WALKOFF',1)}break;}
+    }
+    g.played=true;g.awayScore=A;g.homeScore=H;g.generatedAt=Date.now();
+    const ar=state.teams[g.away],hr=state.teams[g.home];ar.runsFor+=A;ar.runsAgainst+=H;hr.runsFor+=H;hr.runsAgainst+=A;if(A>H){ar.wins++;hr.losses++;ar.streak='W';hr.streak='L'}else{hr.wins++;ar.losses++;hr.streak='W';ar.streak='L'}
+    [g.away,g.home].forEach(tid=>{const pd=ctx.pitchers[tid],rows=[];Object.keys(pd.pitches).forEach(pid=>{const p=ensure29(playerById(pid));if(!p)return;const outs=pd.outs[pid]||0,ip=outs/3,er=pd.er[pid]||0,so=pd.so[pid]||0;p.ip+=ip;p.er+=er;p.so+=so;p.era=p.ip?p.er*9/p.ip:0;p.pitchCount=pd.pitches[pid]||0;rows.push({id:pid,ip,er,so,decision:'',pitches:pd.pitches[pid]||0});});g.pitchingBox[tid]=rows;});
+    const winner=A>H?g.away:g.home,loser=winner===g.away?g.home:g.away;const wb=g.pitchingBox[winner]||[],lb=g.pitchingBox[loser]||[];const winCandidate=wb.find(x=>x.id===ctx.pitchers[winner].starter&&x.ip>=5)||wb[wb.length-1];const lossCandidate=lb[0]||lb[lb.length-1];if(winCandidate){const p=ensure29(playerById(winCandidate.id));p.wins++;winCandidate.decision='W';}if(lossCandidate){const p=ensure29(playerById(lossCandidate.id));p.losses++;lossCandidate.decision='L';}if(wb.length>1&&Math.abs(A-H)<=3){const sv=wb[wb.length-1];if(sv&&sv.id!==winCandidate?.id){const p=ensure29(playerById(sv.id));p.saves++;sv.decision='S';}}
+    [g.away,g.home].forEach(tid=>{const box={};(g.events||[]).filter(e=>e.side===(tid===g.away?'away':'home')&&e.playerId).forEach(e=>{const x=box[e.playerId]||(box[e.playerId]={id:e.playerId,ab:0,h:0,hr:0,rbi:0,bb:0,k:0,sb:0});if(e.type==='BB'||e.type==='HBP')x.bb++;else if(!['SAC','SF','SB','CS','PH','DEF','PITCH','FIELD_ERR','GOAHEAD','WALKOFF'].includes(e.type)){x.ab++;if(['1B','2B','3B','HR'].includes(e.type))x.h++;if(e.type==='HR')x.hr++;if(e.type==='K')x.k++;}x.rbi+=e.runs||0;});Object.values(box).forEach(x=>{const p=playerById(x.id);x.sb=p?.steals||0;x.cs=p?.caughtStealing||0;});g.battingBox[tid]=Object.values(box).filter(x=>x.ab||x.bb||x.rbi||x.sb||x.cs);});
+    g.substitutions=ctx.subs;const leadChanges=(()=>{let a=0,h=0,last=0,c=0;for(let i=0;i<g.inningsAway.length;i++){a+=g.inningsAway[i]||0;h+=g.inningsHome[i]||0;const s=a>h?1:h>a?-1:0;if(s&&last&&s!==last)c++;if(s)last=s;}return c})();
+    g.meta={maxInning:g.inningsAway.length,extraInnings:Math.max(0,g.inningsAway.length-9),leadChanges,leftyRighty:true,engine:'V29'};
+    g.highlights=(g.events||[]).filter(e=>['HR','SB','CS','GDP','E','FIELD_ERR','GOAHEAD','WALKOFF','PITCH','PH','DEF','SAC','SF'].includes(e.type)||e.runs>0).slice(-22).map(e=>e.text);
+    [g.away,g.home].forEach(tid=>teamPlayers(tid).forEach(p=>{if(p.retired)return;const used=ctx.lineups[tid]?.some(x=>x?.id===p.id);if(used)p.fatigue=cap29((p.fatigue||0)+4,0,100);else p.fatigue=Math.max(0,(p.fatigue||0)-1);}));
+    [g.away,g.home].forEach(tid=>teamPlayers(tid).filter(p=>p.rookie&&p.reveal<100).forEach(p=>p.reveal=Math.min(100,(p.reveal||0)+1)));
+    if(g.home===state.controlTeam||g.away===state.controlTeam){const won=(g.home===state.controlTeam&&H>A)||(g.away===state.controlTeam&&A>H);const rec={id:g.id,date:g.date,away:g.away,home:g.home,awayScore:A,homeScore:H,won,inningsAway:g.inningsAway,inningsHome:g.inningsHome,events:g.events.slice(-180),battingBox:g.battingBox,pitchingBox:g.pitchingBox,substitutions:g.substitutions,meta:g.meta};state.v19.lastResults.unshift(rec);state.v19.lastResults=state.v19.lastResults.slice(0,20);state.v19.resultHistory.unshift(rec);state.v19.resultHistory=state.v19.resultHistory.slice(0,120);state.lastResult=g;}
+    return g;
+  }
+
+  window.simulateGame=simulateV29;
+  window.processCurrentDay=function(){if(!state||state.phase!=='regular')return;const gs=gamesOn(state.currentDate);gs.filter(g=>!g.played).forEach(g=>simulateV29(g));TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{if(!p.retired){p.fatigue=Math.max(0,(p.fatigue||0)-2);p.form=clamp(p.form+(50-p.form)*.04);if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null}}}));const d=dateObj(state.currentDate);d.setUTCDate(d.getUTCDate()+1);state.currentDate=dateIso(d);if(!state.games.some(g=>!g.played))finishRegularSeason()};
+  window.nextDay=function(){if(!state)return;unlockBGM();if(state.phase==='regular')window.processCurrentDay();else if(state.phase==='cs'||state.phase==='japan')advanceSeries();else advanceOffseason();state.lastResult=null;safeRender('schedule')};
+  window.advanceN=function(n){if(!state)return;unlockBGM();n=Math.max(1,Math.min(31,Number(n)||1));for(let i=0;i<n&&state.phase==='regular';i++)window.processCurrentDay();state.lastResult=null;state.lastMessage=n+'日分進行しました。';safeRender('schedule')};
 })();
 </script>
 </body></html>
