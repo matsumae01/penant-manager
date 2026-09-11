@@ -2455,4 +2455,207 @@ button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7
 .v32-modal-foot{padding:8px 12px;background:#0d1730;color:#fff;text-align:right;font-size:10px}
 .schedule-toolbar .actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;min-height:40px}
 </style>
+
+<script>
+/* ================= V33 FINAL POLISH =================
+   - Keeps result button LEFT and next-day button RIGHT with stable widths.
+   - Makes next-day a single, isolated render transaction to prevent UI flash.
+   - Hides the app during that transaction so any legacy nested render cannot visibly flash.
+   - Makes BGM use autoplay/preload aggressively, while respecting browser autoplay policy.
+   - Attempts playback at page load, start/load, focus, visibility, and after state creation.
+*/
+(function(){
+  const sleepFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
+  function nextIso33(iso){
+    const d=dateObj(iso); d.setUTCDate(d.getUTCDate()+1); return dateIso(d);
+  }
+  function refreshSchedule33(){
+    currentView='schedule';
+    const app=document.getElementById('app');
+    if(!app)return;
+    app.style.visibility='hidden';
+    try{
+      if(typeof window.renderGame==='function') window.renderGame('schedule');
+      else if(typeof renderGame==='function') renderGame('schedule');
+    }finally{
+      requestAnimationFrame(()=>{
+        try{ if(typeof window.buildProgressButtonsV32==='function') window.buildProgressButtonsV32(); }
+        catch(_){ }
+        app.style.visibility='visible';
+      });
+    }
+  }
+  function fixScheduleButtons33(){
+    if(!state||currentView!=='schedule')return;
+    const host=document.querySelector('.schedule-toolbar .actions')||document.querySelector('.v25-toolbar .v25-actions');
+    if(!host)return;
+    let result=host.querySelector('.v33-result-btn');
+    let next=host.querySelector('.v33-next-btn');
+    if(!result){
+      result=document.createElement('button');
+      result.className='v33-result-btn';
+      result.onclick=()=>window.showDailyResultsV32&&window.showDailyResultsV32();
+      host.appendChild(result);
+    }
+    if(!next){
+      next=document.createElement('button');
+      next.className='v33-next-btn primary';
+      next.textContent='▶ 次の日へ';
+      next.onclick=()=>window.nextDay();
+      host.appendChild(next);
+    }
+    const has=!!(state.dailyResults&&Array.isArray(state.dailyResults.games)&&state.dailyResults.games.length);
+    result.textContent=has?'前日の試合結果':'試合結果なし';
+    result.disabled=!has;
+    result.style.visibility=has?'visible':'hidden';
+    result.style.pointerEvents=has?'auto':'none';
+    next.style.visibility='visible';
+    next.style.display='inline-flex';
+    // Only our stable pair is visible in the schedule toolbar.
+    Array.from(host.children).forEach(el=>{if(el!==result&&el!==next)el.style.display='none';});
+  }
+
+  function autoplayBGM33(){
+    try{
+      if(!window.state||!window.state.settings?.bgm)return;
+      bgmUnlocked=true;
+      initBGM();
+      // Tell the media element it is intended to autoplay.
+      bgmAudio.autoplay=true;
+      bgmAudio.loop=true;
+      bgmAudio.preload='auto';
+      bgmAudio.playsInline=true;
+      const file=trackForDate();
+      if(currentBgmFile!==file || !bgmAudio.src){
+        currentBgmFile=file;
+        bgmSourceIndex=0;
+        const src=bgmSources(file)[0];
+        bgmAudio.src=src;
+      }
+      bgmAudio.volume=state.settings.volume??0.5;
+      const pr=bgmAudio.play();
+      if(pr&&pr.catch)pr.catch(()=>{bgmRetryPending=true;});
+    }catch(e){bgmRetryPending=true;console.warn('V33 BGM',e)}
+  }
+  window.autoplayBGM33=autoplayBGM33;
+
+  // A single final nextDay implementation. It never calls an older nextDay wrapper.
+  window.nextDay=function(){
+    if(!window.state){renderTitle();return;}
+    const app=document.getElementById('app');
+    try{
+      // Do not render anything until all state mutations for this day are complete.
+      bgmUnlocked=true;
+      autoplayBGM33();
+      if(typeof ensureSchedule==='function')ensureSchedule();
+      if(typeof ensureV19State==='function')ensureV19State(state);
+      if(state.phase==='regular'){
+        const date=state.currentDate;
+        const games=gamesOn(date).filter(g=>!g.played);
+        games.forEach(g=>{ if(typeof window.simulateGame==='function')window.simulateGame(g); else simulateGame(g); });
+        TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{
+          if(p.retired)return;
+          p.fatigue=Math.max(0,(p.fatigue||0)-2);
+          p.form=clamp(p.form+(50-p.form)*.04);
+          if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null;}
+        }));
+        state.dailyResults={date,games:games.map(g=>({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}))};
+        const own=games.find(g=>g.home===state.controlTeam||g.away===state.controlTeam)||null;
+        state.lastResult=own?{...own}:null;
+        state.currentDate=nextIso33(date);
+        if(!state.games.some(g=>!g.played))finishRegularSeason();
+        state.lastMessage=games.length?fullDate(date)+'の全球団の試合結果を反映しました。':'本日は試合がありません。';
+      }else if(state.phase==='cs'||state.phase==='japan'){
+        advanceSeries();
+        state.dailyResults=null;
+        state.lastResult=null;
+      }else{
+        const next=nextIso33(state.currentDate);
+        if(next>=(state.year+1)+'-03-27'){
+          newSeason();
+          state.dailyResults=null;
+          state.lastResult=null;
+        }else{
+          state.currentDate=next;
+          const month=Number(next.slice(5,7)),day=Number(next.slice(8,10));
+          if(month===11&&day===20){state.offseason.step=1;state.lastMessage='契約更改・戦力外通告の期間です。';}
+          else if(month===12&&day===6){state.offseason.step=2;state.lastMessage='FA交渉期間です。';}
+          else if(month===1&&day===16){state.offseason.step=3;state.lastMessage='ドラフト候補の調査期間です。';}
+          else if(month===2&&day===1){state.offseason.step=4;state.lastMessage='ドラフト会議・春季キャンプの準備期間です。';}
+          else{state.lastMessage=fullDate(next)+'へ進みました。';}
+        }
+        state.dailyResults=null;
+        state.lastResult=null;
+      }
+      currentView='schedule';
+      // Prevent any intermediate legacy render from being visible.
+      if(app)app.style.visibility='hidden';
+      if(typeof window.renderGame==='function')window.renderGame('schedule');
+      else renderGame('schedule');
+      requestAnimationFrame(()=>{
+        fixScheduleButtons33();
+        if(app)app.style.visibility='visible';
+        autoplayBGM33();
+      });
+    }catch(e){
+      console.error('V33 nextDay',e);
+      if(state)state.lastMessage='日程進行中にエラーが発生しました：'+(e&&e.message?e.message:'不明なエラー');
+      currentView='schedule';
+      try{
+        if(app)app.style.visibility='hidden';
+        if(typeof window.renderGame==='function')window.renderGame('schedule');else renderGame('schedule');
+        requestAnimationFrame(()=>{fixScheduleButtons33();if(app)app.style.visibility='visible';});
+      }catch(_){renderTitle();}
+    }
+  };
+  try{nextDay=window.nextDay}catch(_){ }
+
+  // Start/load: call the existing core directly once, then immediately attempt audio
+  // in the same click event before the browser has a chance to consider it non-gesture.
+  window.startGame=function(control){
+    try{
+      const r=startGameCore(control);
+      autoplayBGM33();
+      return r;
+    }catch(e){
+      console.error('V33 startGame',e);
+      state=null;renderTitle();alert('ゲーム開始に失敗しました。\\n'+e.message);
+    }
+  };
+  window.loadSlot=function(slot){
+    try{
+      const r=(typeof loadSlotCore==='function')?loadSlotCore(slot):null;
+      autoplayBGM33();
+      return r;
+    }catch(e){console.error('V33 loadSlot',e)}
+  };
+
+  // Initial autoplay attempt. Browser policy may still reject audible autoplay;
+  // the important part is that the game itself no longer requires a dedicated BGM button.
+  setTimeout(()=>{autoplayBGM33();fixScheduleButtons33();},0);
+  setTimeout(()=>{autoplayBGM33();fixScheduleButtons33();},800);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoplayBGM33();});
+  window.addEventListener('focus',autoplayBGM33);
+
+  // Patch the final schedule toolbar after every render without triggering another render.
+  const render33=window.renderGame;
+  if(typeof render33==='function'&&!window.__v33RenderWrapped){
+    window.__v33RenderWrapped=true;
+    window.renderGame=function(view){
+      const r=render33(view);
+      if((view||window.currentView)==='schedule')requestAnimationFrame(fixScheduleButtons33);
+      return r;
+    };
+    try{renderGame=window.renderGame}catch(_){ }
+  }
+})();
+</script>
+<style id="v33-style">
+/* Stable controls: result on the left, next-day on the right, identical footprint every day. */
+.schedule-toolbar .actions,.v25-toolbar .v25-actions{display:flex!important;gap:8px!important;align-items:center!important;justify-content:flex-end!important;min-height:40px!important}
+.v33-result-btn,.v33-next-btn{width:170px!important;min-width:170px!important;height:40px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-weight:1000!important}
+.v33-result-btn:disabled{visibility:hidden!important;pointer-events:none!important}
+#app{transition:none!important}
+</style>
+
 </body></html>
