@@ -163,7 +163,7 @@ function phaseText(){return state.phase==="regular"?"レギュラーシーズン
 /* BGM: one persistent Audio instance. Navigation/rerender never restarts the current song. */
 let bgmAudio=null,bgmUnlocked=false,currentBgm="",currentBgmFile="",bgmSourceIndex=0,bgmRetryPending=false;const BGM_FALLBACK_ROOT="https://raw.githubusercontent.com/matsumae01/penant-manager/main/";
 function trackForDate(){const m=dateObj(state?.currentDate||"2026-03-27").getUTCMonth()+1;return m<=5?"COLOR.mp3":m<=8?"Skyline.mp3":m<=11?"Tears_in_the_Quiet_Rain.mp3":"Sunlit_Path.mp3"}
-function bgmSources(file){const local=new URL(file,document.baseURI).href;return [local,BGM_FALLBACK_ROOT+file]}
+function bgmSources(file){const base=String(document.baseURI||document.location?.href||'');let local=file;try{if(/^(https?:|file:)/i.test(base))local=new URL(file,base).href}catch(e){}return [local,BGM_FALLBACK_ROOT+file]}
 function initBGM(){if(bgmAudio)return;bgmAudio=new Audio();bgmAudio.loop=true;bgmAudio.preload="auto";bgmAudio.volume=state?.settings?.volume??.5;bgmAudio.setAttribute("playsinline","");bgmAudio.addEventListener("error",()=>{if(currentBgmFile&&bgmSourceIndex===0){bgmSourceIndex=1;currentBgm="";loadBGMTrack(currentBgmFile)}else bgmRetryPending=true})}
 function loadBGMTrack(file){initBGM();const src=bgmSources(file)[bgmSourceIndex];currentBgmFile=file;currentBgm=src;bgmAudio.src=src;bgmAudio.load()}
 function playBGM(){if(!state||!state.settings?.bgm||!bgmUnlocked)return;initBGM();const file=trackForDate();if(currentBgmFile!==file||!bgmAudio.src){bgmSourceIndex=0;loadBGMTrack(file)}bgmAudio.volume=state.settings.volume??.5;if(!bgmAudio.paused){bgmRetryPending=false;return}const p=bgmAudio.play();if(p?.then)p.then(()=>{bgmRetryPending=false}).catch(()=>{bgmRetryPending=true})}
@@ -2751,5 +2751,157 @@ button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7
   window.addEventListener('load',()=>setTimeout(tryAutoplayV34,50));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden) setTimeout(tryAutoplayV34,0);});
   window.addEventListener('pageshow',()=>setTimeout(tryAutoplayV34,0));
+})();
+</script>
+
+<style id="v35-final-style">
+  /* V35: schedule controls — result LEFT, next-day RIGHT, fixed footprint. */
+  .v35-controlbar{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important;min-width:340px!important;min-height:44px!important}
+  .v35-controlbar button{width:160px!important;min-width:160px!important;height:42px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+  .v35-controlbar .v35-result.is-empty{visibility:hidden!important;pointer-events:none!important}
+  #app.v35-busy{pointer-events:none!important}
+</style>
+<script>
+(function(){
+  'use strict';
+  /* V35: one authoritative next-day path. It does not call any historical nextDay wrapper. */
+  function v35DatePlusOne(iso){
+    const d=dateObj(iso); d.setUTCDate(d.getUTCDate()+1); return dateIso(d);
+  }
+  function v35RenderSchedule(){
+    try{
+      currentView='schedule';
+      ensureSchedule();
+      ensureLineupsAll();
+      if(typeof ensureV23State==='function')ensureV23State(state);
+      if(typeof ensureV19State==='function')ensureV19State(state);
+      if(typeof render25==='function'){
+        render25('schedule');
+      }else if(typeof window.renderGame==='function'){
+        window.renderGame('schedule');
+      }else{
+        renderGame('schedule');
+      }
+      // Normalize controls after the DOM exists, without another render.
+      requestAnimationFrame(v35NormalizeControls);
+    }catch(e){
+      console.error('V35 render schedule',e);
+      try{ currentView='schedule'; if(state)state.lastMessage='日程画面の更新でエラーが発生しました：'+(e.message||e); }catch(_){}
+    }
+  }
+  function v35NormalizeControls(){
+    try{
+      if(!state || currentView!=='schedule')return;
+      const host=document.querySelector('.v25-toolbar .v25-actions')||document.querySelector('.schedule-toolbar .actions')||document.querySelector('.v25-actions');
+      if(!host)return;
+      host.classList.add('v35-controlbar');
+      // Remove/hide every old button in this specific toolbar.
+      Array.from(host.querySelectorAll('button')).forEach(b=>{b.style.display='none';});
+      let result=host.querySelector('.v35-result');
+      if(!result){result=document.createElement('button');result.className='v35-result';host.appendChild(result);}
+      let next=host.querySelector('.v35-next');
+      if(!next){next=document.createElement('button');next.className='v35-next primary';host.appendChild(next);}
+      const dr=state.dailyResults;
+      const has=!!(dr&&Array.isArray(dr.games)&&dr.games.length);
+      result.textContent='前日の試合結果';
+      result.classList.toggle('is-empty',!has);
+      result.disabled=!has;
+      result.onclick=function(ev){ev.preventDefault();ev.stopPropagation(); if(typeof window.showDailyResultsV32==='function')window.showDailyResultsV32();};
+      next.textContent='▶ 次の日へ';
+      next.onclick=function(ev){ev.preventDefault();ev.stopPropagation();window.nextDay();};
+    }catch(e){console.warn('V35 normalize controls',e)}
+  }
+  function v35Advance(){
+    if(!state){renderTitle();return;}
+    const app=document.getElementById('app');
+    if(app&&app.classList.contains('v35-busy'))return;
+    try{
+      if(app)app.classList.add('v35-busy');
+      // Do not rely on old unlock/retry wrappers for state flow.
+      try{ if(typeof window.autoplayBGM33==='function')window.autoplayBGM33(); else if(typeof window.playBGM==='function')window.playBGM(); }catch(_){ }
+      ensureSchedule();
+      if(typeof ensureV23State==='function')ensureV23State(state);
+      if(typeof ensureV19State==='function')ensureV19State(state);
+      if(state.phase==='regular'){
+        const date=state.currentDate;
+        const todayGames=gamesOn(date).filter(g=>!g.played);
+        // Simulate the whole league day exactly once.
+        todayGames.forEach(g=>{
+          if(typeof window.simulateGame==='function') window.simulateGame(g);
+          else if(typeof simulateGame==='function') simulateGame(g);
+        });
+        TEAMS.forEach(t=>teamPlayers(t.id).forEach(p=>{
+          if(p.retired)return;
+          p.fatigue=Math.max(0,(p.fatigue||0)-2);
+          p.form=clamp(p.form+(50-p.form)*0.04);
+          if(p.injury){p.injuryDays=Math.max(0,(p.injuryDays||0)-1);if(p.injuryDays===0)p.injury=null;}
+        }));
+        state.dailyResults={date,games:todayGames.map(g=>({id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore}))};
+        const own=todayGames.find(g=>g.home===state.controlTeam||g.away===state.controlTeam);
+        state.lastResult=own?{...own}:null;
+        const nextDate=v35DatePlusOne(date);
+        state.currentDate=nextDate;
+        if(!state.games.some(g=>!g.played) && typeof finishRegularSeason==='function') finishRegularSeason();
+        state.lastMessage=todayGames.length?(fullDate(date)+'の全球団の試合結果を反映しました。'):'本日は試合がありません。';
+      }else if(state.phase==='cs'||state.phase==='japan'){
+        if(typeof advanceSeries==='function')advanceSeries();
+        state.dailyResults=null; state.lastResult=null;
+      }else{
+        const nextDate=v35DatePlusOne(state.currentDate);
+        if(nextDate >= ((state.year+1)+'-03-27')){
+          if(typeof newSeason==='function')newSeason();
+          else {state.year+=1;state.currentDate=state.year+'-03-27';state.phase='regular';}
+          state.dailyResults=null; state.lastResult=null;
+        }else{
+          state.currentDate=nextDate;
+          state.dailyResults=null; state.lastResult=null;
+          state.lastMessage=fullDate(nextDate)+'へ進みました。';
+        }
+      }
+      // One render only. Never call a legacy nextDay and never renderTitle on normal failures.
+      v35RenderSchedule();
+    }catch(e){
+      console.error('V35 nextDay',e);
+      if(state){
+        state.lastMessage='日程進行エラー：'+(e&&e.message?e.message:'不明なエラー');
+        // Keep the player in the game; render the schedule instead of returning to title.
+        try{v35RenderSchedule();}catch(_){ }
+      }
+    }finally{
+      if(app)requestAnimationFrame(()=>app.classList.remove('v35-busy'));
+    }
+  }
+  window.nextDay=v35Advance;
+  try{nextDay=v35Advance}catch(_){ }
+  window.v35NormalizeControls=v35NormalizeControls;
+  // Patch renderGame only for the schedule controls; do not add another nextDay wrapper.
+  const rg=window.renderGame;
+  if(typeof rg==='function'&&!window.__v35RenderWrapped){
+    window.__v35RenderWrapped=true;
+    window.renderGame=function(view){
+      const r=rg(view);
+      if((view||currentView)==='schedule')requestAnimationFrame(v35NormalizeControls);
+      return r;
+    };
+    try{renderGame=window.renderGame}catch(_){ }
+  }
+  // Best-effort automatic BGM. Browser autoplay policy may still reject audible autoplay.
+  function v35AutoBGM(){
+    try{
+      if(!state||!state.settings||state.settings.bgm===false)return;
+      if(typeof window.autoplayBGM33==='function')window.autoplayBGM33();
+      else if(typeof window.playBGM==='function')window.playBGM();
+    }catch(_){ }
+  }
+  window.addEventListener('load',()=>setTimeout(v35AutoBGM,50));
+  window.addEventListener('pageshow',()=>setTimeout(v35AutoBGM,50));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(v35AutoBGM,50);});
+  // Keyboard next-day is mapped directly to the final authoritative function.
+  document.addEventListener('keydown',e=>{
+    if((e.key==='n'||e.key==='N'||e.code==='Space') && state && currentView==='schedule'){
+      e.preventDefault(); window.nextDay();
+    }
+  });
+  setTimeout(()=>{if(state&&currentView==='schedule')v35NormalizeControls();v35AutoBGM();},0);
 })();
 </script>
