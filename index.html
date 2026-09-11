@@ -2658,6 +2658,230 @@ button:active{transform:translateY(1px);box-shadow:inset 0 1px #fff,0 1px 0 #6b7
 #app{transition:none!important}
 </style>
 
+
+<style id="v36-style">
+  .v36-controlbar{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important;width:350px!important;min-width:350px!important;height:44px!important;box-sizing:border-box!important}
+  .v36-controlbar button{width:165px!important;min-width:165px!important;height:42px!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+  .v36-controlbar .v36-result{order:1!important}
+  .v36-controlbar .v36-next{order:2!important}
+  .v36-controlbar .v36-result.empty{visibility:hidden!important;pointer-events:none!important}
+  #app.v36-busy{pointer-events:none!important}
+  #app.v36-rendering{visibility:hidden!important}
+</style>
+<script id="v36-script">
+(function(){
+  'use strict';
+  window.__v36Advancing=false;
+  window.__v36SuppressRender=false;
+
+  function v36HideDuplicateNextButtons(){
+    try{
+      document.querySelectorAll('.header-tools button').forEach(function(b){
+        if(/1日進む|次の日へ/.test(b.textContent||'')) b.style.display='none';
+      });
+    }catch(_){ }
+  }
+
+  function v36NormalizeControls(){
+    try{
+      if(!state || currentView!=='schedule') return;
+      var host=document.querySelector('.v25-toolbar .v25-actions') || document.querySelector('.schedule-toolbar .actions');
+      if(!host) return;
+      host.classList.add('v36-controlbar');
+      // Build one and only one pair in the fixed order: result LEFT, next-day RIGHT.
+      host.innerHTML='';
+      var result=document.createElement('button');
+      result.className='v36-result';
+      result.textContent='前日の試合結果';
+      result.disabled=false;
+      result.onclick=function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        if(typeof window.showDailyResultsV32==='function') window.showDailyResultsV32();
+        else if(typeof window.showDailyResults==='function') window.showDailyResults();
+      };
+      var has=!!(state.dailyResults&&Array.isArray(state.dailyResults.games)&&state.dailyResults.games.length);
+      if(!has) result.classList.add('empty');
+      var next=document.createElement('button');
+      next.className='v36-next primary';
+      next.textContent='▶ 次の日へ';
+      next.onclick=function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        if(typeof window.nextDay==='function') window.nextDay();
+      };
+      host.appendChild(result);
+      host.appendChild(next);
+      v36HideDuplicateNextButtons();
+    }catch(e){console.warn('V36 controls',e)}
+  }
+  window.v36NormalizeControls=v36NormalizeControls;
+
+  // Persistent BGM: set src without calling load(), then call play() directly.
+  // This preserves the browser gesture->play relationship better than load()+play().
+  function v36PlayBGM(){
+    try{
+      if(!state || state.settings?.bgm===false) return;
+      bgmUnlocked=true;
+      initBGM();
+      var file=trackForDate();
+      if(currentBgmFile!==file || !bgmAudio.src){
+        currentBgmFile=file;
+        bgmSourceIndex=0;
+        var src=bgmSources(file)[0];
+        bgmAudio.src=src;
+        bgmAudio.loop=true;
+        bgmAudio.preload='auto';
+        bgmAudio.volume=state.settings?.volume??0.5;
+      }
+      var pr=bgmAudio.play();
+      if(pr&&pr.catch)pr.catch(function(){ bgmRetryPending=true; });
+    }catch(e){bgmRetryPending=true;}
+  }
+  window.v36PlayBGM=v36PlayBGM;
+
+  // Replace renderGame with a transient-render guard. Some historical simulateGame versions
+  // call renderGame('result') in the middle of a day simulation; suppress that only while a
+  // next-day transaction is active, so the old result screen can never flash on screen.
+  function v36Render(view){
+    if(window.__v36SuppressRender) return;
+    if(window.__v36RealRender){ return window.__v36RealRender(view); }
+  }
+  window.__v36RealRender=window.renderGame;
+  if(typeof window.__v36RealRender==='function'){
+    window.renderGame=v36Render;
+    try{ renderGame=v36Render; }catch(_){ }
+  }
+
+  function v36RenderSchedule(){
+    window.__v36SuppressRender=false;
+    var app=document.getElementById('app');
+    try{
+      if(app) app.classList.add('v36-rendering');
+      currentView='schedule';
+      if(typeof window.__v36RealRender==='function') window.__v36RealRender('schedule');
+      else if(typeof render25==='function') render25('schedule');
+      requestAnimationFrame(function(){
+        v36NormalizeControls();
+        if(app) app.classList.remove('v36-rendering');
+      });
+    }catch(e){
+      console.error('V36 render schedule',e);
+      if(app) app.classList.remove('v36-rendering');
+    }
+  }
+
+  function v36Advance(){
+    if(!state){ renderTitle(); return; }
+    var app=document.getElementById('app');
+    if(app&&app.classList.contains('v36-busy')) return;
+    try{
+      if(app) app.classList.add('v36-busy','v36-rendering');
+      window.__v36Advancing=true;
+      window.__v36SuppressRender=true;
+      // Do not add another intermediate render during the simulation.
+      v36PlayBGM();
+      if(typeof ensureSchedule==='function') ensureSchedule();
+      if(typeof ensureV23State==='function') ensureV23State(state);
+      if(typeof ensureV19State==='function') ensureV19State(state);
+
+      if(state.phase==='regular'){
+        var date=state.currentDate;
+        var games=gamesOn(date).filter(function(g){return !g.played;});
+        games.forEach(function(g){
+          if(typeof window.simulateGame==='function') window.simulateGame(g);
+        });
+        TEAMS.forEach(function(t){
+          teamPlayers(t.id).forEach(function(p){
+            if(p.retired) return;
+            p.fatigue=Math.max(0,(p.fatigue||0)-2);
+            p.form=clamp(p.form+(50-p.form)*0.04);
+            if(p.injury){
+              p.injuryDays=Math.max(0,(p.injuryDays||0)-1);
+              if(p.injuryDays===0) p.injury=null;
+            }
+          });
+        });
+        state.dailyResults={date:date,games:games.map(function(g){
+          return {id:g.id,date:g.date,home:g.home,away:g.away,homeScore:g.homeScore,awayScore:g.awayScore};
+        })};
+        var own=games.find(function(g){return g.home===state.controlTeam||g.away===state.controlTeam;});
+        state.lastResult=own?Object.assign({},own):null;
+        var d=dateObj(date); d.setUTCDate(d.getUTCDate()+1); state.currentDate=dateIso(d);
+        if(!state.games.some(function(g){return !g.played;}) && typeof finishRegularSeason==='function') finishRegularSeason();
+        state.lastMessage=games.length?fullDate(date)+'の全球団の試合結果を反映しました。':'本日は試合がありません。';
+      }else if(state.phase==='cs'||state.phase==='japan'){
+        if(typeof advanceSeries==='function') advanceSeries();
+        state.dailyResults=null; state.lastResult=null;
+      }else{
+        var next=dateObj(state.currentDate); next.setUTCDate(next.getUTCDate()+1); var nextIso=dateIso(next);
+        if(nextIso >= String(state.year+1)+'-03-27'){
+          if(typeof newSeason==='function') newSeason();
+          else { state.year++; state.currentDate=state.year+'-03-27'; state.phase='regular'; }
+          state.dailyResults=null; state.lastResult=null;
+        }else{
+          state.currentDate=nextIso;
+          state.dailyResults=null; state.lastResult=null;
+          state.lastMessage=fullDate(nextIso)+'へ進みました。';
+        }
+      }
+    }catch(e){
+      console.error('V36 nextDay',e);
+      if(state) state.lastMessage='日程進行エラー：'+(e&&e.message?e.message:'不明なエラー');
+    }finally{
+      window.__v36Advancing=false;
+      window.__v36SuppressRender=false;
+      v36RenderSchedule();
+      if(app) requestAnimationFrame(function(){app.classList.remove('v36-busy');});
+      v36PlayBGM();
+    }
+  }
+  window.nextDay=v36Advance;
+  try{nextDay=v36Advance;}catch(_){ }
+
+  // Start-game path: set up state, start audio BEFORE the first render, then draw once.
+  // No old startGame wrapper is called, preventing nested gesture/audio loss.
+  window.startGame=function(control){
+    try{
+      var id=TEAMS.some(function(t){return t.id===control;})?control:TEAMS[0].id;
+      bgmUnlocked=true;
+      state=freshState(id);
+      ensureV13State(); ensureV14State(); ensureSchedule(); ensureLineupsAll();
+      currentView='schedule'; selectedPlayer=null; selectedPlayerTab='ability';
+      state.lastMessage=team(id).name+'でペナントを開始しました。';
+      // Direct user-gesture play, before any large DOM redraw.
+      v36PlayBGM();
+      if(typeof window.__v36RealRender==='function') window.__v36RealRender('schedule');
+      else if(typeof render25==='function') render25('schedule');
+      requestAnimationFrame(v36NormalizeControls);
+    }catch(e){
+      console.error('V36 startGame',e);
+      state=null; alert('ゲーム開始に失敗しました。\n'+(e.message||e)); renderTitle();
+    }
+  };
+
+  // Avoid stacked autoplay wrappers. Retry on lifecycle events, but do not restart a playing track.
+  function v36AutoplayRetry(){ v36PlayBGM(); }
+  window.addEventListener('pageshow',function(){setTimeout(v36AutoplayRetry,0);});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(v36AutoplayRetry,0);});
+  window.addEventListener('focus',function(){setTimeout(v36AutoplayRetry,0);});
+  setTimeout(function(){
+    if(state&&currentView==='schedule') v36NormalizeControls();
+    v36AutoplayRetry();
+  },0);
+
+  // Keep the fixed button pair after any later renderGame call, without adding another render.
+  var realRG=window.__v36RealRender;
+  if(typeof realRG==='function' && !window.__v36PostRenderWrapped){
+    window.__v36PostRenderWrapped=true;
+    window.__v36RealRender=function(view){
+      if(window.__v36SuppressRender) return;
+      var r=realRG(view);
+      if((view||currentView)==='schedule') requestAnimationFrame(v36NormalizeControls);
+      return r;
+    };
+    // v36's internal render calls should use the wrapped real render.
+  }
+})();
+</script>
 </body></html>
 <style id="v34-final-style">
   /* V34: stable schedule controls — result LEFT, next-day RIGHT, fixed position. */
